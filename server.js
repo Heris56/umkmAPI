@@ -4,6 +4,10 @@ const dboperations = require('./query');
 const app = express();
 const port = process.env.PORT || 80;
 
+app.get('/', (req, res) => {
+    res.json({ message: "hello world" })
+})
+
 app.get('/barang', (req, res) => {
     dboperations.getbarang((error, result) => {
         if (error) {
