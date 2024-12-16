@@ -1,0 +1,25 @@
+name: deploy api umkm to azure
+
+on: 
+  push:
+    branches: 
+      -main
+
+jobs: 
+  build-and-deploy:
+    runs-on: windows-latest
+
+    steps: 
+    - name: checkout code
+      uses: actions/checkout@v4
+
+    - name: setup node.js
+      uses: actions/checkout@v3
+      with: 
+        node-version: '20.x'
+
+    - name: install dependencies
+      uses: npm install
+
+    - name: deploy to azure web app
+      uses: azure/webapps-deploy@v3

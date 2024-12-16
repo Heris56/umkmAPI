@@ -15,5 +15,5 @@ app.get('/barang', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`server berjalan di http://localhost:${port}`);
+    console.log(`server berjalan di ${port}`);
 });
