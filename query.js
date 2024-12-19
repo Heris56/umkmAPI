@@ -57,6 +57,22 @@ async function registUMKM(data, callback) {
     }
 }
 
+async function loginUMKM(data, callback) {
+    try {
+        // cari by email
+        const user = await UMKM.findOne({ where: { email: data.LoginEmail } });
+
+        // cek kalo usernya ada, dan passwordnya sesuai
+        if (user && user.password === data.LoginPassword) {
+            callback(null, user);
+        } else {
+            callback(new Error('Email atau Password salah!'), null);
+        }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 module.exports = {
     getbarang,
     addbarang,
@@ -64,4 +80,5 @@ module.exports = {
     addproduk,
     getuserUMKM,
     registUMKM,
+    loginUMKM,
 };
