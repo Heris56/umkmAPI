@@ -1,7 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
+const UMKM = require('./umkm');
 
 const Produk = sequelize.define('Produk', {
+    id: {
+        field: 'id_produk', // Nama id di database
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
     harga: {
         type: DataTypes.FLOAT,
         allowNull: false
@@ -22,7 +29,18 @@ const Produk = sequelize.define('Produk', {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    tableName: 'produk'
+    id_umkm: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: UMKM,
+            key: 'id_umkm'
+        }
+    },
+
+}, {
+    tableName: 'Produk',
+    timestamps: false
 });
 
 module.exports = Produk;
