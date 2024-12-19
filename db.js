@@ -1,27 +1,19 @@
-// db yang dibutuhin
-const sql = require('mssql');
+const { Sequelize } = require('sequelize');
 
-const dbconfig = {
-    user: 'mamankAdmin',
-    password: 'Mamank123',
-    server: 'umkmku.database.windows.net',
-    database: 'umkmku',
-    Options: {
+const sequelize = new Sequelize('umkmku', 'mamankAdmin', 'Mamank123', {
+    host: 'umkmku.database.windows.net',
+    dialect: 'mssql',
+    dialectOptions: {
         encrypt: true,
         enableArithAbort: true,
         trustServerCertificate: false
     },
-    port: 1433
-}
-
-const connection = new sql.ConnectionPool(dbconfig);
-
-connection.connect((err) => {
-    if (err) {
-        console.error('error saat mencoba koneksi ke database: ', err.stack);
-        return
-    }
-    console.log('berhasil koneksi ke database dengan sql azure database');
+    port: 1433,
+    logging: false, // Matikan log SQL untuk produksi
 });
 
-module.exports = connection;
+sequelize.authenticate()
+    .then(() => console.log('Berhasil terhubung dengan Sequelize ke database SQL Server'))
+    .catch(err => console.error('Gagal koneksi ke database:', err));
+
+module.exports = sequelize;
