@@ -73,6 +73,32 @@ app.post('/umkm', (req, res) => {
     });
 });
 
+app.post('/login', async (req, res) => {
+    const { LoginEmail, LoginPassword, RememberMe } = req.body;
+
+    dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
+        if (error) {
+            return res.status(401).send(error.message); // Unauthorized
+        }
+
+        if (RememberMe) {
+            // cookies kalo RememberMe 
+            res.cookie('LoginEmail', LoginEmail, { maxAge: 3600000 }); // 1 hour
+            res.cookie('LoginPassword', LoginPassword, { maxAge: 3600000 }); // 1 hour
+        } else {
+            // hapus cookies kalo tidak RememberMe
+            res.clearCookie('LoginEmail');
+            res.clearCookie('LoginPassword');
+        }
+
+        // simpan user ke session
+        // const users = await User.findAll();
+        // req.session.users = users;
+
+        res.redirect('/MainPage');
+    });        
+});
+
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
 });
