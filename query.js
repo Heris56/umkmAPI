@@ -1,3 +1,4 @@
+const { default: Message } = require('tedious/lib/message');
 const connection = require('./db');
 const Barang = require('./models/barang');
 const Produk = require('./models/produk');
@@ -30,8 +31,48 @@ async function getproduk(callback) {
     }
 }
 
+async function getprodukbyID(id, callback) {
+    try {
+        if (!id) {
+            throw new error('id tidak boleh kosong');
+        }
+
+        const produk = await Produk.findByPk(id);
+
+        if (!produk) {
+            throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
+        }
+        callback(null, produk);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function deleteproduk(id, callback) {
+    try {
+        if (!id) {
+            throw new error('id tidak boleh kosong')
+        }
+
+        const produk = await Produk.findByPk(id);
+
+        if (!produk) {
+            throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
+        }
+
+        await produk.destroy();
+        callback(null, { Message: `produk dengan id ${id} berhasil dihapus` })
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 async function addproduk(data, callback) {
     try {
+        if (!data.harga || !data.stok || !data.berat || !data.nama_barang || !data.id_umkm) {
+            throw new Error('Data tidak lengkap');
+        }
+
         const result = await Produk.create(data);
         callback(null, result);
     } catch (error) {
@@ -77,7 +118,9 @@ module.exports = {
     getbarang,
     addbarang,
     getproduk,
+    getprodukbyID,
     addproduk,
+    deleteproduk,
     getuserUMKM,
     registUMKM,
     loginUMKM,

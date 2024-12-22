@@ -31,6 +31,16 @@ app.post('/barang', (req, res) => {
     });
 });
 
+app.get('/produk/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getprodukbyID(id, (error, result) => {
+        if (error) {
+            res.status(500).send(error.message);
+        }
+        res.json(result);
+    });
+});
+
 app.get('/produk', (req, res) => {
     dboperations.getproduk((error, result) => {
         if (error) {
@@ -47,6 +57,17 @@ app.post('/produk', (req, res) => {
         if (error) {
             console.error('error insert produk:', error);
             return res.status(500).send('error nambah produk');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.delete('/produk/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.deleteproduk(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
         res.status(200).json(result);
     });
@@ -96,7 +117,7 @@ app.post('/login', async (req, res) => {
         // req.session.users = users;
 
         res.redirect('/MainPage');
-    });        
+    });
 });
 
 app.listen(port, () => {
