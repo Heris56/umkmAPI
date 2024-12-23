@@ -1,8 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 const dboperations = require('./query');
 
 const app = express();
 const port = process.env.PORT || 80;
+
 
 app.use(express.json());
 
@@ -53,6 +55,7 @@ app.get('/produk', (req, res) => {
 
 app.post('/produk', (req, res) => {
     const data = req.body;
+    console.log('Request body:', req.body);
     dboperations.addproduk(data, (error, result) => {
         if (error) {
             console.error('error insert produk:', error);
