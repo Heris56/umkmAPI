@@ -1,8 +1,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
+const Keranjang = require('./keranjang');
 
-const Produk = sequelize.define('Pesanan', {
+const Pesanan = sequelize.define('Pesanan', {
     id: {
         field: 'id_pesanan', // Nama id di database
         type: DataTypes.INTEGER,
@@ -21,7 +22,7 @@ const Produk = sequelize.define('Pesanan', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: keranjang,
+            model: Keranjang,
             key: 'id_keranjang'
         }
     },

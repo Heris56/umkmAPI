@@ -1,7 +1,7 @@
 // models/kurir.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
-const Umkm = require('./umkm');  // Assuming you have an Umkm model
+const UMKM = require('./umkm');  // Assuming you have an Umkm model
 const Pesanan = require('./pesanan');  // Assuming you have a Pesanan model
 
 const Kurir = sequelize.define('Kurir', {
@@ -28,7 +28,8 @@ const Kurir = sequelize.define('Kurir', {
 });
 
 // Associations
-Kurir.belongsTo(Umkm, { foreignKey: 'id', targetKey: 'id_umkm' });
-Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id_pesanan' });
+Kurir.belongsTo(UMKM, { foreignKey: 'id_umkm', targetKey: 'id' });
+Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id' });
+
 
 module.exports = Kurir;
