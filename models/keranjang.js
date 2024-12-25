@@ -3,7 +3,6 @@ const sequelize = require('../db');
 const UMKM = require('./umkm');
 const Pembeli = require('./pembeli');
 const Produk = require('./produk');
-const Pembeli = require('./pembeli');
 
 const Keranjang = sequelize.define('Keranjang', {
     id_keranjang: {
