@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
-const Umkm = require('./umkm');
-// const Kurir = require('./kurir');
+const UMKM = require('./umkm');
+const Kurir = require('./kurir');
 const Pembeli = require('./pembeli');
 
 const Message = sequelize.define('Message', {
@@ -43,13 +43,14 @@ const Message = sequelize.define('Message', {
     timestamps: false 
 });
 
-Message.belongsTo(Umkm, { foreignKey: 'sender_id', targetKey: 'id', as: 'sender_umkm' });
-// Message.belongsTo(Kurir, { foreignKey: 'sender_id', targetKey: 'id_kurir', as: 'sender_kurir' });
+// Sender associations
+Message.belongsTo(UMKM, { foreignKey: 'sender_id', targetKey: 'id', as: 'sender_umkm' });
+Message.belongsTo(Kurir, { foreignKey: 'sender_id', targetKey: 'id_kurir', as: 'sender_kurir' });
 Message.belongsTo(Pembeli, { foreignKey: 'sender_id', targetKey: 'id_pembeli', as: 'sender_pembeli' });
 
-Message.belongsTo(Umkm, { foreignKey: 'receiver_id', targetKey: 'id', as: 'receiver_umkm' });
-// Message.belongsTo(Kurir, { foreignKey: 'receiver_id', targetKey: 'id_kurir', as: 'receiver_kurir' });
+// Receiver associations
+Message.belongsTo(UMKM, { foreignKey: 'receiver_id', targetKey: 'id', as: 'receiver_umkm' });
+Message.belongsTo(Kurir, { foreignKey: 'receiver_id', targetKey: 'id_kurir', as: 'receiver_kurir' });
 Message.belongsTo(Pembeli, { foreignKey: 'receiver_id', targetKey: 'id_pembeli', as: 'receiver_pembeli' });
-
 
 module.exports = Message;

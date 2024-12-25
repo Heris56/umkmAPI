@@ -1,11 +1,12 @@
-const { default: Message } = require('tedious/lib/message');
+// query.js
 const connection = require('./db');
 const Barang = require('./models/barang');
 const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
-const MessageModel = require('./models/message');
+const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
 const Pesanan = require('./models/pesanan')
+const Kurir = require('./models/kurir');
 
 async function getbarang(callback) {
     try {
@@ -117,14 +118,25 @@ async function loginUMKM(data, callback) {
     }
 }
 
-async function getMessages(senderId, receiverId, senderType, receiverType, callback) {
+// Get all messages
+async function getMessages(callback) {
     try {
-        const messages = await MessageModel.findAll({
+        const messages = await Message.findAll();
+        callback(null, messages);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Get messages by sender and receiver
+async function getMessagesBySenderReceiver(senderType, senderId, receiverType, receiverId, callback) {
+    try {
+        const messages = await Message.findAll({
             where: {
-                sender_id: senderId,
-                receiver_id: receiverId,
                 sender_type: senderType,
-                receiver_type: receiverType
+                sender_id: senderId,
+                receiver_type: receiverType,
+                receiver_id: receiverId
             },
             order: [['sent_at', 'ASC']]
         });
@@ -134,90 +146,40 @@ async function getMessages(senderId, receiverId, senderType, receiverType, callb
     }
 }
 
-// Function to send a new message
+// Send a message
 async function sendMessage(data, callback) {
     try {
-        // Ensure required data fields are provided
-        if (!data.sender_id || !data.receiver_id || !data.sender_type || !data.receiver_type || !data.message) {
-            throw new Error('Data tidak lengkap');
-        }
-
-        // Check sender and receiver validity based on sender_type and receiver_type
-        let senderExists = false;
-        let receiverExists = false;
-
-        // Check if sender exists in the corresponding table based on sender_type
-        if (data.sender_type === 'UMKM') {
-            senderExists = await UMKM.findByPk(data.sender_id);
-        } else if (data.sender_type === 'Kurir') {
-            senderExists = await Kurir.findByPk(data.sender_id);
-        } else if (data.sender_type === 'Pembeli') {
-            senderExists = await Pembeli.findByPk(data.sender_id);
-        }
-
-        // Check if receiver exists in the corresponding table based on receiver_type
-        if (data.receiver_type === 'UMKM') {
-            receiverExists = await UMKM.findByPk(data.receiver_id);
-        } else if (data.receiver_type === 'Kurir') {
-            receiverExists = await Kurir.findByPk(data.receiver_id);
-        } else if (data.receiver_type === 'Pembeli') {
-            receiverExists = await Pembeli.findByPk(data.receiver_id);
-        }
-
-        // Throw error if either sender or receiver does not exist
-        if (!senderExists) {
-            throw new Error(`Sender not found in ${data.sender_type}`);
-        }
-
-        if (!receiverExists) {
-            throw new Error(`Receiver not found in ${data.receiver_type}`);
-        }
-
-        // If both sender and receiver are valid, create the message
-        const message = await MessageModel.create(data);
-        callback(null, message); // Return the created message
-
-    } catch (error) {
-        callback(error, null); // Return the error
-    }
-}
-
-// Function to mark a message as read
-async function markMessageAsRead(messageId, callback) {
-    try {
-        if (!messageId) {
-            throw new Error('Message ID tidak boleh kosong');
-        }
-
-        const message = await MessageModel.findByPk(messageId);
-
-        if (!message) {
-            throw new Error(`Pesan dengan ID ${messageId} tidak ditemukan`);
-        }
-
-        message.is_read = true;
-        await message.save();
-        callback(null, { Message: `Pesan dengan ID ${messageId} berhasil ditandai sebagai dibaca` });
+        const message = await Message.create(data);
+        callback(null, message);
     } catch (error) {
         callback(error, null);
     }
 }
 
-// Function to delete a message
-async function deleteMessage(messageId, callback) {
+// Mark message as read
+async function markMessageAsRead(id, callback) {
     try {
-        if (!messageId) {
-            throw new Error('Message ID tidak boleh kosong');
-        }
-
-        const message = await MessageModel.findByPk(messageId);
-
+        const message = await Message.findByPk(id);
         if (!message) {
-            throw new Error(`Pesan dengan ID ${messageId} tidak ditemukan`);
+            throw new Error(`Message with ID ${id} not found`);
         }
+        message.is_read = true;
+        await message.save();
+        callback(null, message);
+    } catch (error) {
+        callback(error, null);
+    }
+}
 
+// Delete a message
+async function deleteMessage(id, callback) {
+    try {
+        const message = await Message.findByPk(id);
+        if (!message) {
+            throw new Error(`Message with ID ${id} not found`);
+        }
         await message.destroy();
-        callback(null, { Message: `Pesan dengan ID ${messageId} berhasil dihapus` });
+        callback(null, { message: `Message with ID ${id} has been deleted` });
     } catch (error) {
         callback(error, null);
     }
@@ -326,6 +288,7 @@ module.exports = {
     registUMKM,
     loginUMKM,
     getMessages,
+    getMessagesBySenderReceiver,
     sendMessage,
     markMessageAsRead,
     deleteMessage,
