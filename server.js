@@ -1,8 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 const dboperations = require('./query');
 
 const app = express();
 const port = process.env.PORT || 80;
+
 
 app.use(express.json());
 
@@ -53,6 +55,7 @@ app.get('/produk', (req, res) => {
 
 app.post('/produk', (req, res) => {
     const data = req.body;
+    console.log('Request body:', req.body);
     dboperations.addproduk(data, (error, result) => {
         if (error) {
             console.error('error insert produk:', error);
@@ -119,6 +122,112 @@ app.post('/login', async (req, res) => {
         res.redirect('/MainPage');
     });
 });
+
+// Message Routes
+// Get all messages between sender and receiver
+app.get('/message', (req, res) => {
+    const { senderId, receiverId, senderType, receiverType } = req.query;
+    dboperations.getMessages(senderId, receiverId, senderType, receiverType, (error, result) => {
+        if (error) {
+            console.error('Error fetching messages:', error);
+            return res.status(500).send('Error fetching messages');
+        }
+        res.json(result);
+    });
+});
+
+// Send a new message
+app.post('/message', (req, res) => {
+    const data = req.body;
+    dboperations.sendMessage(data, (error, result) => {
+        if (error) {
+            console.error('Error sending message:', error);
+            return res.status(500).send('Error sending message');
+        }
+        res.status(200).json(result);
+    });
+});
+
+// Mark a message as read
+app.put('/message/:id/read', (req, res) => {
+    const messageId = req.params.id;
+    dboperations.markMessageAsRead(messageId, (error, result) => {
+        if (error) {
+            console.error('Error marking message as read:', error);
+            return res.status(500).send('Error marking message as read');
+        }
+        res.json(result);
+    });
+});
+
+// Delete a message
+app.delete('/message/:id', (req, res) => {
+    const messageId = req.params.id;
+    dboperations.deleteMessage(messageId, (error, result) => {
+        if (error) {
+            console.error('Error deleting message:', error);
+            return res.status(500).send('Error deleting message');
+        }
+        res.status(200).json(result);
+    });
+});
+
+// Get all pembeli
+app.get('/pembeli', (req, res) => {
+    dboperations.getPembeli((error, result) => {
+        if (error) {
+            console.error('Error fetching pembeli:', error);
+            return res.status(500).send('Error fetching pembeli');
+        }
+        res.json(result);  // Send all pembeli data
+    });
+});
+
+// Get pembeli by ID
+app.get('/pembeli/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getPembeliByID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.json(result);  // Send pembeli data by ID
+    });
+});
+
+// Add a new pembeli
+app.post('/pembeli', (req, res) => {
+    const data = req.body;
+    dboperations.addPembeli(data, (error, result) => {
+        if (error) {
+            return res.status(500).send('Error adding pembeli');
+        }
+        res.status(200).json(result);  // Send the newly created pembeli
+    });
+});
+
+// Update pembeli by ID
+app.put('/pembeli/:id', (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updatePembeli(id, data, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);  // Send updated pembeli data
+    });
+});
+
+// Delete pembeli by ID
+app.delete('/pembeli/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.deletePembeli(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);  // Send success message
+    });
+});
+
 
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
