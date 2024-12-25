@@ -29,7 +29,7 @@ const Kurir = sequelize.define('Kurir', {
 
 // Associations
 Kurir.belongsTo(UMKM, { foreignKey: 'id_umkm', targetKey: 'id' });
-Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id' });
+Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id_pesanan' });
 
 
 module.exports = Kurir;

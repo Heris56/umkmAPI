@@ -4,7 +4,7 @@ const dboperations = require('./query');
 
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 
 app.use(express.json());
@@ -18,6 +18,16 @@ app.get('/barang', (req, res) => {
         if (error) {
             console.error('error get barang:', error);
             return res.status(500).send('error fetch barang');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/pesananmasuk', (req, res) => {
+    dboperations.getpesananmasuk((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
         }
         res.json(result);
     });
