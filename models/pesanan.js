@@ -1,20 +1,19 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
-const UMKM = require('./umkm');
-const Keranjang = require('./keranjang');
+const keranjang = require('./keranjang');
 
 const Pesanan = sequelize.define('Pesanan', {
-    id: {
-        field: 'id_pesanan', // Nama id di database
+    id_pesanan: {
+        field: 'id_pesanan',
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    statuspesanan: {
+    status_pesanan: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    totalbelanja: {
+    total_belanja: {
         type: DataTypes.FLOAT,
         allowNull: false
     },
@@ -22,7 +21,7 @@ const Pesanan = sequelize.define('Pesanan', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: Keranjang,
+            model: keranjang,
             key: 'id_keranjang'
         }
     },

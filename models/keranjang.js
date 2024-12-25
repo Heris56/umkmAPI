@@ -1,12 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
+const Pembeli = require('./pembeli');
 const Produk = require('./produk');
 const Pembeli = require('./pembeli');
 
-
 const Keranjang = sequelize.define('Keranjang', {
-    id: {
+    id_keranjang: {
         field: 'id_keranjang', // Nama id di database
         type: DataTypes.INTEGER,
         primaryKey: true,

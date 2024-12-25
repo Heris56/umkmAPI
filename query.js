@@ -5,8 +5,8 @@ const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
+const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
-
 
 async function getbarang(callback) {
     try {
@@ -268,6 +268,15 @@ async function deletePembeli(id, callback) {
     }
 }
 
+async function getpesananmasuk(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
+        callback(null, result); // Kembalikan data
+    } catch (error) {
+        callback(error, null); // Kirim error jika terjadi masalah
+    }
+}
+
 module.exports = {
     getbarang,
     addbarang,
@@ -287,5 +296,6 @@ module.exports = {
     getPembeliByID,
     addPembeli,
     updatePembeli,
-    deletePembeli
+    deletePembeli,
+    getpesananmasuk
 };
