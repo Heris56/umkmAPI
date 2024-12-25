@@ -2,8 +2,10 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
 const Produk = require('./produk');
+const Pembeli = require('./pembeli');
 
-const Produk = sequelize.define('Keranjang', {
+
+const Keranjang = sequelize.define('Keranjang', {
     id: {
         field: 'id_keranjang', // Nama id di database
         type: DataTypes.INTEGER,
@@ -22,7 +24,7 @@ const Produk = sequelize.define('Keranjang', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: pembeli,
+            model: Pembeli,
             key: 'id_pembeli'
         }
     },
@@ -39,4 +41,4 @@ const Produk = sequelize.define('Keranjang', {
     timestamps: false
 });
 
-module.exports = Pesanan;
+module.exports = Keranjang;
