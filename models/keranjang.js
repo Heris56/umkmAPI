@@ -37,7 +37,7 @@ const Keranjang = sequelize.define('Keranjang', {
         }
     },
 }, {
-    tableName: 'Pesanan',
+    tableName: 'keranjang',
     timestamps: false
 });
 
