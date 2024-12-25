@@ -4,7 +4,7 @@ const UMKM = require('./umkm');
 
 const Produk = sequelize.define('Produk', {
     id: {
-        field: 'id_produk', // Nama id di database
+        field: 'id_produk',
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true

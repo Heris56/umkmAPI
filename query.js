@@ -5,6 +5,7 @@ const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const MessageModel = require('./models/message');
 const Pembeli = require('./models/pembeli');
+const Pesanan = require('./models/pesanan')
 
 async function getbarang(callback) {
     try {
@@ -127,9 +128,9 @@ async function getMessages(senderId, receiverId, senderType, receiverType, callb
             },
             order: [['sent_at', 'ASC']]
         });
-        callback(null, messages); 
+        callback(null, messages);
     } catch (error) {
-        callback(error, null); 
+        callback(error, null);
     }
 }
 
@@ -188,7 +189,7 @@ async function markMessageAsRead(messageId, callback) {
             throw new Error('Message ID tidak boleh kosong');
         }
 
-        const message = await MessageModel.findByPk(messageId); 
+        const message = await MessageModel.findByPk(messageId);
 
         if (!message) {
             throw new Error(`Pesan dengan ID ${messageId} tidak ditemukan`);
@@ -198,7 +199,7 @@ async function markMessageAsRead(messageId, callback) {
         await message.save();
         callback(null, { Message: `Pesan dengan ID ${messageId} berhasil ditandai sebagai dibaca` });
     } catch (error) {
-        callback(error, null); 
+        callback(error, null);
     }
 }
 
@@ -215,7 +216,7 @@ async function deleteMessage(messageId, callback) {
             throw new Error(`Pesan dengan ID ${messageId} tidak ditemukan`);
         }
 
-        await message.destroy(); 
+        await message.destroy();
         callback(null, { Message: `Pesan dengan ID ${messageId} berhasil dihapus` });
     } catch (error) {
         callback(error, null);
@@ -305,6 +306,15 @@ async function deletePembeli(id, callback) {
     }
 }
 
+async function getpesananmasuk(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
+        callback(null, result); // Kembalikan data
+    } catch (error) {
+        callback(error, null); // Kirim error jika terjadi masalah
+    }
+}
+
 module.exports = {
     getbarang,
     addbarang,
@@ -323,5 +333,6 @@ module.exports = {
     getPembeliByID,
     addPembeli,
     updatePembeli,
-    deletePembeli
+    deletePembeli,
+    getpesananmasuk
 };
