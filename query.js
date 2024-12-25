@@ -1,30 +1,11 @@
 // query.js
 const connection = require('./db');
-const Barang = require('./models/barang');
 const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
 const Kurir = require('./models/kurir');
 
-
-async function getbarang(callback) {
-    try {
-        const result = await Barang.findAll(); // Ambil semua data dari tabel `barangs`
-        callback(null, result); // Kembalikan data
-    } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
-    }
-}
-
-async function addbarang(data, callback) {
-    try {
-        const result = await Barang.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
 
 async function getproduk(callback) {
     try {
@@ -47,6 +28,24 @@ async function getprodukbyID(id, callback) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
         callback(null, produk);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updateProduk(id, callback) {
+    try {
+        if (!id) {
+            throw new error('id tidak boleh kosong');
+        }
+
+        const produk = await Produk.findByPk(id);
+
+        if (!produk) {
+            throw new error('produk tidak ditemukan');
+        }
+
+
     } catch (error) {
         callback(error, null);
     }
