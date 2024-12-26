@@ -1,46 +1,43 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
+const Pembeli = require('./pembeli');
+const Produk = require('./produk');
 
-const Produk = sequelize.define('Produk', {
-    id: {
-        field: 'id_produk',
+const Keranjang = sequelize.define('Keranjang', {
+    id_keranjang: {
+        field: 'id_keranjang', // Nama id di database
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    harga: {
+    total: {
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    stok: {
+    kuantitas: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    berat: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-    nama_barang: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    deskripsi_barang: {
-        type: DataTypes.TEXT,
-        allowNull: true
-    },
-    id_umkm: {
+    id_pembeli: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: UMKM,
-            key: 'id_umkm'
+            model: Pembeli,
+            key: 'id_pembeli'
         }
     },
-
+    id_produk: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Produk,
+            key: 'id_produk'
+        }
+    },
 }, {
-    tableName: 'Produk',
+    tableName: 'keranjang',
     timestamps: false
 });
 
-module.exports = Produk;
+module.exports = Keranjang;
