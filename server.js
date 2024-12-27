@@ -25,6 +25,16 @@ app.get('/barang', (req, res) => {
     });
 });
 
+app.get('/pesananmasuk', (req, res) => {
+    dboperations.getpesananmasuk((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
 app.post('/barang', (req, res) => {
     const data = req.body;
     dboperations.addbarang(data, (error, result) => {
@@ -325,6 +335,40 @@ app.delete('/kurir/:id', async (req, res) => {
         console.error('Error deleting kurir:', error);
         res.status(500).send('Error deleting kurir');
     }
+// API route for daily stats
+app.get('/daily-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
+    try {
+        const dailyStats = await dboperations.getStatusBulan(umkmId, month, year);
+        res.json(dailyStats);
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// API route for monthly stats
+app.get('/monthly-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    try {
+        const monthlyStats = await dboperations.getStatusOverAll(umkmId);
+        res.json(monthlyStats);
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+app.get('/riwayat', (req, res) => {
+    dboperations.getRiwayat((error, result) => {
+        if (error) {
+            console.error('error get semua riwayat:', error);
+            return res.status(500).send('error fetch user UMKM (test purposes)');
+        }
+        res.json(result);
+    });
 });
 
 

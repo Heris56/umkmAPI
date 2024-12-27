@@ -1,31 +1,13 @@
 // query.js
 const connection = require('./db');
-const Barang = require('./models/barang');
 const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
+const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
-const Pesanan = require('./models/pesanan');
+const Riwayat = require('./models/riwayat');
 
-
-async function getbarang(callback) {
-    try {
-        const result = await Barang.findAll(); // Ambil semua data dari tabel `barangs`
-        callback(null, result); // Kembalikan data
-    } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
-    }
-}
-
-async function addbarang(data, callback) {
-    try {
-        const result = await Barang.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
 
 async function getproduk(callback) {
     try {
@@ -48,6 +30,24 @@ async function getprodukbyID(id, callback) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
         callback(null, produk);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updateProduk(id, callback) {
+    try {
+        if (!id) {
+            throw new error('id tidak boleh kosong');
+        }
+
+        const produk = await Produk.findByPk(id);
+
+        if (!produk) {
+            throw new error('produk tidak ditemukan');
+        }
+
+
     } catch (error) {
         callback(error, null);
     }
@@ -345,12 +345,90 @@ async function deleteKurir(id, callback) {
         callback(null, { message: 'Kurir deleted successfully' });
     } catch (error) {
         callback(error, null);
+async function getpesananmasuk(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
+        callback(null, result); // Kembalikan data
+    } catch (error) {
+        callback(error, null); // Kirim error jika terjadi masalah
+    }
+}
+
+async function getStatusBulan(umkmId, month, year) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+                r.tanggal AS tanggal,
+                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales, -- Cast to INT
+                COUNT(DISTINCT p.id_pesanan) AS total_orders
+            FROM 
+                pesanan p
+            JOIN 
+                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
+            JOIN 
+                riwayat r ON p.id_pesanan = r.id_pesanan
+            WHERE 
+                pm.id_umkm = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY 
+                r.tanggal
+            ORDER BY 
+                r.tanggal;
+        `, {
+            replacements: { umkmId, month, year },
+            type: QueryTypes.SELECT
+        });
+
+        return result; // Return the result instead of using a callback
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        throw error; // Throw the error to be handled in the calling function
+    }
+}
+
+async function getStatusOverAll(umkmId) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+                MONTH(r.tanggal) AS month,
+                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
+                COUNT(DISTINCT p.id_pesanan) AS total_orders
+            FROM 
+                pesanan p
+            JOIN 
+                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
+            JOIN 
+                riwayat r ON p.id_pesanan = r.id_pesanan
+            WHERE 
+                pm.id_umkm = :umkmId
+            GROUP BY 
+                MONTH(r.tanggal)
+            ORDER BY 
+                month;
+        `, {
+            replacements: { umkmId },
+            type: QueryTypes.SELECT
+        });
+
+        return result; // Return the result instead of using a callback
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        throw error; // Throw the error to be handled in the calling function
+    }
+}
+
+async function getRiwayat(callback) {
+    try {
+        const result = await Riwayat.findAll(); // ambil data tari tabel umkm
+        callback(null, result); //return data umkm
+    } catch (error) {
+        callback(error, null); // Kirim error jika terjadi masalah
+
     }
 }
 
 module.exports = {
-    getbarang,
-    addbarang,
     getproduk,
     getprodukbyID,
     addproduk,
@@ -373,4 +451,9 @@ module.exports = {
     addKurir,
     updateKurir,
     deleteKurir
+    getpesananmasuk,
+    getStatusOverAll,
+    getStatusBulan,
+    getRiwayat,
+
 };
