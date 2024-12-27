@@ -457,5 +457,4 @@ module.exports = {
     getStatusOverAll,
     getStatusBulan,
     getRiwayat,
-
 };
