@@ -1,6 +1,9 @@
+// server.js
 const express = require('express');
-const cors = require('cors');
 const dboperations = require('./query');
+const Kurir = require('./models/kurir');
+
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -128,7 +131,7 @@ app.post('/umkm', (req, res) => {
     });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     const { LoginEmail, LoginPassword, RememberMe } = req.body;
 
     dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
@@ -154,11 +157,10 @@ app.post('/login', async (req, res) => {
     });
 });
 
-// Message Routes
-// Get all messages between sender and receiver
+
+// Route to get all messages
 app.get('/message', (req, res) => {
-    const { senderId, receiverId, senderType, receiverType } = req.query;
-    dboperations.getMessages(senderId, receiverId, senderType, receiverType, (error, result) => {
+    dboperations.getMessages((error, result) => {
         if (error) {
             console.error('Error fetching messages:', error);
             return res.status(500).send('Error fetching messages');
@@ -167,7 +169,19 @@ app.get('/message', (req, res) => {
     });
 });
 
-// Send a new message
+// Route to get messages by sender and receiver
+app.get('/message/:senderType/:senderId/:receiverType/:receiverId', (req, res) => {
+    const { senderType, senderId, receiverType, receiverId } = req.params;
+    dboperations.getMessagesBySenderReceiver(senderType, senderId, receiverType, receiverId, (error, result) => {
+        if (error) {
+            console.error('Error fetching messages by sender and receiver:', error);
+            return res.status(500).send('Error fetching messages');
+        }
+        res.json(result);
+    });
+});
+
+// Route to send a message
 app.post('/message', (req, res) => {
     const data = req.body;
     dboperations.sendMessage(data, (error, result) => {
@@ -179,29 +193,28 @@ app.post('/message', (req, res) => {
     });
 });
 
-// Mark a message as read
-app.put('/message/:id/read', (req, res) => {
-    const messageId = req.params.id;
-    dboperations.markMessageAsRead(messageId, (error, result) => {
+// Route to mark a message as read
+app.put('/message/read/:id', (req, res) => {
+    const { id } = req.params;
+    dboperations.markMessageAsRead(id, (error, result) => {
         if (error) {
-            console.error('Error marking message as read:', error);
-            return res.status(500).send('Error marking message as read');
-        }
-        res.json(result);
-    });
-});
-
-// Delete a message
-app.delete('/message/:id', (req, res) => {
-    const messageId = req.params.id;
-    dboperations.deleteMessage(messageId, (error, result) => {
-        if (error) {
-            console.error('Error deleting message:', error);
-            return res.status(500).send('Error deleting message');
+            return res.status(500).send(error.message);
         }
         res.status(200).json(result);
     });
 });
+
+// Route to delete a message
+app.delete('/message/:id', (req, res) => {
+    const { id } = req.params;
+    dboperations.deleteMessage(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 
 // Get all pembeli
 app.get('/pembeli', (req, res) => {
@@ -256,6 +269,127 @@ app.delete('/pembeli/:id', (req, res) => {
             return res.status(500).send(error.message);
         }
         res.status(200).json(result);  // Send success message
+    });
+});
+
+// Get all kurirs
+app.get('/kurir', async (req, res) => {
+    try {
+        const kurirs = await Kurir.findAll();
+        res.json(kurirs);
+    } catch (error) {
+        console.error('Error fetching kurirs:', error);
+        res.status(500).send('Error fetching kurirs');
+    }
+});
+
+// Get kurir by ID
+app.get('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        res.json(kurir);
+    } catch (error) {
+        console.error('Error fetching kurir by ID:', error);
+        res.status(500).send('Error fetching kurir by ID');
+    }
+});
+
+// Add a new kurir
+app.post('/kurir', async (req, res) => {
+    try {
+        const { nama_kurir, id_umkm, id_pesanan } = req.body;
+
+        const newKurir = await Kurir.create({
+            nama_kurir,
+            id_umkm,
+            id_pesanan
+        });
+
+        res.status(201).json(newKurir);
+    } catch (error) {
+        console.error('Error adding kurir:', error);
+        res.status(500).send('Error adding kurir');
+    }
+});
+
+// Update kurir by ID
+app.put('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { nama_kurir, id_umkm, id_pesanan } = req.body;
+
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        await kurir.update({ nama_kurir, id_umkm, id_pesanan });
+
+        res.json(kurir);
+    } catch (error) {
+        console.error('Error updating kurir:', error);
+        res.status(500).send('Error updating kurir');
+    }
+});
+
+// Delete kurir by ID
+app.delete('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        await kurir.destroy();
+
+        res.status(204).send(); // No Content
+    } catch (error) {
+        console.error('Error deleting kurir:', error);
+        res.status(500).send('Error deleting kurir');
+    }
+});
+// API route for daily stats
+app.get('/daily-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
+    try {
+        const dailyStats = await dboperations.getStatusBulan(umkmId, month, year);
+        res.json(dailyStats);
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// API route for monthly stats
+app.get('/monthly-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    try {
+        const monthlyStats = await dboperations.getStatusOverAll(umkmId);
+        res.json(monthlyStats);
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+app.get('/riwayat', (req, res) => {
+    dboperations.getRiwayat((error, result) => {
+        if (error) {
+            console.error('error get semua riwayat:', error);
+            return res.status(500).send('error fetch user UMKM (test purposes)');
+        }
+        res.json(result);
     });
 });
 
