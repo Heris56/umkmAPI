@@ -335,6 +335,7 @@ app.delete('/kurir/:id', async (req, res) => {
         console.error('Error deleting kurir:', error);
         res.status(500).send('Error deleting kurir');
     }
+});
 // API route for daily stats
 app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
