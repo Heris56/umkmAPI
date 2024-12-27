@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const UMKM = sequelize.define('UMKM', {
-    id: {
+    id_umkm: {
         field: 'id_umkm', // Nama id di database
         type: DataTypes.INTEGER,
         primaryKey: true,
