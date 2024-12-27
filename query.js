@@ -269,6 +269,82 @@ async function deletePembeli(id, callback) {
     }
 }
 
+// Get all kurirs
+async function getKurir(callback) {
+    try {
+        const kurirs = await Kurir.findAll({
+            include: [
+                { model: UMKM, attributes: ['nama_umkm'] },
+                { model: Pesanan, attributes: ['kode_pesanan'] }
+            ]
+        });
+        callback(null, kurirs);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Get kurir by ID
+async function getKurirByID(id, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id, {
+            include: [
+                { model: UMKM, attributes: ['nama_umkm'] },
+                { model: Pesanan, attributes: ['kode_pesanan'] }
+            ]
+        });
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        callback(null, kurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Add a new kurir
+async function addKurir(data, callback) {
+    try {
+        const newKurir = await Kurir.create({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            id_pesanan: data.id_pesanan
+        });
+        callback(null, newKurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Update kurir by ID
+async function updateKurir(id, data, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id);
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        await kurir.update({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            id_pesanan: data.id_pesanan
+        });
+        callback(null, kurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Delete kurir by ID
+async function deleteKurir(id, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id);
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        await kurir.destroy();
+        callback(null, { message: 'Kurir deleted successfully' });
+    } catch (error) {
+        callback(error, null);
 async function getpesananmasuk(callback) {
     try {
         const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
@@ -348,6 +424,7 @@ async function getRiwayat(callback) {
         callback(null, result); //return data umkm
     } catch (error) {
         callback(error, null); // Kirim error jika terjadi masalah
+
     }
 }
 
@@ -369,8 +446,14 @@ module.exports = {
     addPembeli,
     updatePembeli,
     deletePembeli,
+    getKurir,
+    getKurirByID,
+    addKurir,
+    updateKurir,
+    deleteKurir
     getpesananmasuk,
     getStatusOverAll,
     getStatusBulan,
     getRiwayat,
+
 };

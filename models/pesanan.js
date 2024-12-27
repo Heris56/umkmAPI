@@ -4,7 +4,7 @@ const keranjang = require('./keranjang');
 
 const Pesanan = sequelize.define('Pesanan', {
     id_pesanan: {
-        field: 'id_pesanan',
+        field: 'id_pesanan', // Nama id di database
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
