@@ -1,33 +1,26 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
+const Pesanan = require('./pesanan');
 
-const Produk = sequelize.define('Produk', {
-    id: {
-        field: 'id_produk',
+const Riwayat = sequelize.define('Riwayat', {
+    id_riwayat: {
+        field: 'id_riwayat',
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    harga: {
-        type: DataTypes.FLOAT,
+    tanggal: {
+        type: DataTypes.DATE,
         allowNull: false
     },
-    stok: {
+    id_pesanan: {
         type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    berat: {
-        type: DataTypes.FLOAT,
         allowNull: false,
-    },
-    nama_barang: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    deskripsi_barang: {
-        type: DataTypes.TEXT,
-        allowNull: true
+        references: {
+            model: Pesanan,
+            key: 'id_pesanan'
+        }
     },
     id_umkm: {
         type: DataTypes.INTEGER,
@@ -39,8 +32,11 @@ const Produk = sequelize.define('Produk', {
     },
 
 }, {
-    tableName: 'Produk',
+    tableName: 'Riwayat',
     timestamps: false
 });
 
-module.exports = Produk;
+module.exports = Riwayat;
+
+Riwayat.belongsTo(Pesanan, { foreignKey: 'id_pesanan' });
+Pesanan.hasMany(Riwayat, { foreignKey: 'id_pesanan' });

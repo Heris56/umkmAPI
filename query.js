@@ -1,11 +1,14 @@
 const { default: Message } = require('tedious/lib/message');
 const connection = require('./db');
+const { where } = require('sequelize');
 const Barang = require('./models/barang');
 const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const MessageModel = require('./models/message');
 const Pembeli = require('./models/pembeli');
-const Pesanan = require('./models/pesanan')
+const Pesanan = require('./models/pesanan');
+const Riwayat = require('./models/riwayat');
+const Keranjang = require('./models/keranjang');
 
 async function getbarang(callback) {
     try {
@@ -315,6 +318,45 @@ async function getpesananmasuk(callback) {
     }
 }
 
+async function getriwayatpesanan(callback) {
+    try {
+        const query = `
+            SELECT
+            p.Nama_Barang AS nama_barang,
+            ps.total_belanja AS total_harga,
+            pb.alamat AS alamat_pembeli,
+            p.Deskripsi_Barang AS deskripsi_barang
+            FROM riwayat r
+            INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
+        `;
+
+        const riwayatData = await sequelize.query(query, {
+            type: QueryTypes.SELECT
+        });
+
+        return riwayatData;
+    } catch (error) {
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function addriwayat(data, callback) {
+    try {
+        if (!data.tanggal || !data.id_pesanan || !data.id_umkm) {
+            throw new Error('Incomplete data');
+        }
+
+        const result = await Riwayat.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 module.exports = {
     getbarang,
     addbarang,
@@ -334,5 +376,7 @@ module.exports = {
     addPembeli,
     updatePembeli,
     deletePembeli,
-    getpesananmasuk
+    getpesananmasuk,
+    getriwayatpesanan,
+    addriwayat,
 };
