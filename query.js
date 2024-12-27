@@ -345,6 +345,9 @@ async function deleteKurir(id, callback) {
         callback(null, { message: 'Kurir deleted successfully' });
     } catch (error) {
         callback(error, null);
+    }
+}
+
 async function getpesananmasuk(callback) {
     try {
         const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
@@ -450,7 +453,7 @@ module.exports = {
     getKurirByID,
     addKurir,
     updateKurir,
-    deleteKurir
+    deleteKurir,
     getpesananmasuk,
     getStatusOverAll,
     getStatusBulan,
