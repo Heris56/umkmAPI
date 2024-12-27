@@ -6,6 +6,7 @@ const UMKM = require('./models/umkm');
 const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
 const Kurir = require('./models/kurir');
+const Pesanan = require('./models/pesanan');
 
 
 async function getbarang(callback) {
@@ -268,6 +269,85 @@ async function deletePembeli(id, callback) {
     }
 }
 
+// Get all kurirs
+async function getKurir(callback) {
+    try {
+        const kurirs = await Kurir.findAll({
+            include: [
+                { model: UMKM, attributes: ['nama_umkm'] },
+                { model: Pesanan, attributes: ['kode_pesanan'] }
+            ]
+        });
+        callback(null, kurirs);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Get kurir by ID
+async function getKurirByID(id, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id, {
+            include: [
+                { model: UMKM, attributes: ['nama_umkm'] },
+                { model: Pesanan, attributes: ['kode_pesanan'] }
+            ]
+        });
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        callback(null, kurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Add a new kurir
+async function addKurir(data, callback) {
+    try {
+        const newKurir = await Kurir.create({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            id_pesanan: data.id_pesanan
+        });
+        callback(null, newKurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Update kurir by ID
+async function updateKurir(id, data, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id);
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        await kurir.update({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            id_pesanan: data.id_pesanan
+        });
+        callback(null, kurir);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Delete kurir by ID
+async function deleteKurir(id, callback) {
+    try {
+        const kurir = await Kurir.findByPk(id);
+        if (!kurir) {
+            return callback(new Error('Kurir not found'), null);
+        }
+        await kurir.destroy();
+        callback(null, { message: 'Kurir deleted successfully' });
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 module.exports = {
     getbarang,
     addbarang,
@@ -287,5 +367,10 @@ module.exports = {
     getPembeliByID,
     addPembeli,
     updatePembeli,
-    deletePembeli
+    deletePembeli,
+    getKurir,
+    getKurirByID,
+    addKurir,
+    updateKurir,
+    deleteKurir
 };

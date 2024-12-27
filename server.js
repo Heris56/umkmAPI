@@ -1,10 +1,12 @@
 // server.js
 const express = require('express');
 const dboperations = require('./query');
+const Kurir = require('./models/kurir');
+
 
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 
 app.use(express.json());
@@ -237,6 +239,92 @@ app.delete('/pembeli/:id', (req, res) => {
         }
         res.status(200).json(result);  // Send success message
     });
+});
+
+// Get all kurirs
+app.get('/kurir', async (req, res) => {
+    try {
+        const kurirs = await Kurir.findAll();
+        res.json(kurirs);
+    } catch (error) {
+        console.error('Error fetching kurirs:', error);
+        res.status(500).send('Error fetching kurirs');
+    }
+});
+
+// Get kurir by ID
+app.get('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        res.json(kurir);
+    } catch (error) {
+        console.error('Error fetching kurir by ID:', error);
+        res.status(500).send('Error fetching kurir by ID');
+    }
+});
+
+// Add a new kurir
+app.post('/kurir', async (req, res) => {
+    try {
+        const { nama_kurir, id_umkm, id_pesanan } = req.body;
+
+        const newKurir = await Kurir.create({
+            nama_kurir,
+            id_umkm,
+            id_pesanan
+        });
+
+        res.status(201).json(newKurir);
+    } catch (error) {
+        console.error('Error adding kurir:', error);
+        res.status(500).send('Error adding kurir');
+    }
+});
+
+// Update kurir by ID
+app.put('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { nama_kurir, id_umkm, id_pesanan } = req.body;
+
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        await kurir.update({ nama_kurir, id_umkm, id_pesanan });
+
+        res.json(kurir);
+    } catch (error) {
+        console.error('Error updating kurir:', error);
+        res.status(500).send('Error updating kurir');
+    }
+});
+
+// Delete kurir by ID
+app.delete('/kurir/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            return res.status(404).send('Kurir not found');
+        }
+
+        await kurir.destroy();
+
+        res.status(204).send(); // No Content
+    } catch (error) {
+        console.error('Error deleting kurir:', error);
+        res.status(500).send('Error deleting kurir');
+    }
 });
 
 

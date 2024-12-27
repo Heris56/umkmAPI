@@ -44,12 +44,12 @@ const Message = sequelize.define('Message', {
 });
 
 // Sender associations
-Message.belongsTo(UMKM, { foreignKey: 'sender_id', targetKey: 'id', as: 'sender_umkm' });
+Message.belongsTo(UMKM, { foreignKey: 'sender_id', targetKey: 'id_umkm', as: 'sender_umkm' });
 Message.belongsTo(Kurir, { foreignKey: 'sender_id', targetKey: 'id_kurir', as: 'sender_kurir' });
 Message.belongsTo(Pembeli, { foreignKey: 'sender_id', targetKey: 'id_pembeli', as: 'sender_pembeli' });
 
 // Receiver associations
-Message.belongsTo(UMKM, { foreignKey: 'receiver_id', targetKey: 'id', as: 'receiver_umkm' });
+Message.belongsTo(UMKM, { foreignKey: 'receiver_id', targetKey: 'id_umkm', as: 'receiver_umkm' });
 Message.belongsTo(Kurir, { foreignKey: 'receiver_id', targetKey: 'id_kurir', as: 'receiver_kurir' });
 Message.belongsTo(Pembeli, { foreignKey: 'receiver_id', targetKey: 'id_pembeli', as: 'receiver_pembeli' });
 
