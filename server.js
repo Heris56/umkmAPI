@@ -108,7 +108,7 @@ app.post('/umkm', (req, res) => {
     });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     const { LoginEmail, LoginPassword, RememberMe } = req.body;
 
     dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
