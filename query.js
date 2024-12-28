@@ -4,12 +4,14 @@ const Produk = require('./models/produk');
 const UMKM = require('./models/umkm');
 const Message = require('./models/message');
 const Pembeli = require('./models/pembeli');
-const Pesanan = require('./models/pesanan')
-const Kurir = require('./models/kurir');
+const Pesanan = require('./models/pesanan');
 const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
+const Kurir = require('./models/kurir');
+const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
-const QueryTypes = require('./db');
+
+
 
 async function getproduk(callback) {
     try {
@@ -398,10 +400,49 @@ async function getpesananmasuk(callback) {
     }
 }
 
-// Function to get daily stats by UMKM
-async function getDailyStatsByUMKM(umkmId, month, year) {
+async function getriwayatpesanan(callback) {
     try {
+
         const result = await sequelize.query(`
+            SELECT
+            p.Nama_Barang AS nama_barang,
+            ps.total_belanja AS total_harga,
+            pb.alamat AS alamat_pembeli,
+            p.Deskripsi_Barang AS deskripsi_barang
+            FROM riwayat r
+            INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
+        `, {
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function addriwayat(data, callback) {
+    try {
+        if (!data.tanggal || !data.id_pesanan || !data.id_umkm) {
+            throw new Error('Incomplete data');
+        }
+
+        const result = await Riwayat.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+async function getStatusBulan(umkmId, month, year) {
+    // Function to get daily stats by UMKM
+    async function getDailyStatsByUMKM(umkmId, month, year) {
+        try {
+            const result = await sequelize.query(`
             SELECT 
                 r.tanggal AS tanggal,
                 SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
@@ -421,17 +462,17 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             ORDER BY 
                 r.tanggal;
         `, {
-            replacements: { umkmId, month, year },
-            type: QueryTypes.SELECT
-        });
+                replacements: { umkmId, month, year },
+                type: QueryTypes.SELECT
+            });
 
-        return result; // Return the result instead of using a callback
-    } catch (error) {
-        console.error('Error fetching daily stats:', error);
-        throw new Error('Error fetching daily stats: ' + error.message);
+            return result; // Return the result instead of using a callback
+        } catch (error) {
+            console.error('Error fetching daily stats:', error);
+            throw new Error('Error fetching daily stats: ' + error.message);
+        }
     }
 }
-
 // Function to get monthly stats by UMKM
 async function getMonthlyStatsByUMKM(umkmId) {
     try {
@@ -465,7 +506,14 @@ async function getMonthlyStatsByUMKM(umkmId) {
     }
 }
 
-
+async function getRiwayat(callback) {
+    try {
+        const result = await Riwayat.findAll();
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
 async function getRiwayat() {
     try {
         return await Riwayat.findAll(); // Return data from the `riwayat` table
@@ -495,6 +543,9 @@ module.exports = {
     addPembeli,
     updatePembeli,
     deletePembeli,
+    getpesananmasuk,
+    getriwayatpesanan,
+    addriwayat,
     getKurir,
     getKurirByID,
     addKurir,

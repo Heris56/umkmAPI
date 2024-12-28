@@ -30,12 +30,33 @@ app.get('/pesananmasuk', (req, res) => {
     });
 });
 
+app.get('/getriwayatpesanan', (req, res) => {
+    dboperations.getriwayatpesanan((error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
 app.post('/barang', (req, res) => {
     const data = req.body;
     dboperations.addbarang(data, (error, result) => {
         if (error) {
             console.error('error insert barang:', error);
             return res.status(500).send('error nambah barang');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.post('/addriwayat', (req, res) => {
+    const data = req.body;
+    dboperations.addriwayat(data, (error, result) => {
+        if (error) {
+            console.error('error insert riwayat:', error);
+            return res.status(500).send('error nambah riwayat');
         }
         res.status(200).json(result);
     });

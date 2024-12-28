@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
-const keranjang = require('./keranjang');
+const Keranjang = require('./keranjang');
 
 const Pesanan = sequelize.define('Pesanan', {
     id_pesanan: {
@@ -21,7 +21,7 @@ const Pesanan = sequelize.define('Pesanan', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: keranjang,
+            model: Keranjang,
             key: 'id_keranjang'
         }
     },
@@ -32,3 +32,6 @@ const Pesanan = sequelize.define('Pesanan', {
 });
 
 module.exports = Pesanan;
+
+Pesanan.belongsTo(Keranjang, { foreignKey: 'id_keranjang' });
+Keranjang.hasOne(Pesanan, { foreignKey: 'id_keranjang' });

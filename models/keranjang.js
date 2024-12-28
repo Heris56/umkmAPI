@@ -36,8 +36,13 @@ const Keranjang = sequelize.define('Keranjang', {
         }
     },
 }, {
-    tableName: 'keranjang',
+    tableName: 'Keranjang',
     timestamps: false
 });
 
 module.exports = Keranjang;
+
+Keranjang.belongsTo(Produk, { foreignKey: 'id_produk' });
+Keranjang.belongsTo(Pembeli, { foreignKey: 'id_pembeli' });
+Produk.hasMany(Keranjang, { foreignKey: 'id_produk' });
+Pembeli.hasMany(Keranjang, { foreignKey: 'id_pembeli' });
