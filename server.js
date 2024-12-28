@@ -150,6 +150,7 @@ app.put('/updateproduk/:id', (req, res) => {
     });
 });
 
+
 app.get('/produkbytipe/tipe', async (req, res) => {
     // Extract 'tipe_barang' from query parameters
     const { tipe_barang } = req.query;
