@@ -20,8 +20,38 @@ app.get('/barang', (req, res) => {
     });
 });
 
-app.get('/pesananmasuk', (req, res) => {
+app.get('/getpesananmasuk', (req, res) => {
     dboperations.getpesananmasuk((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditerima', (req, res) => {
+    dboperations.getpesananditerima((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditolak', (req, res) => {
+    dboperations.getpesananditolak((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananselesai', (req, res) => {
+    dboperations.getpesananselesai((error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -57,6 +87,17 @@ app.post('/addriwayat', (req, res) => {
         if (error) {
             console.error('error insert riwayat:', error);
             return res.status(500).send('error nambah riwayat');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.post('/addpesanan', (req, res) => {
+    const data = req.body;
+    dboperations.addpesanan(data, (error, result) => {
+        if (error) {
+            console.error('error insert pesanan:', error);
+            return res.status(500).send('error nambah pesanan');
         }
         res.status(200).json(result);
     });

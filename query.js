@@ -393,18 +393,46 @@ async function deleteKurir(id, callback) {
 }
 async function getpesananmasuk(callback) {
     try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } }); // Ambil semua data dari tabel `barangs`
-        callback(null, result); // Kembalikan data
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } });
+        callback(null, result);
     } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
+        callback(error, null);
+    }
+}
+
+async function getpesananditerima(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Diterima' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getpesananditolak(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Ditolak' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+
+async function getpesananselesai(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Selesai' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
     }
 }
 
 async function getriwayatpesanan(callback) {
     try {
-
         const result = await sequelize.query(`
             SELECT
+			tanggal as Tanggal_Pesanan,
             p.Nama_Barang AS nama_barang,
             ps.total_belanja AS total_harga,
             pb.alamat AS alamat_pembeli,
@@ -423,6 +451,18 @@ async function getriwayatpesanan(callback) {
         callback(error, null);
         console.error('Error executing raw query:', error);
         throw new Error('Query execution failed');
+    }
+}
+
+async function addpesanan(data, callback) {
+    try {
+        if (!data.status_pesanan || !data.total_belanja || !data.id_keranjang) {
+            throw new Error('Incomplete data');
+        }
+        const result = await Pesanan.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
     }
 }
 
@@ -552,4 +592,8 @@ module.exports = {
     getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
     getRiwayat,
+    addpesanan,
+    getpesananditerima,
+    getpesananditolak,
+    getpesananselesai
 };
