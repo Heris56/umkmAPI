@@ -356,12 +356,13 @@ async function getpesananmasuk(callback) {
     }
 }
 
-async function getStatusBulan(umkmId, month, year) {
+// Function to get daily stats by UMKM
+async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
             SELECT 
                 r.tanggal AS tanggal,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales, -- Cast to INT
+                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
                 COUNT(DISTINCT p.id_pesanan) AS total_orders
             FROM 
                 pesanan p
@@ -385,11 +386,12 @@ async function getStatusBulan(umkmId, month, year) {
         return result; // Return the result instead of using a callback
     } catch (error) {
         console.error('Error fetching daily stats:', error);
-        throw error; // Throw the error to be handled in the calling function
+        throw new Error('Error fetching daily stats: ' + error.message);
     }
 }
 
-async function getStatusOverAll(umkmId) {
+// Function to get monthly stats by UMKM
+async function getMonthlyStatsByUMKM(umkmId) {
     try {
         const result = await sequelize.query(`
             SELECT 
@@ -411,22 +413,22 @@ async function getStatusOverAll(umkmId) {
         `, {
             replacements: { umkmId },
             type: QueryTypes.SELECT
+
         });
 
         return result; // Return the result instead of using a callback
     } catch (error) {
         console.error('Error fetching monthly stats:', error);
-        throw error; // Throw the error to be handled in the calling function
+        throw new Error('Error fetching monthly stats: ' + error.message);
     }
 }
 
-async function getRiwayat(callback) {
-    try {
-        const result = await Riwayat.findAll(); // ambil data tari tabel umkm
-        callback(null, result); //return data umkm
-    } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
 
+async function getRiwayat() {
+    try {
+        return await Riwayat.findAll(); // Return data from the `riwayat` table
+    } catch (error) {
+        throw new Error('Error fetching riwayat: ' + error.message);
     }
 }
 
@@ -454,7 +456,7 @@ module.exports = {
     updateKurir,
     deleteKurir,
     getpesananmasuk,
-    getStatusOverAll,
-    getStatusBulan,
+    getDailyStatsByUMKM,
+    getMonthlyStatsByUMKM,
     getRiwayat,
 };

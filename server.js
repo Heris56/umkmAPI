@@ -3,13 +3,8 @@ const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 
-
-
 const app = express();
 const port = process.env.PORT || 80;
-
-
-app.use(express.json());
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -321,40 +316,37 @@ app.delete('/kurir/:id', async (req, res) => {
         res.status(500).send('Error deleting kurir');
     }
 });
-// API route for daily stats
-app.get('/daily-stats/:umkmId', async (req, res) => {
-    const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
-    try {
-        const dailyStats = await dboperations.getStatusBulan(umkmId, month, year);
-        res.json(dailyStats);
-    } catch (error) {
-        console.error('Error fetching daily stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
 
-// API route for monthly stats
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     try {
-        const monthlyStats = await dboperations.getStatusOverAll(umkmId);
-        res.json(monthlyStats);
+        const stats = await dboperations.getMonthlyStatsByUMKM(umkmId);
+        res.json(stats);
     } catch (error) {
-        console.error('Error fetching monthly stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: error.message });
     }
 });
 
+app.get('/daily-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
 
-app.get('/riwayat', (req, res) => {
-    dboperations.getRiwayat((error, result) => {
-        if (error) {
-            console.error('error get semua riwayat:', error);
-            return res.status(500).send('error fetch user UMKM (test purposes)');
-        }
-        res.json(result);
-    });
+    try {
+        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year); // Use the imported function
+        res.json(dailyStats);
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/riwayat', async (req, res) => {
+    try {
+        const riwayat = await dboperations.getRiwayat();
+        res.json(riwayat);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 
