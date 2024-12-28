@@ -39,23 +39,27 @@ async function getprodukbyID(id, callback) {
     }
 }
 
-async function updateProduk(id, callback) {
+async function updateProduk(id, data, callback) {
     try {
         if (!id) {
-            throw new error('id tidak boleh kosong');
+            throw new Error('id tidak boleh kosong');
         }
 
         const produk = await Produk.findByPk(id);
 
         if (!produk) {
-            throw new error('produk tidak ditemukan');
+            throw new Error('produk tidak ditemukan');
         }
 
+        const updatedProduk = await produk.update(data);
 
+        callback(null, updatedProduk);
     } catch (error) {
         callback(error, null);
     }
 }
+
+
 
 async function deleteproduk(id, callback) {
     try {
@@ -79,7 +83,9 @@ async function deleteproduk(id, callback) {
 async function addproduk(data, callback) {
     try {
         console.log(data);
-
+        if (!data.harga || !data.stok || !data.berat || !data.nama_barang || !data.id_umkm || !data.image_url || !data.tipe_barang) {
+            throw new Error('Data tidak lengkap');
+        }
 
         const result = await Produk.create(data);
         callback(null, result);
@@ -574,6 +580,7 @@ module.exports = {
     getproduk,
     getprodukbyID,
     addproduk,
+    updateProduk,
     deleteproduk,
     getkeranjangbyID,
     getallKeranjang,

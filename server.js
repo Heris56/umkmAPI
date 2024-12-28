@@ -129,7 +129,6 @@ app.get('/produk', (req, res) => {
 
 app.post('/produk', (req, res) => {
     const data = req.body;
-    console.log('Request body:', req.body);
     dboperations.addproduk(data, (error, result) => {
         if (error) {
             console.error('error insert produk:', error);
@@ -139,9 +138,24 @@ app.post('/produk', (req, res) => {
     });
 });
 
-app.get('/produk/tipe', async (req, res) => {
+app.put('/updateproduk/:id', (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updateProduk(id, data, (error, result) => {
+        if (error) {
+            console.error('error update produk:', error);
+            return res.status(500).send('gagal meng-update produk');
+        }
+        res.status(200).json(result);
+    });
+});
+
+
+app.get('/produkbytipe/tipe', async (req, res) => {
     // Extract 'tipe_barang' from query parameters
     const { tipe_barang } = req.query;
+
+    console.log('tipe_barang:', tipe_barang);
 
     // Validate that tipe_barang is provided
     if (!tipe_barang) {
