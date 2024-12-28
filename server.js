@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT || 80;
 
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -336,40 +336,34 @@ app.delete('/kurir/:id', async (req, res) => {
         res.status(500).send('Error deleting kurir');
     }
 });
-// API route for daily stats
-app.get('/daily-stats/:umkmId', async (req, res) => {
-    const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
-    try {
-        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year);
-        res.json(dailyStats);
-    } catch (error) {
-        console.error('Error fetching daily stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
 
-// API route for monthly stats
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     try {
-        const monthlyStats = await dboperations.getMonthlyStatsByUMKM(umkmId);
-        res.json(monthlyStats);
+        const stats = await dboperations.getMonthlyStatsByUMKM(umkmId);
+        res.json(stats);
     } catch (error) {
-        console.error('Error fetching monthly stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: error.message });
     }
 });
 
+app.get('/daily-stats/:umkmId/:month/:year', async (req, res) => {
+    const { umkmId, month, year } = req.params;
+    try {
+        const stats = await dboperations.getDailyStatsByUMKM(umkmId, month, year);
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.get('/riwayat', async (req, res) => {
-    dboperations.getRiwayat((error, result) => {
-        if (error) {
-            console.error('error get semua riwayat:', error);
-            return res.status(500).send('error fetch user UMKM (test purposes)');
-        }
-        res.json(result);
-    });
+    try {
+        const riwayat = await dboperations.getRiwayat();
+        res.json(riwayat);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 
