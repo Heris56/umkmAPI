@@ -73,6 +73,27 @@ app.post('/produk', (req, res) => {
     });
 });
 
+app.get('/keranjang', (req, res) => {
+    dboperations.getallKeranjang((error, result) => {
+        if (error) {
+            return res.status(500).send('error memasukan ke keranjang');
+        }
+        res.json(result).status(200);
+        console.log('berhasil mendapatkan semua keranjang');
+    });
+});
+
+app.get('/keranjang/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getkeranjangbyID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.json(result).status(200);
+        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
+    });
+});
+
 app.delete('/produk/:id', (req, res) => {
     const id = req.params.id;
 
@@ -110,24 +131,9 @@ app.post('/login', (req, res) => {
 
     dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
         if (error) {
-            return res.status(401).send(error.message); // Unauthorized
+            return res.status(401).send(error.message);
         }
-
-        if (RememberMe) {
-            // cookies kalo RememberMe 
-            res.cookie('LoginEmail', LoginEmail, { maxAge: 3600000 }); // 1 hour
-            res.cookie('LoginPassword', LoginPassword, { maxAge: 3600000 }); // 1 hour
-        } else {
-            // hapus cookies kalo tidak RememberMe
-            res.clearCookie('LoginEmail');
-            res.clearCookie('LoginPassword');
-        }
-
-        // simpan user ke session
-        // const users = await User.findAll();
-        // req.session.users = users;
-
-        res.redirect('/MainPage');
+        res.status(200).json(result);
     });
 });
 
