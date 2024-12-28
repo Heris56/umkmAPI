@@ -2,8 +2,12 @@
 const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
+const bodyParser = require('body-parser');
+
 
 const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
 
 app.get('/', (req, res) => {

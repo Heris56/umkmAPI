@@ -78,9 +78,8 @@ async function deleteproduk(id, callback) {
 
 async function addproduk(data, callback) {
     try {
-        if (!data.harga || !data.stok || !data.berat || !data.nama_barang || !data.id_umkm) {
-            throw new Error('Data tidak lengkap');
-        }
+        console.log(data);
+
 
         const result = await Produk.create(data);
         callback(null, result);
