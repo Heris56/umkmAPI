@@ -492,6 +492,7 @@ async function addriwayat(data, callback) {
         callback(error, null);
     }
 }
+
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
