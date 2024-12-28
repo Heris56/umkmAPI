@@ -2,14 +2,9 @@
 const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
-const cors = require('cors');
-
 
 const app = express();
 const port = process.env.PORT || 80;
-
-app.use(cors());
-app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -347,13 +342,16 @@ app.get('/monthly-stats/:umkmId', async (req, res) => {
     }
 });
 
-app.get('/daily-stats/:umkmId/:month/:year', async (req, res) => {
-    const { umkmId, month, year } = req.params;
+app.get('/daily-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
+
     try {
-        const stats = await dboperations.getDailyStatsByUMKM(umkmId, month, year);
-        res.json(stats);
+        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year); // Use the imported function
+        res.json(dailyStats);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching daily stats:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
