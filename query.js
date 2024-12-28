@@ -404,6 +404,84 @@ async function deleteKurir(id, callback) {
         callback(error, null);
     }
 }
+
+
+
+async function getDailyStatsByUMKM(umkmId, month, year) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+                r.tanggal AS tanggal,
+                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
+                COUNT(DISTINCT p.id_pesanan) AS total_orders
+            FROM 
+                pesanan p
+            JOIN 
+                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
+            JOIN 
+                riwayat r ON p.id_pesanan = r.id_pesanan
+            WHERE 
+                pm.id_umkm = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY 
+                r.tanggal
+            ORDER BY 
+                r.tanggal;
+        `, {
+            replacements: { umkmId, month, year },
+            type: QueryTypes.SELECT
+        });
+
+        return result; // Return the result instead of using a callback
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        throw new Error('Error fetching daily stats: ' + error.message);
+    }
+}
+// Function to get monthly stats by UMKM
+async function getMonthlyStatsByUMKM(umkmId) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+                MONTH(r.tanggal) AS month,
+                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
+                COUNT(DISTINCT p.id_pesanan) AS total_orders
+            FROM 
+                pesanan p
+            JOIN 
+                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
+            JOIN 
+                riwayat r ON p.id_pesanan = r.id_pesanan
+            WHERE 
+                pm.id_umkm = :umkmId
+            GROUP BY 
+                MONTH(r.tanggal)
+            ORDER BY 
+                month;
+        `, {
+            replacements: { umkmId },
+            type: QueryTypes.SELECT
+
+        });
+
+        return result; // Return the result instead of using a callback
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        throw new Error('Error fetching monthly stats: ' + error.message);
+    }
+}
+
+async function getRiwayat(callback) {
+    try {
+        const result = await Riwayat.findAll();
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Query Dapa
 async function getpesananmasuk(callback) {
     try {
         const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } });
@@ -489,87 +567,6 @@ async function addriwayat(data, callback) {
         callback(null, result);
     } catch (error) {
         callback(error, null);
-    }
-}
-
-async function getDailyStatsByUMKM(umkmId, month, year) {
-    try {
-        const result = await sequelize.query(`
-            SELECT 
-                r.tanggal AS tanggal,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-                AND MONTH(r.tanggal) = :month
-                AND YEAR(r.tanggal) = :year
-            GROUP BY 
-                r.tanggal
-            ORDER BY 
-                r.tanggal;
-        `, {
-            replacements: { umkmId, month, year },
-            type: QueryTypes.SELECT
-        });
-
-        return result; // Return the result instead of using a callback
-    } catch (error) {
-        console.error('Error fetching daily stats:', error);
-        throw new Error('Error fetching daily stats: ' + error.message);
-    }
-}
-// Function to get monthly stats by UMKM
-async function getMonthlyStatsByUMKM(umkmId) {
-    try {
-        const result = await sequelize.query(`
-            SELECT 
-                MONTH(r.tanggal) AS month,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-            GROUP BY 
-                MONTH(r.tanggal)
-            ORDER BY 
-                month;
-        `, {
-            replacements: { umkmId },
-            type: QueryTypes.SELECT
-
-        });
-
-        return result; // Return the result instead of using a callback
-    } catch (error) {
-        console.error('Error fetching monthly stats:', error);
-        throw new Error('Error fetching monthly stats: ' + error.message);
-    }
-}
-
-async function getRiwayat(callback) {
-    try {
-        const result = await Riwayat.findAll();
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
-async function getRiwayat() {
-    try {
-        return await Riwayat.findAll(); // Return data from the `riwayat` table
-    } catch (error) {
-        throw new Error('Error fetching riwayat: ' + error.message);
     }
 }
 
