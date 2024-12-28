@@ -3,13 +3,8 @@ const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 
-
-
 const app = express();
 const port = process.env.PORT || 80;
-
-
-app.use(express.json());
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -99,6 +94,27 @@ app.post('/produk', (req, res) => {
     });
 });
 
+app.get('/keranjang', (req, res) => {
+    dboperations.getallKeranjang((error, result) => {
+        if (error) {
+            return res.status(500).send('error memasukan ke keranjang');
+        }
+        res.json(result).status(200);
+        console.log('berhasil mendapatkan semua keranjang');
+    });
+});
+
+app.get('/keranjang/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getkeranjangbyID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.json(result).status(200);
+        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
+    });
+});
+
 app.delete('/produk/:id', (req, res) => {
     const id = req.params.id;
 
@@ -136,24 +152,9 @@ app.post('/login', (req, res) => {
 
     dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
         if (error) {
-            return res.status(401).send(error.message); // Unauthorized
+            return res.status(401).send(error.message);
         }
-
-        if (RememberMe) {
-            // cookies kalo RememberMe 
-            res.cookie('LoginEmail', LoginEmail, { maxAge: 3600000 }); // 1 hour
-            res.cookie('LoginPassword', LoginPassword, { maxAge: 3600000 }); // 1 hour
-        } else {
-            // hapus cookies kalo tidak RememberMe
-            res.clearCookie('LoginEmail');
-            res.clearCookie('LoginPassword');
-        }
-
-        // simpan user ke session
-        // const users = await User.findAll();
-        // req.session.users = users;
-
-        res.redirect('/MainPage');
+        res.status(200).json(result);
     });
 });
 
@@ -357,40 +358,37 @@ app.delete('/kurir/:id', async (req, res) => {
         res.status(500).send('Error deleting kurir');
     }
 });
-// API route for daily stats
-app.get('/daily-stats/:umkmId', async (req, res) => {
-    const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
-    try {
-        const dailyStats = await dboperations.getStatusBulan(umkmId, month, year);
-        res.json(dailyStats);
-    } catch (error) {
-        console.error('Error fetching daily stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
 
-// API route for monthly stats
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     try {
-        const monthlyStats = await dboperations.getStatusOverAll(umkmId);
-        res.json(monthlyStats);
+        const stats = await dboperations.getMonthlyStatsByUMKM(umkmId);
+        res.json(stats);
     } catch (error) {
-        console.error('Error fetching monthly stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: error.message });
     }
 });
 
+app.get('/daily-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
 
-app.get('/riwayat', (req, res) => {
-    dboperations.getRiwayat((error, result) => {
-        if (error) {
-            console.error('error get semua riwayat:', error);
-            return res.status(500).send('error fetch user UMKM (test purposes)');
-        }
-        res.json(result);
-    });
+    try {
+        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year); // Use the imported function
+        res.json(dailyStats);
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/riwayat', async (req, res) => {
+    try {
+        const riwayat = await dboperations.getRiwayat();
+        res.json(riwayat);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 
