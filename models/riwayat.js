@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../db'); // assuming you already have a sequelize instance in db.js
 const umkm = require('./umkm');
+const pesanan = require('./pesanan');
 
 const Riwayat = sequelize.define('Riwayat', {
     id_riwayat: {
@@ -17,7 +18,7 @@ const Riwayat = sequelize.define('Riwayat', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-            model: 'pesanan', // The name of the related model (should match the actual table name)
+            model: pesanan, // The name of the related model (should match the actual table name)
             key: 'id_pesanan'
         }
     },
@@ -25,7 +26,7 @@ const Riwayat = sequelize.define('Riwayat', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-            model: 'umkm', // The name of the related model (should match the actual table name)
+            model: umkm, // The name of the related model (should match the actual table name)
             key: 'id_umkm'
         }
     }
