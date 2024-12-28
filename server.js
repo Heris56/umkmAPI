@@ -129,11 +129,22 @@ app.get('/produk', (req, res) => {
 
 app.post('/produk', (req, res) => {
     const data = req.body;
-    console.log('Request body:', req.body);
     dboperations.addproduk(data, (error, result) => {
         if (error) {
             console.error('error insert produk:', error);
             return res.status(500).send('error nambah produk');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put('/updateproduk/:id', (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updateProduk(id, data, (error, result) => {
+        if (error) {
+            console.error('error update produk:', error);
+            return res.status(500).send('gagal meng-update produk');
         }
         res.status(200).json(result);
     });
