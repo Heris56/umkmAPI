@@ -8,8 +8,8 @@ const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
 const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
-const { where } = require('sequelize');
-
+const sequelize = require('./db');
+const { QueryTypes } = require('sequelize');
 
 async function getproduk(callback) {
     try {
