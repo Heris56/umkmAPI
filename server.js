@@ -2,6 +2,7 @@
 const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
+const { getStatusOverAll, getStatusBulan } = require('../query');
 
 
 
@@ -341,7 +342,7 @@ app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     const { month, year } = req.query; // Get month and year from query parameters
     try {
-        const dailyStats = await dboperations.getStatusBulan(umkmId, month, year);
+        const dailyStats = await getStatusBulan(umkmId, month, year);
         res.json(dailyStats);
     } catch (error) {
         console.error('Error fetching daily stats:', error);
@@ -353,7 +354,7 @@ app.get('/daily-stats/:umkmId', async (req, res) => {
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     try {
-        const monthlyStats = await dboperations.getStatusOverAll(umkmId);
+        const monthlyStats = await getStatusOverAll(umkmId);
         res.json(monthlyStats);
     } catch (error) {
         console.error('Error fetching monthly stats:', error);
