@@ -150,9 +150,11 @@ app.put('/updateproduk/:id', (req, res) => {
     });
 });
 
-app.get('/produk/tipe', async (req, res) => {
+app.get('/produkbytipe/tipe', async (req, res) => {
     // Extract 'tipe_barang' from query parameters
     const { tipe_barang } = req.query;
+
+    console.log('tipe_barang:', tipe_barang);
 
     // Validate that tipe_barang is provided
     if (!tipe_barang) {
