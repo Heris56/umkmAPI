@@ -14,7 +14,7 @@ const Pesanan = sequelize.define('Pesanan', {
         allowNull: false
     },
     total_belanja: {
-        type: DataTypes.STRING,
+        type: DataTypes.FLOAT,
         allowNull: false
     },
     id_keranjang: {

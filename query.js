@@ -533,7 +533,8 @@ async function getriwayatpesanan(callback) {
             p.Nama_Barang AS nama_barang,
             ps.total_belanja AS total_harga,
             pb.alamat AS alamat_pembeli,
-            p.Deskripsi_Barang AS deskripsi_barang
+            p.Deskripsi_Barang AS deskripsi_barang,
+            k.kuantitas as kuantitas_barang
             FROM riwayat r
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
@@ -553,10 +554,10 @@ async function getriwayatpesanan(callback) {
 
 async function addpesanan(data, callback) {
     try {
-        if (!data.status_pesanan || !data.total_belanja || !data.id_keranjang) {
+        if (!data.total_belanja || !data.id_keranjang) {
             throw new Error('Incomplete data');
         }
-        const result = await Pesanan.create(data);
+        const result = await Pesanan.create({ status_pesanan: "Pesanan Masuk", total_belanja: data.total_belanja, id_keranjang: data.id_keranjang });
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -575,6 +576,89 @@ async function addriwayat(data, callback) {
         callback(error, null);
     }
 }
+
+async function updatestatuspesananmasuk(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Masuk' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuspesananditerima(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Diterima' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+
+
+async function updatestatuspesananditolak(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Ditolak' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuspesananselesai(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Selesai' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+// End Query Dapa
 
 module.exports = {
     getproduk,
@@ -614,5 +698,9 @@ module.exports = {
     addpesanan,
     getpesananditerima,
     getpesananditolak,
-    getpesananselesai
+    getpesananselesai,
+    updatestatuspesananditerima,
+    updatestatuspesananditolak,
+    updatestatuspesananselesai,
+    updatestatuspesananmasuk,
 };
