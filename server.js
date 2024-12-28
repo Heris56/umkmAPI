@@ -362,7 +362,7 @@ app.get('/monthly-stats/:umkmId', async (req, res) => {
 });
 
 
-app.get('/riwayat', (req, res) => {
+app.get('/riwayat', async (req, res) => {
     dboperations.getRiwayat((error, result) => {
         if (error) {
             console.error('error get semua riwayat:', error);
