@@ -29,6 +29,14 @@ const Produk = sequelize.define('Produk', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    image_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    tipe_barang: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     id_umkm: {
         type: DataTypes.INTEGER,
         allowNull: false,
