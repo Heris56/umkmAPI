@@ -9,7 +9,7 @@ const Kurir = require('./models/kurir');
 const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
 const sequelize = require('./db');
-const { QueryTypes } = require('sequelize');
+const QueryTypes = require('./db');
 
 async function getproduk(callback) {
     try {
