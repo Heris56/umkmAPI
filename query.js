@@ -7,6 +7,7 @@ const Pembeli = require('./models/pembeli');
 const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
 const Riwayat = require('./models/riwayat');
+const { QueryTypes } = require('sequelize');
 
 
 async function getproduk(callback) {
