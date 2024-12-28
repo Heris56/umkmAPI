@@ -135,6 +135,25 @@ app.post('/produk', (req, res) => {
     });
 });
 
+app.get('/produk/tipe', async (req, res) => {
+    // Extract 'tipe_barang' from query parameters
+    const { tipe_barang } = req.query;
+
+    // Validate that tipe_barang is provided
+    if (!tipe_barang) {
+        return res.status(400).send('Parameter "tipe_barang" is required.');
+    }
+
+    // Call the updated function with the parameter
+    dboperations.getProdukByType(tipe_barang, (error, result) => {
+        if (error) {
+            console.error('Error getting produk:', error);
+            return res.status(500).send('Error fetching produk');
+        }
+        res.json(result);
+    });
+});
+
 app.get('/keranjang', (req, res) => {
     dboperations.getallKeranjang((error, result) => {
         if (error) {

@@ -89,6 +89,20 @@ async function addproduk(data, callback) {
     }
 }
 
+async function getProdukByType(tipe_barang, callback) {
+    try {
+        // Fetch all products where tipe_barang matches the provided value
+        const result = await Produk.findAll({
+            where: { tipe_barang }
+        });
+        // Return the results through the callback
+        callback(null, result);
+    } catch (error) {
+        // Send error if something goes wrong
+        callback(error, null);
+    }
+}
+
 async function getallKeranjang(callback) {
     try {
         const result = await Keranjang.findAll();
@@ -592,6 +606,7 @@ module.exports = {
     getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
     getRiwayat,
+    getProdukByType,
     addpesanan,
     getpesananditerima,
     getpesananditolak,
