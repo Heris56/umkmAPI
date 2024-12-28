@@ -410,93 +410,9 @@ async function deleteKurir(id, callback) {
         callback(error, null);
     }
 }
-async function getpesananmasuk(callback) {
-    try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
-
-async function getpesananditerima(callback) {
-    try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Diterima' } });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
-
-async function getpesananditolak(callback) {
-    try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Ditolak' } });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
 
 
-async function getpesananselesai(callback) {
-    try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Selesai' } });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
 
-async function getriwayatpesanan(callback) {
-    try {
-        const result = await sequelize.query(`
-            SELECT
-			tanggal as Tanggal_Pesanan,
-            p.Nama_Barang AS nama_barang,
-            ps.total_belanja AS total_harga,
-            pb.alamat AS alamat_pembeli,
-            p.Deskripsi_Barang AS deskripsi_barang
-            FROM riwayat r
-            INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
-        `, {
-            type: QueryTypes.SELECT
-        });
-
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-        console.error('Error executing raw query:', error);
-        throw new Error('Query execution failed');
-    }
-}
-
-async function addpesanan(data, callback) {
-    try {
-        if (!data.status_pesanan || !data.total_belanja || !data.id_keranjang) {
-            throw new Error('Incomplete data');
-        }
-        const result = await Pesanan.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
-
-async function addriwayat(data, callback) {
-    try {
-        if (!data.tanggal || !data.id_pesanan || !data.id_umkm) {
-            throw new Error('Incomplete data');
-        }
-
-        const result = await Riwayat.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
-}
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
@@ -570,13 +486,179 @@ async function getRiwayat(callback) {
         callback(error, null);
     }
 }
-async function getRiwayat() {
+
+// Query Dapa
+async function getpesananmasuk(callback) {
     try {
-        return await Riwayat.findAll(); // Return data from the `riwayat` table
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } });
+        callback(null, result);
     } catch (error) {
-        throw new Error('Error fetching riwayat: ' + error.message);
+        callback(error, null);
     }
 }
+
+async function getpesananditerima(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Diterima' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getpesananditolak(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Ditolak' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+
+async function getpesananselesai(callback) {
+    try {
+        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Selesai' } });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getriwayatpesanan(callback) {
+    try {
+        const result = await sequelize.query(`
+            SELECT
+			tanggal as Tanggal_Pesanan,
+            p.Nama_Barang AS nama_barang,
+            ps.total_belanja AS total_harga,
+            pb.alamat AS alamat_pembeli,
+            p.Deskripsi_Barang AS deskripsi_barang,
+            k.kuantitas as kuantitas_barang
+            FROM riwayat r
+            INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
+        `, {
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function addpesanan(data, callback) {
+    try {
+        if (!data.total_belanja || !data.id_keranjang) {
+            throw new Error('Incomplete data');
+        }
+        const result = await Pesanan.create({ status_pesanan: "Pesanan Masuk", total_belanja: data.total_belanja, id_keranjang: data.id_keranjang });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function addriwayat(data, callback) {
+    try {
+        if (!data.tanggal || !data.id_pesanan || !data.id_umkm) {
+            throw new Error('Incomplete data');
+        }
+
+        const result = await Riwayat.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuspesananmasuk(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Masuk' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuspesananditerima(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Diterima' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+
+
+async function updatestatuspesananditolak(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Ditolak' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuspesananselesai(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const pesanan = await Pesanan.findByPk(id);
+
+        if (!pesanan) {
+            throw new Error('produk tidak ditemukan');
+        }
+
+        const updatestatus = await pesanan.update({ status_pesanan: 'Pesanan Selesai' });
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+// End Query Dapa
 
 module.exports = {
     getproduk,
@@ -616,5 +698,9 @@ module.exports = {
     addpesanan,
     getpesananditerima,
     getpesananditolak,
-    getpesananselesai
+    getpesananselesai,
+    updatestatuspesananditerima,
+    updatestatuspesananditolak,
+    updatestatuspesananselesai,
+    updatestatuspesananmasuk,
 };

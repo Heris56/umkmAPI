@@ -24,55 +24,7 @@ app.get('/barang', (req, res) => {
     });
 });
 
-app.get('/getpesananmasuk', (req, res) => {
-    dboperations.getpesananmasuk((error, result) => {
-        if (error) {
-            console.error('error get pesanan:', error);
-            return res.status(500).send('error fetch pesanan');
-        }
-        res.json(result);
-    });
-});
 
-app.get('/getpesananditerima', (req, res) => {
-    dboperations.getpesananditerima((error, result) => {
-        if (error) {
-            console.error('error get pesanan:', error);
-            return res.status(500).send('error fetch pesanan');
-        }
-        res.json(result);
-    });
-});
-
-app.get('/getpesananditolak', (req, res) => {
-    dboperations.getpesananditolak((error, result) => {
-        if (error) {
-            console.error('error get pesanan:', error);
-            return res.status(500).send('error fetch pesanan');
-        }
-        res.json(result);
-    });
-});
-
-app.get('/getpesananselesai', (req, res) => {
-    dboperations.getpesananselesai((error, result) => {
-        if (error) {
-            console.error('error get pesanan:', error);
-            return res.status(500).send('error fetch pesanan');
-        }
-        res.json(result);
-    });
-});
-
-app.get('/getriwayatpesanan', (req, res) => {
-    dboperations.getriwayatpesanan((error, result) => {
-        if (error) {
-            console.error('error get riwayat:', error);
-            return res.status(500).send('error fetch riwayat');
-        }
-        res.json(result);
-    });
-});
 
 app.post('/barang', (req, res) => {
     const data = req.body;
@@ -85,27 +37,9 @@ app.post('/barang', (req, res) => {
     });
 });
 
-app.post('/addriwayat', (req, res) => {
-    const data = req.body;
-    dboperations.addriwayat(data, (error, result) => {
-        if (error) {
-            console.error('error insert riwayat:', error);
-            return res.status(500).send('error nambah riwayat');
-        }
-        res.status(200).json(result);
-    });
-});
 
-app.post('/addpesanan', (req, res) => {
-    const data = req.body;
-    dboperations.addpesanan(data, (error, result) => {
-        if (error) {
-            console.error('error insert pesanan:', error);
-            return res.status(500).send('error nambah pesanan');
-        }
-        res.status(200).json(result);
-    });
-});
+
+
 
 app.get('/produk/:id', (req, res) => {
     const id = req.params.id;
@@ -469,6 +403,124 @@ app.get('/riwayat', async (req, res) => {
     }
 });
 
+//Server Dapa
+app.get('/getpesananmasuk', (req, res) => {
+    dboperations.getpesananmasuk((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditerima', (req, res) => {
+    dboperations.getpesananditerima((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditolak', (req, res) => {
+    dboperations.getpesananditolak((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananselesai', (req, res) => {
+    dboperations.getpesananselesai((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getriwayatpesanan', (req, res) => {
+    dboperations.getriwayatpesanan((error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
+app.post('/addriwayat', (req, res) => {
+    const data = req.body;
+    dboperations.addriwayat(data, (error, result) => {
+        if (error) {
+            console.error('error insert riwayat:', error);
+            return res.status(500).send('error nambah riwayat');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.post('/addpesanan', (req, res) => {
+    const data = req.body;
+    dboperations.addpesanan(data, (error, result) => {
+        if (error) {
+            console.error('error insert pesanan:', error);
+            return res.status(500).send('error nambah pesanan');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put('/updatestatuspesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananmasuk(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananditerima/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananditerima(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananditolak/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananditolak(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananselesai/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananselesai(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+// End Server Dapa
 
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
