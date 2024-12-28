@@ -7,8 +7,9 @@ const Pembeli = require('./models/pembeli');
 const Pesanan = require('./models/pesanan');
 const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
-const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
+const { QueryTypes } = require('sequelize');
+const sequelize = require('./db');
 
 
 
@@ -361,7 +362,8 @@ async function getpesananmasuk(callback) {
 
 async function getriwayatpesanan(callback) {
     try {
-        const query = `
+
+        const result = await sequelize.query(`
             SELECT
             p.Nama_Barang AS nama_barang,
             ps.total_belanja AS total_harga,
@@ -372,14 +374,13 @@ async function getriwayatpesanan(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
-        `;
-
-        const riwayatData = await sequelize.query(query, {
+        `, {
             type: QueryTypes.SELECT
         });
 
-        return riwayatData;
+        callback(null, result);
     } catch (error) {
+        callback(error, null);
         console.error('Error executing raw query:', error);
         throw new Error('Query execution failed');
     }
@@ -463,10 +464,10 @@ async function getStatusOverAll(umkmId) {
 
 async function getRiwayat(callback) {
     try {
-        const result = await Riwayat.findAll(); // ambil data tari tabel umkm
-        callback(null, result); //return data umkm
+        const result = await Riwayat.findAll();
+        callback(null, result);
     } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
+        callback(error, null);
 
     }
 }
