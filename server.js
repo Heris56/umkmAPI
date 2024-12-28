@@ -78,6 +78,27 @@ app.post('/produk', (req, res) => {
     });
 });
 
+app.get('/keranjang', (req, res) => {
+    dboperations.getallKeranjang((error, result) => {
+        if (error) {
+            return res.status(500).send('error memasukan ke keranjang');
+        }
+        res.json(result).status(200);
+        console.log('berhasil mendapatkan semua keranjang');
+    });
+});
+
+app.get('/keranjang/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getkeranjangbyID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.json(result).status(200);
+        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
+    });
+});
+
 app.delete('/produk/:id', (req, res) => {
     const id = req.params.id;
 
@@ -336,6 +357,7 @@ app.delete('/kurir/:id', async (req, res) => {
         res.status(500).send('Error deleting kurir');
     }
 });
+
 // API route for daily stats
 app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
