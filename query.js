@@ -7,6 +7,8 @@ const Pembeli = require('./models/pembeli');
 const Pesanan = require('./models/pesanan')
 const Kurir = require('./models/kurir');
 const Riwayat = require('./models/riwayat');
+const Keranjang = require('./models/keranjang');
+const { where } = require('sequelize');
 
 
 async function getproduk(callback) {
@@ -79,6 +81,46 @@ async function addproduk(data, callback) {
         }
 
         const result = await Produk.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getallKeranjang(callback) {
+    try {
+        const result = await Keranjang.findAll();
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getkeranjangbyID(id_pembeli, callback) {
+    try {
+        if (!id_pembeli) {
+            throw new Error('id tidak ditemukan');
+        }
+        const result = await Keranjang.findAll({
+            where: {
+                id_pembeli: id_pembeli
+            }
+        });
+        if (!result || result.length === 0) {
+            throw new Error('data keranjang tidak ditemukan');
+        }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function addtoKeranjang(data, callback) {
+    try {
+        if (!data.total || !data.kuantitas || !data.id_pembeli || !data.id_produk) {
+            throw new Error('Data Harus terisi semua');
+        }
+        const result = await Keranjang.create(data);
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -437,6 +479,9 @@ module.exports = {
     getprodukbyID,
     addproduk,
     deleteproduk,
+    getkeranjangbyID,
+    getallKeranjang,
+    addtoKeranjang,
     getuserUMKM,
     registUMKM,
     loginUMKM,
