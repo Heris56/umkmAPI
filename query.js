@@ -438,11 +438,9 @@ async function addriwayat(data, callback) {
         callback(error, null);
     }
 }
-async function getStatusBulan(umkmId, month, year) {
-    // Function to get daily stats by UMKM
-    async function getDailyStatsByUMKM(umkmId, month, year) {
-        try {
-            const result = await sequelize.query(`
+async function getDailyStatsByUMKM(umkmId, month, year) {
+    try {
+        const result = await sequelize.query(`
             SELECT 
                 r.tanggal AS tanggal,
                 SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
@@ -462,15 +460,14 @@ async function getStatusBulan(umkmId, month, year) {
             ORDER BY 
                 r.tanggal;
         `, {
-                replacements: { umkmId, month, year },
-                type: QueryTypes.SELECT
-            });
+            replacements: { umkmId, month, year },
+            type: QueryTypes.SELECT
+        });
 
-            return result; // Return the result instead of using a callback
-        } catch (error) {
-            console.error('Error fetching daily stats:', error);
-            throw new Error('Error fetching daily stats: ' + error.message);
-        }
+        return result; // Return the result instead of using a callback
+    } catch (error) {
+        console.error('Error fetching daily stats:', error);
+        throw new Error('Error fetching daily stats: ' + error.message);
     }
 }
 // Function to get monthly stats by UMKM
