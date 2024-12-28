@@ -89,45 +89,11 @@ async function addproduk(data, callback) {
     }
 }
 
-async function getmakanan(data, callback) {
+async function getProdukByType(tipe_barang, callback) {
     try {
-        // Fetch all products where tipe_barang is 'makanan'
+        // Fetch all products where tipe_barang matches the provided value
         const result = await Produk.findAll({
-            where: {
-                tipe_barang: 'Makanan'
-            }
-        });
-        // Return the results through the callback
-        callback(null, result);
-    } catch (error) {
-        // Send error if something goes wrong
-        callback(error, null);
-    }
-}
-
-async function getminuman(data, callback) {
-    try {
-        // Fetch all products where tipe_barang is 'makanan'
-        const result = await Produk.findAll({
-            where: {
-                tipe_barang: 'Minuman'
-            }
-        });
-        // Return the results through the callback
-        callback(null, result);
-    } catch (error) {
-        // Send error if something goes wrong
-        callback(error, null);
-    }
-}
-
-async function getmisc(data, callback) {
-    try {
-        // Fetch all products where tipe_barang is 'makanan'
-        const result = await Produk.findAll({
-            where: {
-                tipe_barang: 'Misc'
-            }
+            where: { tipe_barang }
         });
         // Return the results through the callback
         callback(null, result);
@@ -600,7 +566,5 @@ module.exports = {
     getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
     getRiwayat,
-    getmisc,
-    getmakanan,
-    getminuman
+    getProdukByType,
 };
