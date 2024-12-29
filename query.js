@@ -159,9 +159,11 @@ async function getuserUMKM(callback) {
 
 async function registUMKM(data, callback) {
     try {
+        console.log('Incoming data:', data);
         const result = await UMKM.create(data);
         callback(null, result);
     } catch (error) {
+        console.error('Error during registration:', error);
         callback(error, null);
     }
 }
@@ -169,10 +171,10 @@ async function registUMKM(data, callback) {
 async function loginUMKM(data, callback) {
     try {
         // cari by email
-        const user = await UMKM.findOne({ where: { email: data.LoginEmail } });
+        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
 
         // cek kalo usernya ada, dan passwordnya sesuai
-        if (user && user.password === data.LoginPassword) {
+        if (user && user.password === data.inputPassword) {
             callback(null, user);
         } else {
             callback(new Error('Email atau Password salah!'), null);
