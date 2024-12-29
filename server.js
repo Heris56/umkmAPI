@@ -2,8 +2,12 @@
 const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
+const bodyParser = require('body-parser');
+
 
 const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
 
 app.use(express.json());
@@ -22,25 +26,7 @@ app.get('/barang', (req, res) => {
     });
 });
 
-app.get('/pesananmasuk', (req, res) => {
-    dboperations.getpesananmasuk((error, result) => {
-        if (error) {
-            console.error('error get pesanan:', error);
-            return res.status(500).send('error fetch pesanan');
-        }
-        res.json(result);
-    });
-});
 
-app.get('/getriwayatpesanan', (req, res) => {
-    dboperations.getriwayatpesanan((error, result) => {
-        if (error) {
-            console.error('error get riwayat:', error);
-            return res.status(500).send('error fetch riwayat');
-        }
-        res.json(result);
-    });
-});
 
 app.post('/barang', (req, res) => {
     const data = req.body;
@@ -53,16 +39,9 @@ app.post('/barang', (req, res) => {
     });
 });
 
-app.post('/addriwayat', (req, res) => {
-    const data = req.body;
-    dboperations.addriwayat(data, (error, result) => {
-        if (error) {
-            console.error('error insert riwayat:', error);
-            return res.status(500).send('error nambah riwayat');
-        }
-        res.status(200).json(result);
-    });
-});
+
+
+
 
 app.get('/produk/:id', (req, res) => {
     const id = req.params.id;
@@ -86,13 +65,46 @@ app.get('/produk', (req, res) => {
 
 app.post('/produk', (req, res) => {
     const data = req.body;
-    console.log('Request body:', req.body);
     dboperations.addproduk(data, (error, result) => {
         if (error) {
             console.error('error insert produk:', error);
             return res.status(500).send('error nambah produk');
         }
         res.status(200).json(result);
+    });
+});
+
+app.put('/updateproduk/:id', (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updateProduk(id, data, (error, result) => {
+        if (error) {
+            console.error('error update produk:', error);
+            return res.status(500).send('gagal meng-update produk');
+        }
+        res.status(200).json(result);
+    });
+});
+
+
+app.get('/produkbytipe/tipe', async (req, res) => {
+    // Extract 'tipe_barang' from query parameters
+    const { tipe_barang } = req.query;
+
+    console.log('tipe_barang:', tipe_barang);
+
+    // Validate that tipe_barang is provided
+    if (!tipe_barang) {
+        return res.status(400).send('Parameter "tipe_barang" is required.');
+    }
+
+    // Call the updated function with the parameter
+    dboperations.getProdukByType(tipe_barang, (error, result) => {
+        if (error) {
+            console.error('Error getting produk:', error);
+            return res.status(500).send('Error fetching produk');
+        }
+        res.json(result);
     });
 });
 
@@ -427,6 +439,124 @@ app.get('/riwayat', async (req, res) => {
     }
 });
 
+//Server Dapa
+app.get('/getpesananmasuk', (req, res) => {
+    dboperations.getpesananmasuk((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditerima', (req, res) => {
+    dboperations.getpesananditerima((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananditolak', (req, res) => {
+    dboperations.getpesananditolak((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getpesananselesai', (req, res) => {
+    dboperations.getpesananselesai((error, result) => {
+        if (error) {
+            console.error('error get pesanan:', error);
+            return res.status(500).send('error fetch pesanan');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getriwayatpesanan', (req, res) => {
+    dboperations.getriwayatpesanan((error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
+app.post('/addriwayat', (req, res) => {
+    const data = req.body;
+    dboperations.addriwayat(data, (error, result) => {
+        if (error) {
+            console.error('error insert riwayat:', error);
+            return res.status(500).send('error nambah riwayat');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.post('/addpesanan', (req, res) => {
+    const data = req.body;
+    dboperations.addpesanan(data, (error, result) => {
+        if (error) {
+            console.error('error insert pesanan:', error);
+            return res.status(500).send('error nambah pesanan');
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put('/updatestatuspesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananmasuk(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananditerima/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananditerima(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananditolak/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananditolak(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatestatuspesananselesai/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.updatestatuspesananselesai(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+// End Server Dapa
 
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
