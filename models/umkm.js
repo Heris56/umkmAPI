@@ -37,7 +37,7 @@ const UMKM = sequelize.define('UMKM', {
         allowNull: true
     },
     NIK_KTP: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false
     },
 
