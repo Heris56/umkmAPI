@@ -1,3 +1,4 @@
+
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 const UMKM = require('./umkm');
@@ -32,7 +33,12 @@ const Message = sequelize.define('Message', {
     },
     sent_at: {
         type: DataTypes.TIME,
-        defaultValue: DataTypes.NOW 
+        defaultValue: DataTypes.NOW,
+        get() {
+            // Format time as HH:mm:ss before returning
+            const value = this.getDataValue('sent_at');
+            return value ? value.toISOString().split('T')[1].split('.')[0] : null;
+        }
     },
     is_read: {
         type: DataTypes.BOOLEAN,
