@@ -185,7 +185,9 @@ async function loginUMKM(data, callback) {
 // Get all messages
 async function getMessages(callback) {
     try {
-        const messages = await Message.findAll();
+        const messages = await Message.findAll({
+            order: [['sent_at', 'ASC']],
+        });
         callback(null, messages);
     } catch (error) {
         callback(error, null);
@@ -200,9 +202,9 @@ async function getMessagesBySenderReceiver(senderType, senderId, receiverType, r
                 sender_type: senderType,
                 sender_id: senderId,
                 receiver_type: receiverType,
-                receiver_id: receiverId
+                receiver_id: receiverId,
             },
-            order: [['sent_at', 'ASC']]
+            order: [['sent_at', 'ASC']],
         });
         callback(null, messages);
     } catch (error) {
@@ -213,14 +215,14 @@ async function getMessagesBySenderReceiver(senderType, senderId, receiverType, r
 // Send a message
 async function sendMessage(data, callback) {
     try {
-        const message = await Message.create(data);
-        callback(null, message);
+        const newMessage = await Message.create(data);
+        callback(null, newMessage);
     } catch (error) {
         callback(error, null);
     }
 }
 
-// Mark message as read
+// Mark a message as read
 async function markMessageAsRead(id, callback) {
     try {
         const message = await Message.findByPk(id);
@@ -490,38 +492,110 @@ async function getRiwayat(callback) {
 // Query Dapa
 async function getpesananmasuk(callback) {
     try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Masuk' } });
+        const result = await sequelize.query(`
+            SELECT
+			id_pesanan ,
+			status_pesanan,
+            p.Nama_Barang AS nama_barang,
+            k.kuantitas as kuantitas_barang,
+			total_belanja,
+            pb.alamat AS alamat_pembeli
+            FROM pesanan ps
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+			WHERE ps.status_pesanan = 'Pesanan Masuk';
+        `, {
+            type: QueryTypes.SELECT
+        });
+
         callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
 async function getpesananditerima(callback) {
     try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Diterima' } });
+        const result = await sequelize.query(`
+            SELECT
+			id_pesanan ,
+			status_pesanan,
+            p.Nama_Barang AS nama_barang,
+            k.kuantitas as kuantitas_barang,
+			total_belanja,
+            pb.alamat AS alamat_pembeli
+            FROM pesanan ps
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+			WHERE ps.status_pesanan = 'Pesanan Diterima';
+        `, {
+            type: QueryTypes.SELECT
+        });
+
         callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
 async function getpesananditolak(callback) {
     try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Ditolak' } });
+        const result = await sequelize.query(`
+            SELECT
+			id_pesanan ,
+			status_pesanan,
+            p.Nama_Barang AS nama_barang,
+            k.kuantitas as kuantitas_barang,
+			total_belanja,
+            pb.alamat AS alamat_pembeli
+            FROM pesanan ps
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+			WHERE ps.status_pesanan = 'Pesanan Ditolak';
+        `, {
+            type: QueryTypes.SELECT
+        });
+
         callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
 
 async function getpesananselesai(callback) {
     try {
-        const result = await Pesanan.findAll({ where: { status_pesanan: 'Pesanan Selesai' } });
+        const result = await sequelize.query(`
+            SELECT
+			id_pesanan ,
+			status_pesanan,
+            p.Nama_Barang AS nama_barang,
+            k.kuantitas as kuantitas_barang,
+			total_belanja,
+            pb.alamat AS alamat_pembeli
+            FROM pesanan ps
+            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+			WHERE ps.status_pesanan = 'Pesanan Selesai';
+        `, {
+            type: QueryTypes.SELECT
+        });
+
         callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
