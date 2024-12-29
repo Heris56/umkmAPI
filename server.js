@@ -162,9 +162,9 @@ app.post('/umkm', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    const { LoginEmail, LoginPassword } = req.body;
+    const { inputEmail, inputPassword } = req.body;
 
-    dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, result) => {
+    dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
