@@ -159,9 +159,11 @@ async function getuserUMKM(callback) {
 
 async function registUMKM(data, callback) {
     try {
+        console.log('Incoming data:', data);
         const result = await UMKM.create(data);
         callback(null, result);
     } catch (error) {
+        console.error('Error during registration:', error);
         callback(error, null);
     }
 }
