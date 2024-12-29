@@ -164,7 +164,7 @@ app.post('/umkm', (req, res) => {
 app.post('/login', (req, res) => {
     const { LoginEmail, LoginPassword } = req.body;
 
-    dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
+    dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
