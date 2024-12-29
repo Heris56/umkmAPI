@@ -522,6 +522,16 @@ app.put('/updatestatuspesananselesai/:id', (req, res) => {
 
 // End Server Dapa
 
+app.get('/getinboxpesanan', (req, res) => {
+    dboperations.getinboxpesanan((error, result) => {
+        if (error) {
+            console.error('error get inbox:', error);
+            return res.status(500).send('error fetch inbox pesanan');
+        }
+        res.json(result);
+    });
+});
+
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
 });
