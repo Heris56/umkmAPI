@@ -175,7 +175,10 @@ async function loginUMKM(data, callback) {
 
         // cek kalo usernya ada, dan passwordnya sesuai
         if (user && user.password === data.inputPassword) {
-            callback(null, user);
+            const result = {
+                id_umkm: user.id_umkm,
+            };
+            callback(null, result);
         } else {
             callback(new Error('Email atau Password salah!'), null);
         }
