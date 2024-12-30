@@ -419,7 +419,6 @@ async function deleteKurir(id, callback) {
 }
 
 
-
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
@@ -448,32 +447,34 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             type: QueryTypes.SELECT
         });
 
-        return result; // Return the result instead of using a callback
+        return result;
     } catch (error) {
         console.error('Error fetching daily stats:', error);
         throw new Error('Error fetching daily stats: ' + error.message);
     }
 }
-// Function to get monthly stats by UMKM
+
 async function getMonthlyStatsByUMKM(umkmId) {
     try {
         const result = await sequelize.query(`
-        SELECT 
-            MONTH(r.tanggal) AS month,
-            SUM(k.kuantitas * p.Harga) AS total_sales,
-            COUNT(DISTINCT r.id_riwayat) AS total_orders
-        FROM 
-            riwayat r
-        JOIN 
-            keranjang k ON r.id_riwayat = k.id_keranjang
-        JOIN 
-            Produk p ON k.id_produk = p.id_produk
-        WHERE 
-            p.ID_UMKM = :umkmId
-        GROUP BY 
-            MONTH(r.tanggal)
-        ORDER BY 
-            month;
+    SELECT 
+        MONTH(r.tanggal) AS month,
+        SUM(k.kuantitas * p.Harga) AS total_sales,
+        COUNT(DISTINCT r.id_riwayat) AS total_orders
+    FROM 
+        riwayat r
+    JOIN 
+        pesanan ps ON r.id_pesanan = ps.id_pesanan  -- Correct join to pesanan
+    JOIN 
+        keranjang k ON ps.id_keranjang = k.id_keranjang  -- Join keranjang to pesanan
+    JOIN 
+        Produk p ON k.id_produk = p.id_produk
+    WHERE 
+        p.ID_UMKM = :umkmId
+    GROUP BY 
+        MONTH(r.tanggal)
+    ORDER BY 
+        month;
         `, {
             replacements: { umkmId },
             type: QueryTypes.SELECT
