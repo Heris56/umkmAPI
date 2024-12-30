@@ -3,9 +3,15 @@ const express = require('express');
 const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 const bodyParser = require('body-parser');
-
+const cors = require('cors');
 
 const app = express();
+const corsOptions = {
+    origin: 'http://127.0.0.1:8000/',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
@@ -160,9 +166,9 @@ app.post('/umkm', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    const { LoginEmail, LoginPassword, RememberMe } = req.body;
+    const { inputEmail, inputPassword } = req.body;
 
-    dboperations.loginUMKM({ LoginEmail, LoginPassword }, (error, user) => {
+    dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
@@ -512,6 +518,18 @@ app.put('/updatestatuspesananditolak/:id', (req, res) => {
 app.put('/updatestatuspesananselesai/:id', (req, res) => {
     const id = req.params.id;
     dboperations.updatestatuspesananselesai(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatepassword/:email/:newPassword', (req, res) => {
+    const email = req.params.email;
+    const newPassword = req.params.newPassword;
+    dboperations.updatepassword(email, newPassword, (error, result) => {
         if (error) {
             console.error('error update status pesanan diterima:', error);
             return res.status(500).send('error status pesanan diterima');

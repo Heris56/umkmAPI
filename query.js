@@ -83,7 +83,7 @@ async function deleteproduk(id, callback) {
 async function addproduk(data, callback) {
     try {
         console.log(data);
-        if (!data.harga || !data.stok || !data.berat || !data.nama_barang || !data.id_umkm || !data.image_url || !data.tipe_barang) {
+        if (!data.harga || !data.stok || !data.berat || !data.nama_barang || !data.id_umkm) {
             throw new Error('Data tidak lengkap');
         }
 
@@ -159,9 +159,11 @@ async function getuserUMKM(callback) {
 
 async function registUMKM(data, callback) {
     try {
+        console.log('Incoming data:', data);
         const result = await UMKM.create(data);
         callback(null, result);
     } catch (error) {
+        console.error('Error during registration:', error);
         callback(error, null);
     }
 }
@@ -169,10 +171,10 @@ async function registUMKM(data, callback) {
 async function loginUMKM(data, callback) {
     try {
         // cari by email
-        const user = await UMKM.findOne({ where: { email: data.LoginEmail } });
+        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
 
         // cek kalo usernya ada, dan passwordnya sesuai
-        if (user && user.password === data.LoginPassword) {
+        if (user && user.password === data.inputPassword) {
             callback(null, user);
         } else {
             callback(new Error('Email atau Password salah!'), null);
@@ -732,9 +734,26 @@ async function updatestatuspesananselesai(id, callback) {
         callback(error, null);
     }
 }
+
+async function updatepassword(email, newPassword, callback) {
+    try {
+        const result = await Pembeli.update(
+            { password: newPassword },
+            { where: { email } }
+        );
+
+        if (result[0] === 0) {
+            return { success: false, message: 'Email Tidak ditemukan atau password salah' };
+        }
+        callback(null, result)
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false, message: 'Ada kesalahan saat mengganti email' };
+    }
+}
+
 // End Query Dapa
 
-//
 async function getinboxpesanan(callback) {
     try {
         const result = await sequelize.query(`
@@ -805,5 +824,6 @@ module.exports = {
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
+    updatepassword,
     getinboxpesanan,
 };
