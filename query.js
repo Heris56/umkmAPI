@@ -734,6 +734,24 @@ async function updatestatuspesananselesai(id, callback) {
         callback(error, null);
     }
 }
+
+async function updatepassword(email, newPassword, callback) {
+    try {
+        const result = await Pembeli.update(
+            { password: newPassword },
+            { where: { email } }
+        );
+
+        if (result[0] === 0) {
+            return { success: false, message: 'Email Tidak ditemukan atau password salah' };
+        }
+        callback(null, result)
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false, message: 'Ada kesalahan saat mengganti email' };
+    }
+}
+
 // End Query Dapa
 
 module.exports = {
@@ -779,4 +797,5 @@ module.exports = {
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
+    updatepassword,
 };

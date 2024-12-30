@@ -556,6 +556,18 @@ app.put('/updatestatuspesananselesai/:id', (req, res) => {
     });
 })
 
+app.put('/updatepassword/:email/:newPassword', (req, res) => {
+    const email = req.params.email;
+    const newPassword = req.params.newPassword;
+    dboperations.updatepassword(email, newPassword, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
 // End Server Dapa
 
 app.listen(port, () => {
