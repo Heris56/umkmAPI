@@ -420,24 +420,26 @@ async function deleteKurir(id, callback) {
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
-            SELECT 
-                r.tanggal AS tanggal,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-                AND MONTH(r.tanggal) = :month
-                AND YEAR(r.tanggal) = :year
-            GROUP BY 
-                r.tanggal
-            ORDER BY 
-                r.tanggal;
+        SELECT
+            r.tanggal AS tanggal,
+            SUM(k.kuantitas * prod.Harga) AS total_sales,
+            COUNT(DISTINCT pes.id_pesanan) AS total_orders
+        FROM
+            pesanan pes
+        JOIN
+            keranjang k ON pes.id_keranjang = k.id_keranjang
+        JOIN
+            Produk prod ON k.id_produk = prod.id_produk
+        JOIN
+            riwayat r ON pes.id_pesanan = r.id_pesanan
+        WHERE
+            prod.ID_UMKM = :umkmId
+            AND MONTH(r.tanggal) = :month
+            AND YEAR(r.tanggal) = :year
+        GROUP BY
+            r.tanggal
+        ORDER BY
+            r.tanggal;
         `, {
             replacements: { umkmId, month, year },
             type: QueryTypes.SELECT
@@ -453,22 +455,22 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
 async function getMonthlyStatsByUMKM(umkmId) {
     try {
         const result = await sequelize.query(`
-            SELECT 
-                MONTH(r.tanggal) AS month,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-            GROUP BY 
-                MONTH(r.tanggal)
-            ORDER BY 
-                month;
+        SELECT 
+            MONTH(r.tanggal) AS month,
+            SUM(k.kuantitas * p.Harga) AS total_sales,
+            COUNT(DISTINCT r.id_riwayat) AS total_orders
+        FROM 
+            riwayat r
+        JOIN 
+            keranjang k ON r.id_riwayat = k.id_keranjang
+        JOIN 
+            Produk p ON k.id_produk = p.id_produk
+        WHERE 
+            p.ID_UMKM = :umkmId
+        GROUP BY 
+            MONTH(r.tanggal)
+        ORDER BY 
+            month;
         `, {
             replacements: { umkmId },
             type: QueryTypes.SELECT
