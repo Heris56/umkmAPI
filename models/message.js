@@ -11,22 +11,7 @@ const Message = sequelize.define('Message', {
         primaryKey: true,
         autoIncrement: true
     },
-    sender_type: {
-        type: DataTypes.STRING, 
-        allowNull: false
-    },
-    sender_id: {
-        type: DataTypes.INTEGER, 
-        allowNull: false
-    },
-    receiver_type: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    receiver_id: {
-        type: DataTypes.INTEGER, 
-        allowNull: false
-    },
+    
     message: {
         type: DataTypes.TEXT,
         allowNull: false
@@ -43,20 +28,45 @@ const Message = sequelize.define('Message', {
     is_read: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    id_umkm: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: UMKM,
+            key: 'id_umkm'
+        }
+    },
+    id_pembeli: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Pembeli,
+            key: 'id_pembeli'
+        }
+    },
+    id_kurir: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Kurir,
+            key: 'id_kurir'
+        }
     }
+
 }, {
     tableName: 'Chat',
     timestamps: false 
 });
 
 // Sender associations
-Message.belongsTo(UMKM, { foreignKey: 'sender_id', targetKey: 'id_umkm', as: 'sender_umkm' });
-Message.belongsTo(Kurir, { foreignKey: 'sender_id', targetKey: 'id_kurir', as: 'sender_kurir' });
-Message.belongsTo(Pembeli, { foreignKey: 'sender_id', targetKey: 'id_pembeli', as: 'sender_pembeli' });
+// Message.belongsTo(UMKM, { foreignKey: 'sender_id', targetKey: 'id_umkm', as: 'sender_umkm' });
+// Message.belongsTo(Kurir, { foreignKey: 'sender_id', targetKey: 'id_kurir', as: 'sender_kurir' });
+// Message.belongsTo(Pembeli, { foreignKey: 'sender_id', targetKey: 'id_pembeli', as: 'sender_pembeli' });
 
-// Receiver associations
-Message.belongsTo(UMKM, { foreignKey: 'receiver_id', targetKey: 'id_umkm', as: 'receiver_umkm' });
-Message.belongsTo(Kurir, { foreignKey: 'receiver_id', targetKey: 'id_kurir', as: 'receiver_kurir' });
-Message.belongsTo(Pembeli, { foreignKey: 'receiver_id', targetKey: 'id_pembeli', as: 'receiver_pembeli' });
+// // Receiver associations
+// Message.belongsTo(UMKM, { foreignKey: 'receiver_id', targetKey: 'id_umkm', as: 'receiver_umkm' });
+// Message.belongsTo(Kurir, { foreignKey: 'receiver_id', targetKey: 'id_kurir', as: 'receiver_kurir' });
+// Message.belongsTo(Pembeli, { foreignKey: 'receiver_id', targetKey: 'id_pembeli', as: 'receiver_pembeli' });
 
 module.exports = Message;

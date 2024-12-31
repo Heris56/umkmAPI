@@ -200,14 +200,39 @@ async function getMessages(callback) {
 }
 
 // Get messages by sender and receiver
-async function getMessagesBySenderReceiver(senderType, senderId, receiverType, receiverId, callback) {
+async function getMessagesByUMKM(id, callback) {
     try {
         const messages = await Message.findAll({
             where: {
-                sender_type: senderType,
-                sender_id: senderId,
-                receiver_type: receiverType,
-                receiver_id: receiverId,
+                id_umkm : id
+            },
+            order: [['sent_at', 'ASC']],
+        });
+        callback(null, messages);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getMessagesByPembeli(id, callback) {
+    try {
+        const messages = await Message.findAll({
+            where: {
+                id_pembeli : id
+            },
+            order: [['sent_at', 'ASC']],
+        });
+        callback(null, messages);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getMessagesByKurir(id, callback) {
+    try {
+        const messages = await Message.findAll({
+            where: {
+                id_kurir : id
             },
             order: [['sent_at', 'ASC']],
         });
@@ -218,9 +243,84 @@ async function getMessagesBySenderReceiver(senderType, senderId, receiverType, r
 }
 
 // Send a message
-async function sendMessage(data, callback) {
+async function sendMessagePembeliKeUMKM(id, data, callback) {
     try {
-        const newMessage = await Message.create(data);
+        // const messages = Message.findOne({ where: { id_pembeli : id } });
+        // if (!messages){
+        //     throw new error('id tidak ditemukan');
+        // }
+        const newMessage = await messages.create({
+            where:{id_pembeli:id},
+            message : data.message, 
+            sent_at : data.sent_at,
+            is_read : data.is_read,
+            id_umkm : data.id_umkm,
+            id_pembeli : id,
+            id_kurir : null
+        });
+        callback(null, newMessage);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function sendMessagePembeliKeKurir(id, data, callback) {
+    try {
+        // const messages = Message.findOne({ where: { id_pembeli : id } });
+        // if (!messages){
+        //     throw new error('id tidak ditemukan');
+        // }
+        const newMessage = await messages.create({
+            where:{id_pembeli:id},
+            message : data.message, 
+            sent_at : data.sent_at,
+            is_read : data.is_read,
+            id_umkm : null,
+            id_pembeli : id,
+            id_kurir : data.id_kurir
+        });
+        callback(null, newMessage);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function sendMessageUMKMKePembeli(id, data, callback) {
+    try {
+        // const messages = await Message.findOne({ where: { id_umkm : id } });
+        // if (!messages){
+        //     throw new Error('id tidak ditemukan');
+        // }
+        const newMessage = await Message.create({
+            where:{id_umkm:id},
+            message : data.message, 
+            sent_at : data.sent_at,
+            is_read : data.is_read,
+            id_umkm : id,
+            id_pembeli : data.id_pembeli,
+            id_kurir : null
+        });
+        callback(null, newMessage);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function sendMessageKurirKePembeli(id, data, callback) {
+    try {
+        // const messages = Message.findOne({ where: { id_kurir : id } });
+        // if (!messages){
+        //     throw new error('id tidak ditemukan');
+        // }
+        const newMessage = await messages.create({
+            where:{id_kurir:id},
+            message : data.message, 
+            sent_at : data.sent_at,
+            is_read : data.is_read,
+            id_umkm : null,
+            id_pembeli : data.id_pembeli,
+            id_kurir : id
+        });
         callback(null, newMessage);
     } catch (error) {
         callback(error, null);
@@ -841,8 +941,13 @@ module.exports = {
     registUMKM,
     loginUMKM,
     getMessages,
-    getMessagesBySenderReceiver,
-    sendMessage,
+    getMessagesByUMKM,
+    getMessagesByPembeli,
+    getMessagesByKurir,
+    sendMessagePembeliKeUMKM,
+    sendMessagePembeliKeKurir,
+    sendMessageUMKMKePembeli,
+    sendMessageKurirKePembeli,
     markMessageAsRead,
     deleteMessage,
     getPembeli,
