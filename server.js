@@ -576,6 +576,17 @@ app.put('/updatepassword/:email/:newPassword', (req, res) => {
 
 // End Server Dapa
 
+app.get('/getinboxpesanan', (req, res) => {
+    dboperations.getinboxpesanan((error, result) => {
+        if (error) {
+            console.error('error get inbox:', error);
+            return res.status(500).send('error fetch inbox pesanan');
+        }
+        res.json(result);
+    });
+});
+// server.js
+
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
 });
