@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('umkmku', 'mamankAdmin', 'Mamank123', {
-    host: 'umkmku.database.windows.net',
+const sequelize = new Sequelize('umkmku', 'asepgantenk', '!13Juli2002', {
+    host: 'umkmkuserver.database.windows.net',
     dialect: 'mssql',
     dialectOptions: {
         encrypt: true,
