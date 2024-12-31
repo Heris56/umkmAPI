@@ -585,6 +585,18 @@ app.get('/getriwayatpesanan', (req, res) => {
     });
 });
 
+app.get('/getprofileumkm/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getprofileumkm(id, (error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
 app.post('/addriwayat', (req, res) => {
     const data = req.body;
     dboperations.addriwayat(data, (error, result) => {
@@ -651,10 +663,10 @@ app.put('/updatestatuspesananselesai/:id', (req, res) => {
     });
 })
 
-app.put('/updatepassword/:email/:newPassword', (req, res) => {
+app.put('/updatepasswordpembeli/:email/:newPassword', (req, res) => {
     const email = req.params.email;
     const newPassword = req.params.newPassword;
-    dboperations.updatepassword(email, newPassword, (error, result) => {
+    dboperations.updatepasswordpembeli(email, newPassword, (error, result) => {
         if (error) {
             console.error('error update status pesanan diterima:', error);
             return res.status(500).send('error status pesanan diterima');
@@ -663,7 +675,30 @@ app.put('/updatepassword/:email/:newPassword', (req, res) => {
     });
 })
 
+app.put('/updatedataumkm/:id', (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updatedataumkm(id, data, (error, result) => {
+        if (error) {
+            console.error('error update data UMKM:', error);
+            return res.status(500).send('error update data UMKM');
+        }
+        res.status(200).json(result);
+    });
+})
+
 // End Server Dapa
+
+app.get('/getinboxpesanan', (req, res) => {
+    dboperations.getinboxpesanan((error, result) => {
+        if (error) {
+            console.error('error get inbox:', error);
+            return res.status(500).send('error fetch inbox pesanan');
+        }
+        res.json(result);
+    });
+});
+// server.js
 
 app.listen(port, () => {
     console.log(`server berjalan di ${port}`);
