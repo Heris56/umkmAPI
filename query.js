@@ -801,6 +801,33 @@ async function getprofileumkm(id, callback) {
 
 // End Query Dapa
 
+async function getinboxpesanan(callback) {
+    try {
+        const result = await sequelize.query(`
+         SELECT
+    pesanan.id_pesanan,
+    pembeli.nama_lengkap,
+    produk.Nama_Barang,
+    keranjang.kuantitas AS quantity,
+    pesanan.status_pesanan
+    FROM pesanan
+    JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
+    JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
+    JOIN produk ON keranjang.id_produk = produk.id_produk;
+
+
+        `, {
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
 module.exports = {
     getproduk,
     getprodukbyID,
@@ -847,4 +874,5 @@ module.exports = {
     updatepasswordpembeli,
     updatedataumkm,
     getprofileumkm,
+    getinboxpesanan,
 };
