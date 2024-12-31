@@ -175,7 +175,10 @@ async function loginUMKM(data, callback) {
 
         // cek kalo usernya ada, dan passwordnya sesuai
         if (user && user.password === data.inputPassword) {
-            callback(null, user);
+            const result = {
+                id_umkm: user.id_umkm,
+            };
+            callback(null, result);
         } else {
             callback(new Error('Email atau Password salah!'), null);
         }
@@ -416,59 +419,62 @@ async function deleteKurir(id, callback) {
 }
 
 
-
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(`
-            SELECT 
-                r.tanggal AS tanggal,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-                AND MONTH(r.tanggal) = :month
-                AND YEAR(r.tanggal) = :year
-            GROUP BY 
-                r.tanggal
-            ORDER BY 
-                r.tanggal;
+        SELECT
+            r.tanggal AS tanggal,
+            SUM(k.kuantitas * prod.Harga) AS total_sales,
+            COUNT(DISTINCT pes.id_pesanan) AS total_orders
+        FROM
+            pesanan pes
+        JOIN
+            keranjang k ON pes.id_keranjang = k.id_keranjang
+        JOIN
+            Produk prod ON k.id_produk = prod.id_produk
+        JOIN
+            riwayat r ON pes.id_pesanan = r.id_pesanan
+        WHERE
+            prod.ID_UMKM = :umkmId
+            AND MONTH(r.tanggal) = :month
+            AND YEAR(r.tanggal) = :year
+        GROUP BY
+            r.tanggal
+        ORDER BY
+            r.tanggal;
         `, {
             replacements: { umkmId, month, year },
             type: QueryTypes.SELECT
         });
 
-        return result; // Return the result instead of using a callback
+        return result;
     } catch (error) {
         console.error('Error fetching daily stats:', error);
         throw new Error('Error fetching daily stats: ' + error.message);
     }
 }
-// Function to get monthly stats by UMKM
+
 async function getMonthlyStatsByUMKM(umkmId) {
     try {
         const result = await sequelize.query(`
-            SELECT 
-                MONTH(r.tanggal) AS month,
-                SUM(pm.harga * CAST(pm.quantitas_barang AS INT)) AS total_sales,
-                COUNT(DISTINCT p.id_pesanan) AS total_orders
-            FROM 
-                pesanan p
-            JOIN 
-                pesananMasuk pm ON p.id_pesanan = pm.id_pesanan
-            JOIN 
-                riwayat r ON p.id_pesanan = r.id_pesanan
-            WHERE 
-                pm.id_umkm = :umkmId
-            GROUP BY 
-                MONTH(r.tanggal)
-            ORDER BY 
-                month;
+    SELECT 
+        MONTH(r.tanggal) AS month,
+        SUM(k.kuantitas * p.Harga) AS total_sales,
+        COUNT(DISTINCT r.id_riwayat) AS total_orders
+    FROM 
+        riwayat r
+    JOIN 
+        pesanan ps ON r.id_pesanan = ps.id_pesanan  -- Correct join to pesanan
+    JOIN 
+        keranjang k ON ps.id_keranjang = k.id_keranjang  -- Join keranjang to pesanan
+    JOIN 
+        Produk p ON k.id_produk = p.id_produk
+    WHERE 
+        p.ID_UMKM = :umkmId
+    GROUP BY 
+        MONTH(r.tanggal)
+    ORDER BY 
+        month;
         `, {
             replacements: { umkmId },
             type: QueryTypes.SELECT
@@ -734,6 +740,24 @@ async function updatestatuspesananselesai(id, callback) {
         callback(error, null);
     }
 }
+
+async function updatepassword(email, newPassword, callback) {
+    try {
+        const result = await Pembeli.update(
+            { password: newPassword },
+            { where: { email } }
+        );
+
+        if (result[0] === 0) {
+            return { success: false, message: 'Email Tidak ditemukan atau password salah' };
+        }
+        callback(null, result)
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false, message: 'Ada kesalahan saat mengganti email' };
+    }
+}
+
 // End Query Dapa
 
 module.exports = {
@@ -779,4 +803,5 @@ module.exports = {
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
+    updatepassword,
 };

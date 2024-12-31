@@ -6,12 +6,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
-const corsOptions = {
-    origin: 'http://127.0.0.1:8000/',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
+// const corsOptions = {
+//     origin: 'http://127.0.0.1:8000/',
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+// };
+// app.use(cors(corsOptions));
+
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
@@ -554,6 +556,18 @@ app.put('/updatestatuspesananditolak/:id', (req, res) => {
 app.put('/updatestatuspesananselesai/:id', (req, res) => {
     const id = req.params.id;
     dboperations.updatestatuspesananselesai(id, (error, result) => {
+        if (error) {
+            console.error('error update status pesanan diterima:', error);
+            return res.status(500).send('error status pesanan diterima');
+        }
+        res.status(200).json(result);
+    });
+})
+
+app.put('/updatepassword/:email/:newPassword', (req, res) => {
+    const email = req.params.email;
+    const newPassword = req.params.newPassword;
+    dboperations.updatepassword(email, newPassword, (error, result) => {
         if (error) {
             console.error('error update status pesanan diterima:', error);
             return res.status(500).send('error status pesanan diterima');
