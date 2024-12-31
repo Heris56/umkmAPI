@@ -741,7 +741,7 @@ async function updatestatuspesananselesai(id, callback) {
     }
 }
 
-async function updatepassword(email, newPassword, callback) {
+async function updatepasswordpembeli(email, newPassword, callback) {
     try {
         const result = await Pembeli.update(
             { password: newPassword },
@@ -755,6 +755,47 @@ async function updatepassword(email, newPassword, callback) {
     } catch (error) {
         console.error('Error updating password:', error);
         return { success: false, message: 'Ada kesalahan saat mengganti email' };
+    }
+}
+
+async function updatedataumkm(id, data, callback) {
+    try {
+
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+
+        if (!umkm) {
+            throw new Error('UMKM Tidak ditemukan');
+        }
+        const result = await umkm.update(data);
+
+        callback(null, result)
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false, message: 'Ada kesalahan saat mengganti Password' };
+    }
+}
+
+async function getprofileumkm(id, callback) {
+    try {
+
+        if (!id) {
+            throw new Error('id tidak boleh kosong');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+
+        if (!umkm) {
+            throw new Error('UMKM Tidak ditemukan');
+        }
+
+        callback(null, umkm)
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false, message: 'Ada kesalahan saat mengganti Password' };
     }
 }
 
@@ -830,6 +871,8 @@ module.exports = {
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
-    updatepassword,
+    updatepasswordpembeli,
+    updatedataumkm,
+    getprofileumkm,
     getinboxpesanan,
 };
