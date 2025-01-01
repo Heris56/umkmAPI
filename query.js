@@ -235,11 +235,15 @@ async function getMessagesByUMKM(id, callback) {
         const result = await sequelize.query(`
             SELECT 
                 Chat.*, 
-                Pembeli.nama_lengkap
+                pembeli.nama_lengkap,
+                umkm.username
             FROM 
                 Chat
             LEFT JOIN 
-                Pembeli ON Chat.id_pembeli = Pembeli.id_pembeli;
+                pembeli ON Chat.id_pembeli = Pembeli.id_pembeli
+                LEFT JOIN 
+                umkm ON Chat.id_umkm = Pembeli.id_pembeli
+				WHERE umkm.id_umkm = 1;
         `, {
             replacements: { id: id },
             type: QueryTypes.SELECT
@@ -637,6 +641,37 @@ async function getRiwayat(callback) {
 }
 
 // Query Dapa
+async function getdatadashboard(id, callback) {
+    try {
+        const result = await sequelize.query(`
+            SELECT TOP 1
+    p.nama_barang, 
+    SUM(k.kuantitas) AS total_kuantitas
+FROM 
+    Keranjang k
+JOIN 
+    Produk p ON k.id_produk = p.id_produk
+JOIN 
+    Pesanan ps ON k.id_keranjang = ps.id_keranjang
+WHERE 
+    p.id_umkm = 1
+GROUP BY 
+    p.nama_barang
+ORDER BY 
+    total_kuantitas DESC;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
 async function getpesananmasuk(callback) {
     try {
         const result = await sequelize.query(`
@@ -1052,4 +1087,5 @@ module.exports = {
     getinboxpesanan,
     getBlobUrl,
     uploadFileToBlob,
+    getdatadashboard,
 };
