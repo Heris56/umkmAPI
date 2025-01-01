@@ -11,6 +11,8 @@ const Kurir = require('./models/kurir');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
+const path = require('path');
+const fs = require('fs');
 require("dotenv").config();
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
@@ -230,15 +232,24 @@ async function getMessages(callback) {
 // Get messages by sender and receiver
 async function getMessagesByUMKM(id, callback) {
     try {
-        const messages = await Message.findAll({
-            where: {
-                id_umkm: id
-            },
-            order: [['sent_at', 'ASC']],
+        const result = await sequelize.query(`
+            SELECT 
+                Chat.*, 
+                Pembeli.nama_lengkap
+            FROM 
+                Chat
+            LEFT JOIN 
+                Pembeli ON Chat.id_pembeli = Pembeli.id_pembeli;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
         });
-        callback(null, messages);
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
@@ -277,7 +288,7 @@ async function sendMessagePembeliKeUMKM(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -298,7 +309,7 @@ async function sendMessagePembeliKeKurir(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -340,7 +351,7 @@ async function sendMessageKurirKePembeli(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_kurir: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -932,6 +943,31 @@ async function getBlobUrl(containerName, blobName) {
     const blobClient = containerClient.getBlobClient(blobName);
     return blobClient.url;
 }
+
+async function uploadFileToBlob(containerName, fileBuffer, blobName, contentType) {
+    try {
+        // Pastikan container ada
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        await containerClient.createIfNotExists();
+        console.log(`Container "${containerName}" sudah tersedia.`);
+
+        // Buat blob client
+        const blobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Unggah file dari buffer
+        await blobClient.uploadData(fileBuffer, {
+            blobHTTPHeaders: { blobContentType: contentType },
+        });
+        console.log(`File berhasil diunggah ke "${blobName}".`);
+
+        // Kembalikan URL blob
+        return blobClient.url;
+    } catch (error) {
+        console.error('Terjadi kesalahan saat mengunggah file:', error.message);
+        throw error;
+    }
+}
+
 // End Query Dapa
 
 async function getinboxpesanan(callback) {
@@ -1015,4 +1051,5 @@ module.exports = {
     getprofileumkm,
     getinboxpesanan,
     getBlobUrl,
+    uploadFileToBlob,
 };
