@@ -10,7 +10,10 @@ const Keranjang = require('./models/keranjang');
 const Kurir = require('./models/kurir');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
-
+const { BlobServiceClient } = require("@azure/storage-blob");
+require("dotenv").config();
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
 
 
 // Produk - Haikal
@@ -924,6 +927,11 @@ async function getprofileumkm(id, callback) {
     }
 }
 
+async function getBlobUrl(containerName, blobName) {
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobClient = containerClient.getBlobClient(blobName);
+    return blobClient.url;
+}
 // End Query Dapa
 
 async function getinboxpesanan(callback) {
@@ -1006,4 +1014,5 @@ module.exports = {
     updatedataumkm,
     getprofileumkm,
     getinboxpesanan,
+    getBlobUrl,
 };

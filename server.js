@@ -671,6 +671,19 @@ app.put('/updatedataumkm/:id', (req, res) => {
     });
 })
 
+app.get('/getbloburl/', async (req, res) => {
+    try {
+        const containerName = 'storeimg';
+        const blobName = 'ayamgeprek.jpg';
+
+        const result = await dboperations.getBlobUrl(containerName, blobName); // Tunggu hasil fungsi asynchronous
+        res.json({ url: result }); // Kirim URL sebagai JSON
+    } catch (error) {
+        console.error('Error fetching blob URL:', error);
+        res.status(500).send('Error fetching blob URL');
+    }
+});
+
 // End Server Dapa
 
 app.get('/getinboxpesanan', (req, res) => {
