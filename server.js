@@ -4,7 +4,7 @@ const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+console.log("Azure Storage Connection String: ", process.env.AZURE_STORAGE_CONNECTION_STRING);
 const app = express();
 // const corsOptions = {
 //     origin: 'http://127.0.0.1:8000/',
