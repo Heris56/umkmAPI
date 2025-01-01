@@ -19,8 +19,8 @@ const Barang = sequelize.define('Barang', {
         allowNull: false,
     },
 }, {
-    tableName: 'barangs', // Nama tabel di database
-    timestamps: false,   // Nonaktifkan createdAt dan updatedAt
+    tableName: 'barangs',
+    timestamps: false,
 });
 
 module.exports = Barang;

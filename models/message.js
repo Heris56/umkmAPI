@@ -11,7 +11,7 @@ const Message = sequelize.define('Message', {
         primaryKey: true,
         autoIncrement: true
     },
-    
+
     message: {
         type: DataTypes.TEXT,
         allowNull: false
@@ -56,7 +56,7 @@ const Message = sequelize.define('Message', {
 
 }, {
     tableName: 'Chat',
-    timestamps: false 
+    timestamps: false
 });
 
 // Sender associations
