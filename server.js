@@ -251,7 +251,7 @@ app.post('/message/msgUMKM/:id', (req, res) => {
     });
 });
 
-app.post('/message/msgPembeli/:id/:data', (req, res) => {
+app.post('/message/msgPembeli/:id', (req, res) => {
     const data = req.body;
     const id = req.params.id;
 
