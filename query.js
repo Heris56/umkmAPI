@@ -232,15 +232,24 @@ async function getMessages(callback) {
 // Get messages by sender and receiver
 async function getMessagesByUMKM(id, callback) {
     try {
-        const messages = await Message.findAll({
-            where: {
-                id_umkm: id
-            },
-            order: [['sent_at', 'ASC']],
+        const result = await sequelize.query(`
+            SELECT 
+                Chat.*, 
+                Pembeli.nama_lengkap
+            FROM 
+                Chat
+            LEFT JOIN 
+                Pembeli ON Chat.id_pembeli = Pembeli.id_pembeli;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
         });
-        callback(null, messages);
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
@@ -279,7 +288,7 @@ async function sendMessagePembeliKeUMKM(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -300,7 +309,7 @@ async function sendMessagePembeliKeKurir(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -342,7 +351,7 @@ async function sendMessageKurirKePembeli(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_kurir: id },
             message: data.message,
             sent_at: data.sent_at,
