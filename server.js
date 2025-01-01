@@ -4,6 +4,8 @@ const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 // const corsOptions = {
@@ -19,6 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
 
 app.use(express.json());
+
+// Konfigurasi multer untuk file upload
+const storage = multer.memoryStorage(); // Simpan file di memori (buffer)
+const upload = multer({ storage });
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -681,6 +687,29 @@ app.get('/getbloburl/', async (req, res) => {
     } catch (error) {
         console.error('Error fetching blob URL:', error);
         res.status(500).send('Error fetching blob URL');
+    }
+});
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'File tidak ditemukan!' });
+        }
+
+        const containerName = 'storeimg'; // Ganti dengan nama container Anda
+        const blobName = `${Date.now()}-${req.file.originalname}`;
+        const contentType = req.file.mimetype;
+
+        // Panggil fungsi untuk upload file ke Azure Blob Storage
+        const blobUrl = await dboperations.uploadFileToBlob(containerName, req.file.buffer, blobName, contentType);
+
+        res.status(200).json({
+            message: 'File berhasil diunggah!',
+            blobUrl,
+        });
+    } catch (error) {
+        console.error('Kesalahan saat mengunggah file:', error.message);
+        res.status(500).json({ message: 'Terjadi kesalahan saat mengunggah file.' });
     }
 });
 
