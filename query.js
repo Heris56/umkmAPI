@@ -12,6 +12,11 @@ const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
 require("dotenv").config();
+console.log("Azure Storage Connection String: ", process.env.AZURE_STORAGE_CONNECTION_STRING);
+const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+if (!connectionString) {
+  console.error("Azure connection string is not set!");
+}
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
 
