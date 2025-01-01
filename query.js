@@ -11,12 +11,9 @@ const Kurir = require('./models/kurir');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
+const path = require('path');
+const fs = require('fs');
 require("dotenv").config();
-console.log("Azure Storage Connection String: ", process.env.AZURE_STORAGE_CONNECTION_STRING);
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-if (!connectionString) {
-  console.error("Azure connection string is not set!");
-}
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
 
@@ -946,6 +943,31 @@ async function getBlobUrl(containerName, blobName) {
     const blobClient = containerClient.getBlobClient(blobName);
     return blobClient.url;
 }
+
+async function uploadFileToBlob(containerName, fileBuffer, blobName, contentType) {
+    try {
+        // Pastikan container ada
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        await containerClient.createIfNotExists();
+        console.log(`Container "${containerName}" sudah tersedia.`);
+
+        // Buat blob client
+        const blobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Unggah file dari buffer
+        await blobClient.uploadData(fileBuffer, {
+            blobHTTPHeaders: { blobContentType: contentType },
+        });
+        console.log(`File berhasil diunggah ke "${blobName}".`);
+
+        // Kembalikan URL blob
+        return blobClient.url;
+    } catch (error) {
+        console.error('Terjadi kesalahan saat mengunggah file:', error.message);
+        throw error;
+    }
+}
+
 // End Query Dapa
 
 async function getinboxpesanan(callback) {
@@ -1029,4 +1051,5 @@ module.exports = {
     getprofileumkm,
     getinboxpesanan,
     getBlobUrl,
+    uploadFileToBlob,
 };
