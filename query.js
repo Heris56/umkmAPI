@@ -13,6 +13,7 @@ const sequelize = require('./db');
 
 
 
+// Produk - Haikal
 async function getproduk(callback) {
     try {
         const result = await Produk.findAll(); // Ambil data dari tabel produk
@@ -36,6 +37,28 @@ async function getprodukbyID(id, callback) {
         callback(null, produk);
     } catch (error) {
         callback(error, null);
+    }
+}
+
+async function getprodukbyIDUMKM(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tida ditemukan di parameter');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+        if (!umkm) {
+            throw new Error('UMKM tidak ditemukan');
+        }
+
+        const result = await Produk.findAll({
+            where: { id_umkm: id }
+        })
+
+        callback(null, result);
+    } catch (error) {
+        console.log(error)
+        callback(error, null)
     }
 }
 
@@ -107,6 +130,8 @@ async function getProdukByType(tipe_barang, callback) {
         callback(error, null);
     }
 }
+
+// end of // Produk - Haikal
 
 async function getallKeranjang(callback) {
     try {
@@ -204,7 +229,7 @@ async function getMessagesByUMKM(id, callback) {
     try {
         const messages = await Message.findAll({
             where: {
-                id_umkm : id
+                id_umkm: id
             },
             order: [['sent_at', 'ASC']],
         });
@@ -218,7 +243,7 @@ async function getMessagesByPembeli(id, callback) {
     try {
         const messages = await Message.findAll({
             where: {
-                id_pembeli : id
+                id_pembeli: id
             },
             order: [['sent_at', 'ASC']],
         });
@@ -232,7 +257,7 @@ async function getMessagesByKurir(id, callback) {
     try {
         const messages = await Message.findAll({
             where: {
-                id_kurir : id
+                id_kurir: id
             },
             order: [['sent_at', 'ASC']],
         });
@@ -250,13 +275,13 @@ async function sendMessagePembeliKeUMKM(id, data, callback) {
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await messages.create({
-            where:{id_pembeli:id},
-            message : data.message, 
-            sent_at : data.sent_at,
-            is_read : data.is_read,
-            id_umkm : data.id_umkm,
-            id_pembeli : id,
-            id_kurir : null
+            where: { id_pembeli: id },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: data.id_umkm,
+            id_pembeli: id,
+            id_kurir: null
         });
         callback(null, newMessage);
     } catch (error) {
@@ -271,13 +296,13 @@ async function sendMessagePembeliKeKurir(id, data, callback) {
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await messages.create({
-            where:{id_pembeli:id},
-            message : data.message, 
-            sent_at : data.sent_at,
-            is_read : data.is_read,
-            id_umkm : null,
-            id_pembeli : id,
-            id_kurir : data.id_kurir
+            where: { id_pembeli: id },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: null,
+            id_pembeli: id,
+            id_kurir: data.id_kurir
         });
         callback(null, newMessage);
     } catch (error) {
@@ -292,13 +317,13 @@ async function sendMessageUMKMKePembeli(id, data, callback) {
         //     throw new Error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-            where:{id_umkm:id},
-            message : data.message, 
-            sent_at : data.sent_at,
-            is_read : data.is_read,
-            id_umkm : id,
-            id_pembeli : data.id_pembeli,
-            id_kurir : null
+            where: { id_umkm: id },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: id,
+            id_pembeli: data.id_pembeli,
+            id_kurir: null
         });
         callback(null, newMessage);
     } catch (error) {
@@ -313,13 +338,13 @@ async function sendMessageKurirKePembeli(id, data, callback) {
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await messages.create({
-            where:{id_kurir:id},
-            message : data.message, 
-            sent_at : data.sent_at,
-            is_read : data.is_read,
-            id_umkm : null,
-            id_pembeli : data.id_pembeli,
-            id_kurir : id
+            where: { id_kurir: id },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: null,
+            id_pembeli: data.id_pembeli,
+            id_kurir: id
         });
         callback(null, newMessage);
     } catch (error) {
@@ -931,6 +956,7 @@ async function getinboxpesanan(callback) {
 module.exports = {
     getproduk,
     getprodukbyID,
+    getprodukbyIDUMKM,
     addproduk,
     updateProduk,
     deleteproduk,

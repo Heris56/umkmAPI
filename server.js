@@ -24,33 +24,6 @@ app.get('/', (req, res) => {
     res.json({ message: "hello world" })
 })
 
-app.get('/barang', (req, res) => {
-    dboperations.getbarang((error, result) => {
-        if (error) {
-            console.error('error get barang:', error);
-            return res.status(500).send('error fetch barang');
-        }
-        res.json(result);
-    });
-});
-
-
-
-app.post('/barang', (req, res) => {
-    const data = req.body;
-    dboperations.addbarang(data, (error, result) => {
-        if (error) {
-            console.error('error insert barang:', error);
-            return res.status(500).send('error nambah barang');
-        }
-        res.status(200).json(result);
-    });
-});
-
-
-
-
-
 app.get('/produk/:id', (req, res) => {
     const id = req.params.id;
     dboperations.getprodukbyID(id, (error, result) => {
@@ -68,6 +41,17 @@ app.get('/produk', (req, res) => {
             return res.status(500).send('error fetch produk');
         }
         res.json(result);
+    });
+});
+
+app.get('/produkumkm/:id', async (req, res) => {
+    const id_umkm = req.params.id;
+    dboperations.getprodukbyIDUMKM(id_umkm, (error, result) => {
+        if (error) {
+            console.error('error: ', error);
+            return res.status(500).send(error);
+        }
+        res.status(200).json(result)
     });
 });
 
