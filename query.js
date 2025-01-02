@@ -237,24 +237,24 @@ async function getMessages(callback) {
 }
 
 // Get messages by sender and receiver
-async function getMessagesByUMKM(id, callback) {
+async function getMessagesByUMKM(id_umkm, id_pembeli, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT 
-                Chat.*, 
+            SELECT
+                Chat.*,
                 pembeli.nama_lengkap,
                 umkm.username
-            FROM 
+            FROM
                 Chat
-            LEFT JOIN 
-                pembeli ON Chat.id_pembeli = Pembeli.id_pembeli
-                LEFT JOIN 
-                umkm ON Chat.id_umkm = Pembeli.id_pembeli
-				WHERE umkm.id_umkm = 1;
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+                LEFT JOIN
+                umkm ON pembeli.id_pembeli = umkm.id_umkm
+				WHERE umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
         `,
             {
-                replacements: { id: id },
+                replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
                 type: QueryTypes.SELECT,
             }
         );

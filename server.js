@@ -181,10 +181,11 @@ app.get("/message", (req, res) => {
 });
 
 // Route to get messages by sender and receiver
-app.get("/message/msgUMKM/:id", (req, res) => {
-    const { id } = req.params;
+app.get("/message/msgUMKM/:id_umkm/:id_pembeli", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByUMKM(id, (error, result) => {
+    dboperations.getMessagesByUMKM(id_umkm, id_pembeli, (error, result) => {
         if (error) {
             console.error("Error fetching messages by sender and receiver:", error);
             return res.status(500).send("Error fetching messages");
