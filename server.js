@@ -182,7 +182,7 @@ app.get("/message", (req, res) => {
 
 // Route to get messages by sender and receiver
 app.get("/message/msgUMKM/:id", (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
 
   dboperations.getMessagesByUMKM(id, (error, result) => {
     if (error) {
@@ -826,44 +826,12 @@ app.get("/getcampaign/:id", async (req, res) => {
       .status(500)
       .json({ message: "Error fetching campaigns", error: error.message });
   }
-  res.json(result);
 });
 
 app.put("/campaignEdit/:id/:data", (req, res) => {
   const id = req.params.id;
   const data = req.body.data;
   dboperations.updateCampaign(id, data, (error, campaign) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ message: "Error updating campaign", error });
-    }
-    return res.status(200).json(campaign);
-  });
-});
-
-app.get("/campaign/:id", async (req, res) => {
-  const id = req.params.id;
-
-  try {
-    const campaigns = await dboperations.getCampaign(id); // Correctly assign the value
-    if (campaigns.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No campaigns found for this ID" });
-    }
-    res.status(200).json(campaigns); // Use `campaigns` here
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching campaigns", error: error.message });
-  }
-});
-
-app.put("/campaign/:id", (req, res) => {
-  const { id } = req.params; // Get campaign ID from route params
-  const updatedData = req.body; // Get updated data from request body
-  dboperations.updateCampaign(id, updatedData, (error, campaign) => {
     if (error) {
       return res
         .status(500)
