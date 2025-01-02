@@ -802,7 +802,7 @@ app.post('/campaign', (req, res) => {
     });
 });
 
-app.get('/campaign/:id', async (req, res) => {
+app.get('/getcampaign/:id', async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -817,10 +817,10 @@ app.get('/campaign/:id', async (req, res) => {
 });
 
 
-app.put('/campaign/:id', (req, res) => {
-    const { id } = req.params; // Get campaign ID from route params
-    const updatedData = req.body; // Get updated data from request body
-    dboperations.updateCampaign(id, updatedData, (error, campaign) => {
+app.put('/campaignEdit/:id/:data', (req, res) => {
+    const  id  = req.params.id;
+    const data = req.body.data; 
+    dboperations.updateCampaign(id, data, (error, campaign) => {
         if (error) {
             return res.status(500).json({ message: 'Error updating campaign', error });
         }

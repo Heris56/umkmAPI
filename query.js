@@ -1159,11 +1159,11 @@ async function getCampaign(id) {
 
 async function createCampaign(data, callback) {
     try {
-        const campaign = await Campaign.create(data); // Creating a new campaign
-        callback(null, campaign); // Return the created campaign
+        const campaign = await Campaign.create(data); 
+        callback(null, campaign); 
     } catch (error) {
         console.error('Error creating campaign:', error);
-        callback(error, null); // Return error
+        callback(error, null); 
     }
 };
 
