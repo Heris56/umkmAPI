@@ -9,7 +9,7 @@ const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
 const Kurir = require('./models/kurir');
 const Campaign = require('./models/campaign');
-const { QueryTypes } = require('sequelize');
+const { QueryTypes, where } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
 const path = require('path');
@@ -1073,15 +1073,16 @@ async function getinboxpesanan(callback) {
     }
 }
 
-async function getCampaign(callback) {
+async function getCampaign(id) {
     try {
-        const campaigns = await Campaign.findAll();
-        callback(null, campaigns); // Pass campaigns to the callback on success
+        const campaigns = await Campaign.findAll({ where: { id_umkm: id } });
+        return campaigns;
     } catch (error) {
         console.error('Error fetching campaigns:', error);
-        callback(error, null); // Pass error to the callback on failure
+        throw error;
     }
-};
+}
+
 
 
 async function createCampaign(data, callback) {

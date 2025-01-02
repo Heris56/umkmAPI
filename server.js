@@ -766,14 +766,20 @@ app.post('/campaign', (req, res) => {
     });
 });
 
-app.get('/campaign', (req, res) => {
-    dboperations.getCampaign((error, campaigns) => {
-        if (error) {
-            return res.status(500).json({ message: 'Error fetching campaigns', error });
+app.get('/campaign/:id', async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const campaigns = await dboperations.getCampaign(id); // Correctly assign the value
+        if (campaigns.length === 0) {
+            return res.status(404).json({ message: 'No campaigns found for this ID' });
         }
-        return res.status(200).json(campaigns);
-    });
+        res.status(200).json(campaigns); // Use `campaigns` here
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching campaigns', error: error.message });
+    }
 });
+
 
 app.put('/campaign/:id', (req, res) => {
     const { id } = req.params; // Get campaign ID from route params

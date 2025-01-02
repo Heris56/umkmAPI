@@ -37,6 +37,10 @@ const Campaign = sequelize.define('Campaign', {
     id_umkm: {
         type: DataTypes.INTEGER,
         allowNull: true, // Set to true since not all campaigns may have UMKM
+        references: {
+            model: UMKM,
+            key: 'id_umkm'
+        }
     }
 }, {
     tableName: 'campaign',
