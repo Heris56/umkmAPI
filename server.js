@@ -641,6 +641,18 @@ app.get('/getdatadashboardpesanpalingbaru/:id', (req, res) => {
     });
 });
 
+app.get('/getdatadashboardcampaignpalingbaru/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getdatadashboardcampaignpalingbaru(id, (error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
 app.post('/addriwayat', (req, res) => {
     const data = req.body;
     dboperations.addriwayat(data, (error, result) => {

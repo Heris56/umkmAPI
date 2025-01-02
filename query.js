@@ -761,9 +761,9 @@ async function getdatadashboardcampaignpalingbaru(id, callback) {
             throw new Error('UMKM tidak ditemukan');
         }
 
-        const result = await Message.findAll({
-            where: { id_umkm: id, is_read: 0 },
-            order: [['id_chat', 'DESC']],
+        const result = await Campaign.findAll({
+            where: { id_umkm: id },
+            order: [['id_campaign', 'DESC']],
             limit: 1
         });
 
@@ -1263,4 +1263,5 @@ module.exports = {
     getdatadashboardpesananmasuk,
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
+    getdatadashboardcampaignpalingbaru,
 };
