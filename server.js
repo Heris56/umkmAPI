@@ -525,8 +525,10 @@ app.get('/riwayat', async (req, res) => {
 });
 
 //Server Dapa
-app.get('/getpesananmasuk', (req, res) => {
-    dboperations.getpesananmasuk((error, result) => {
+app.get('/getpesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getpesananmasuk(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -535,8 +537,9 @@ app.get('/getpesananmasuk', (req, res) => {
     });
 });
 
-app.get('/getpesananditerima', (req, res) => {
-    dboperations.getpesananditerima((error, result) => {
+app.get('/getpesananditerima/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananditerima(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -545,8 +548,9 @@ app.get('/getpesananditerima', (req, res) => {
     });
 });
 
-app.get('/getpesananditolak', (req, res) => {
-    dboperations.getpesananditolak((error, result) => {
+app.get('/getpesananditolak/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananditolak(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -555,8 +559,9 @@ app.get('/getpesananditolak', (req, res) => {
     });
 });
 
-app.get('/getpesananselesai', (req, res) => {
-    dboperations.getpesananselesai((error, result) => {
+app.get('/getpesananselesai/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananselesai(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -565,8 +570,9 @@ app.get('/getpesananselesai', (req, res) => {
     });
 });
 
-app.get('/getriwayatpesanan', (req, res) => {
-    dboperations.getriwayatpesanan((error, result) => {
+app.get('/getriwayatpesanan/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getriwayatpesanan(id, (error, result) => {
         if (error) {
             console.error('error get riwayat:', error);
             return res.status(500).send('error fetch riwayat');
@@ -587,10 +593,22 @@ app.get('/getprofileumkm/:id', (req, res) => {
     });
 });
 
-app.get('/getdatadashboard/:id', (req, res) => {
+app.get('/getdatadashboardproduklaris/:id', (req, res) => {
     const id = req.params.id;
 
-    dboperations.getdatadashboard(id, (error, result) => {
+    dboperations.getdatadashboardproduklaris(id, (error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getdatadashboardpesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getdatadashboardpesananmasuk(id, (error, result) => {
         if (error) {
             console.error('error get riwayat:', error);
             return res.status(500).send('error fetch riwayat');
