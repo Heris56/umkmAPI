@@ -810,6 +810,38 @@ app.post("/campaign", (req, res) => {
   });
 });
 
+app.get("/getcampaign/:id", async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const campaigns = await dboperations.getCampaign(id); // Correctly assign the value
+    if (campaigns.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No campaigns found for this ID" });
+    }
+    res.status(200).json(campaigns); // Use `campaigns` here
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching campaigns", error: error.message });
+  }
+  res.json(result);
+});
+
+app.put("/campaignEdit/:id/:data", (req, res) => {
+  const id = req.params.id;
+  const data = req.body.data;
+  dboperations.updateCampaign(id, data, (error, campaign) => {
+    if (error) {
+      return res
+        .status(500)
+        .json({ message: "Error updating campaign", error });
+    }
+    return res.status(200).json(campaign);
+  });
+});
+
 app.get("/campaign/:id", async (req, res) => {
   const id = req.params.id;
 
