@@ -655,7 +655,7 @@ JOIN
 JOIN 
     Pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
-    p.id_umkm = 1
+    p.id_umkm = :id
 GROUP BY 
     p.nama_barang
 ORDER BY 
@@ -688,7 +688,7 @@ INNER JOIN
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE 
     ps.status_pesanan = 'Pesanan Masuk' 
-    AND p.id_umkm = 1;
+    AND p.id_umkm = :id;
         `, {
             replacements: { id: id },
             type: QueryTypes.SELECT
@@ -741,6 +741,28 @@ async function getdatadashboardpesanpalingbaru(id, callback) {
             where: { id_umkm: id, is_read: 0 },
             order: [['id_chat', 'DESC']],
             limit: 1
+        });
+
+        callback(null, result);
+    } catch (error) {
+        console.error(error);
+        callback(error, null);
+    }
+}
+
+async function getpesanread(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak ditemukan di parameter');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+        if (!umkm) {
+            throw new Error('UMKM tidak ditemukan');
+        }
+
+        const result = await Message.findAll({
+            where: { id_umkm: id, is_read: 1 },
         });
 
         callback(null, result);
@@ -1264,4 +1286,5 @@ module.exports = {
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
+    getpesanread,
 };
