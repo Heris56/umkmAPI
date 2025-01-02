@@ -8,7 +8,8 @@ const Pesanan = require('./models/pesanan');
 const Riwayat = require('./models/riwayat');
 const Keranjang = require('./models/keranjang');
 const Kurir = require('./models/kurir');
-const { QueryTypes } = require('sequelize');
+const Campaign = require('./models/campaign');
+const { QueryTypes, where } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
 const path = require('path');
@@ -1044,6 +1045,7 @@ async function uploadFileToBlob(containerName, fileBuffer, blobName, contentType
 
 // End Query Dapa
 
+//start query inbox pesanan
 async function getinboxpesanan(callback) {
     try {
         const result = await sequelize.query(`
@@ -1070,6 +1072,61 @@ async function getinboxpesanan(callback) {
         throw new Error('Query execution failed');
     }
 }
+
+async function getCampaign(id) {
+    try {
+        const campaigns = await Campaign.findAll({ where: { id_umkm: id } });
+        return campaigns;
+    } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        throw error;
+    }
+}
+
+
+
+async function createCampaign(data, callback) {
+    try {
+        const campaign = await Campaign.create(data); // Creating a new campaign
+        callback(null, campaign); // Return the created campaign
+    } catch (error) {
+        console.error('Error creating campaign:', error);
+        callback(error, null); // Return error
+    }
+};
+
+async function updateCampaign(id, data, callback) {
+    try {
+        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); // Find the campaign by ID
+        if (campaign) {
+            await campaign.update(data); // Update the campaign with new data
+            callback(null, campaign); // Return the updated campaign
+        } else {
+            callback('Campaign not found', null); // If no campaign found
+        }
+    } catch (error) {
+        console.error('Error updating campaign:', error);
+        callback(error, null); // Return error
+    }
+};
+
+async function deleteCampaign(id, callback) {
+    try {
+        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); // Find the campaign by ID
+        if (campaign) {
+            await campaign.destroy(); // Delete the campaign
+            callback(null, 'Campaign deleted successfully'); // Return success message
+        } else {
+            callback('Campaign not found', null); // If no campaign found
+        }
+    } catch (error) {
+        console.error('Error deleting campaign:', error);
+        callback(error, null); // Return error
+    }
+};
+
+//end query inbox pesanan
+
 
 module.exports = {
     getproduk,
@@ -1125,6 +1182,10 @@ module.exports = {
     getprofileumkm,
     getinboxpesanan,
     getBlobUrl,
+    getCampaign,
+    createCampaign,
+    updateCampaign,
+    deleteCampaign,
     uploadFileToBlob,
     getdatadashboardproduklaris,
     getdatadashboardpesananmasuk,
