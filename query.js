@@ -12,6 +12,8 @@ const Campaign = require('./models/campaign');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('./db');
 const { BlobServiceClient } = require("@azure/storage-blob");
+const path = require('path');
+const fs = require('fs');
 require("dotenv").config();
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
@@ -231,15 +233,28 @@ async function getMessages(callback) {
 // Get messages by sender and receiver
 async function getMessagesByUMKM(id, callback) {
     try {
-        const messages = await Message.findAll({
-            where: {
-                id_umkm: id
-            },
-            order: [['sent_at', 'ASC']],
+        const result = await sequelize.query(`
+            SELECT 
+                Chat.*, 
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM 
+                Chat
+            LEFT JOIN 
+                pembeli ON Chat.id_pembeli = Pembeli.id_pembeli
+                LEFT JOIN 
+                umkm ON Chat.id_umkm = Pembeli.id_pembeli
+				WHERE umkm.id_umkm = 1;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
         });
-        callback(null, messages);
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
     }
 }
 
@@ -278,7 +293,7 @@ async function sendMessagePembeliKeUMKM(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -299,7 +314,7 @@ async function sendMessagePembeliKeKurir(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_pembeli: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -341,7 +356,7 @@ async function sendMessageKurirKePembeli(id, data, callback) {
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
-        const newMessage = await messages.create({
+        const newMessage = await Message.create({
             where: { id_kurir: id },
             message: data.message,
             sent_at: data.sent_at,
@@ -627,7 +642,67 @@ async function getRiwayat(callback) {
 }
 
 // Query Dapa
-async function getpesananmasuk(callback) {
+async function getdatadashboardproduklaris(id, callback) {
+    try {
+        const result = await sequelize.query(`
+            SELECT TOP 1
+    p.nama_barang, 
+    SUM(k.kuantitas) AS total_kuantitas
+FROM 
+    Keranjang k
+JOIN 
+    Produk p ON k.id_produk = p.id_produk
+JOIN 
+    Pesanan ps ON k.id_keranjang = ps.id_keranjang
+WHERE 
+    p.id_umkm = 1
+GROUP BY 
+    p.nama_barang
+ORDER BY 
+    total_kuantitas DESC;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function getdatadashboardpesananmasuk(id, callback) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+    COUNT(ps.id_pesanan) AS jumlah_pesanan
+FROM 
+    pesanan ps
+INNER JOIN 
+    keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN 
+    produk p ON k.id_produk = p.id_produk
+INNER JOIN 
+    pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE 
+    ps.status_pesanan = 'Pesanan Masuk' 
+    AND p.id_umkm = 1;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function getpesananmasuk(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -641,8 +716,10 @@ async function getpesananmasuk(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Masuk';
+			WHERE ps.status_pesanan = 'Pesanan Masuk'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -654,7 +731,7 @@ async function getpesananmasuk(callback) {
     }
 }
 
-async function getpesananditerima(callback) {
+async function getpesananditerima(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -668,8 +745,10 @@ async function getpesananditerima(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Diterima';
+			WHERE ps.status_pesanan = 'Pesanan Diterima'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -681,7 +760,7 @@ async function getpesananditerima(callback) {
     }
 }
 
-async function getpesananditolak(callback) {
+async function getpesananditolak(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -695,8 +774,10 @@ async function getpesananditolak(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Ditolak';
+			WHERE ps.status_pesanan = 'Pesanan Ditolak'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -709,7 +790,7 @@ async function getpesananditolak(callback) {
 }
 
 
-async function getpesananselesai(callback) {
+async function getpesananselesai(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -723,8 +804,10 @@ async function getpesananselesai(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Selesai';
+			WHERE ps.status_pesanan = 'Pesanan Selesai'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -736,7 +819,7 @@ async function getpesananselesai(callback) {
     }
 }
 
-async function getriwayatpesanan(callback) {
+async function getriwayatpesanan(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -750,8 +833,10 @@ async function getriwayatpesanan(callback) {
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+            WHERE pb.id_pembeli = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -933,6 +1018,31 @@ async function getBlobUrl(containerName, blobName) {
     const blobClient = containerClient.getBlobClient(blobName);
     return blobClient.url;
 }
+
+async function uploadFileToBlob(containerName, fileBuffer, blobName, contentType) {
+    try {
+        // Pastikan container ada
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        await containerClient.createIfNotExists();
+        console.log(`Container "${containerName}" sudah tersedia.`);
+
+        // Buat blob client
+        const blobClient = containerClient.getBlockBlobClient(blobName);
+
+        // Unggah file dari buffer
+        await blobClient.uploadData(fileBuffer, {
+            blobHTTPHeaders: { blobContentType: contentType },
+        });
+        console.log(`File berhasil diunggah ke "${blobName}".`);
+
+        // Kembalikan URL blob
+        return blobClient.url;
+    } catch (error) {
+        console.error('Terjadi kesalahan saat mengunggah file:', error.message);
+        throw error;
+    }
+}
+
 // End Query Dapa
 
 //start query inbox pesanan
@@ -1075,4 +1185,7 @@ module.exports = {
     createCampaign,
     updateCampaign,
     deleteCampaign,
+    uploadFileToBlob,
+    getdatadashboardproduklaris,
+    getdatadashboardpesananmasuk,
 };

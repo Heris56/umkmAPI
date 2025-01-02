@@ -4,6 +4,8 @@ const dboperations = require('./query');
 const Kurir = require('./models/kurir');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 // const corsOptions = {
@@ -19,6 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
 
 app.use(express.json());
+
+// Konfigurasi multer untuk file upload
+const storage = multer.memoryStorage(); // Simpan file di memori (buffer)
+const upload = multer({ storage });
 
 app.get('/', (req, res) => {
     res.json({ message: "hello world" })
@@ -245,7 +251,7 @@ app.post('/message/msgUMKM/:id', (req, res) => {
     });
 });
 
-app.post('/message/msgPembeli/:id/:data', (req, res) => {
+app.post('/message/msgPembeli/:id', (req, res) => {
     const data = req.body;
     const id = req.params.id;
 
@@ -519,8 +525,10 @@ app.get('/riwayat', async (req, res) => {
 });
 
 //Server Dapa
-app.get('/getpesananmasuk', (req, res) => {
-    dboperations.getpesananmasuk((error, result) => {
+app.get('/getpesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getpesananmasuk(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -529,8 +537,9 @@ app.get('/getpesananmasuk', (req, res) => {
     });
 });
 
-app.get('/getpesananditerima', (req, res) => {
-    dboperations.getpesananditerima((error, result) => {
+app.get('/getpesananditerima/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananditerima(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -539,8 +548,9 @@ app.get('/getpesananditerima', (req, res) => {
     });
 });
 
-app.get('/getpesananditolak', (req, res) => {
-    dboperations.getpesananditolak((error, result) => {
+app.get('/getpesananditolak/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananditolak(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -549,8 +559,9 @@ app.get('/getpesananditolak', (req, res) => {
     });
 });
 
-app.get('/getpesananselesai', (req, res) => {
-    dboperations.getpesananselesai((error, result) => {
+app.get('/getpesananselesai/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getpesananselesai(id, (error, result) => {
         if (error) {
             console.error('error get pesanan:', error);
             return res.status(500).send('error fetch pesanan');
@@ -559,8 +570,9 @@ app.get('/getpesananselesai', (req, res) => {
     });
 });
 
-app.get('/getriwayatpesanan', (req, res) => {
-    dboperations.getriwayatpesanan((error, result) => {
+app.get('/getriwayatpesanan/:id', (req, res) => {
+    const id = req.params.id;
+    dboperations.getriwayatpesanan(id, (error, result) => {
         if (error) {
             console.error('error get riwayat:', error);
             return res.status(500).send('error fetch riwayat');
@@ -573,6 +585,30 @@ app.get('/getprofileumkm/:id', (req, res) => {
     const id = req.params.id;
 
     dboperations.getprofileumkm(id, (error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getdatadashboardproduklaris/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getdatadashboardproduklaris(id, (error, result) => {
+        if (error) {
+            console.error('error get riwayat:', error);
+            return res.status(500).send('error fetch riwayat');
+        }
+        res.json(result);
+    });
+});
+
+app.get('/getdatadashboardpesananmasuk/:id', (req, res) => {
+    const id = req.params.id;
+
+    dboperations.getdatadashboardpesananmasuk(id, (error, result) => {
         if (error) {
             console.error('error get riwayat:', error);
             return res.status(500).send('error fetch riwayat');
@@ -681,6 +717,29 @@ app.get('/getbloburl/', async (req, res) => {
     } catch (error) {
         console.error('Error fetching blob URL:', error);
         res.status(500).send('Error fetching blob URL');
+    }
+});
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'File tidak ditemukan!' });
+        }
+
+        const containerName = 'storeimg'; // Ganti dengan nama container Anda
+        const blobName = `${Date.now()}-${req.file.originalname}`;
+        const contentType = req.file.mimetype;
+
+        // Panggil fungsi untuk upload file ke Azure Blob Storage
+        const blobUrl = await dboperations.uploadFileToBlob(containerName, req.file.buffer, blobName, contentType);
+
+        res.status(200).json({
+            message: 'File berhasil diunggah!',
+            blobUrl,
+        });
+    } catch (error) {
+        console.error('Kesalahan saat mengunggah file:', error.message);
+        res.status(500).json({ message: 'Terjadi kesalahan saat mengunggah file.' });
     }
 });
 
