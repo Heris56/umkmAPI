@@ -641,7 +641,7 @@ async function getRiwayat(callback) {
 }
 
 // Query Dapa
-async function getdatadashboard(id, callback) {
+async function getdatadashboardproduklaris(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT TOP 1
@@ -672,7 +672,36 @@ ORDER BY
     }
 }
 
-async function getpesananmasuk(callback) {
+async function getdatadashboardpesananmasuk(id, callback) {
+    try {
+        const result = await sequelize.query(`
+            SELECT 
+    COUNT(ps.id_pesanan) AS jumlah_pesanan
+FROM 
+    pesanan ps
+INNER JOIN 
+    keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN 
+    produk p ON k.id_produk = p.id_produk
+INNER JOIN 
+    pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE 
+    ps.status_pesanan = 'Pesanan Masuk' 
+    AND p.id_umkm = 1;
+        `, {
+            replacements: { id: id },
+            type: QueryTypes.SELECT
+        });
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error('Error executing raw query:', error);
+        throw new Error('Query execution failed');
+    }
+}
+
+async function getpesananmasuk(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -686,8 +715,10 @@ async function getpesananmasuk(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Masuk';
+			WHERE ps.status_pesanan = 'Pesanan Masuk'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -699,7 +730,7 @@ async function getpesananmasuk(callback) {
     }
 }
 
-async function getpesananditerima(callback) {
+async function getpesananditerima(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -713,8 +744,10 @@ async function getpesananditerima(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Diterima';
+			WHERE ps.status_pesanan = 'Pesanan Diterima'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -726,7 +759,7 @@ async function getpesananditerima(callback) {
     }
 }
 
-async function getpesananditolak(callback) {
+async function getpesananditolak(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -740,8 +773,10 @@ async function getpesananditolak(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Ditolak';
+			WHERE ps.status_pesanan = 'Pesanan Ditolak'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -754,7 +789,7 @@ async function getpesananditolak(callback) {
 }
 
 
-async function getpesananselesai(callback) {
+async function getpesananselesai(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -768,8 +803,10 @@ async function getpesananselesai(callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Selesai';
+			WHERE ps.status_pesanan = 'Pesanan Selesai'
+            AND p.id_umkm = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -781,7 +818,7 @@ async function getpesananselesai(callback) {
     }
 }
 
-async function getriwayatpesanan(callback) {
+async function getriwayatpesanan(id, callback) {
     try {
         const result = await sequelize.query(`
             SELECT
@@ -795,8 +832,10 @@ async function getriwayatpesanan(callback) {
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli;
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+            WHERE pb.id_pembeli = :id;
         `, {
+            replacements: { id: id },
             type: QueryTypes.SELECT
         });
 
@@ -1087,5 +1126,6 @@ module.exports = {
     getinboxpesanan,
     getBlobUrl,
     uploadFileToBlob,
-    getdatadashboard,
+    getdatadashboardproduklaris,
+    getdatadashboardpesananmasuk,
 };
