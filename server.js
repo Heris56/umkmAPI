@@ -686,6 +686,7 @@ app.get('/getbloburl/', async (req, res) => {
 
 // End Server Dapa
 
+//start server inbox
 app.get('/getinboxpesanan', (req, res) => {
     dboperations.getinboxpesanan((error, result) => {
         if (error) {
@@ -695,6 +696,47 @@ app.get('/getinboxpesanan', (req, res) => {
         res.json(result);
     });
 });
+
+app.post('/campaign', (req, res) => {
+    const campaignData = req.body; // Get campaign data from request body
+    dboperations.createCampaign(campaignData, (error, campaign) => {
+        if (error) {
+            return res.status(500).json({ message: 'Error creating campaign', error });
+        }
+        return res.status(201).json(campaign);
+    });
+});
+
+app.get('/campaign', (req, res) => {
+    dboperations.getCampaign((error, campaigns) => {
+        if (error) {
+            return res.status(500).json({ message: 'Error fetching campaigns', error });
+        }
+        return res.status(200).json(campaigns);
+    });
+});
+
+app.put('/campaign/:id', (req, res) => {
+    const { id } = req.params; // Get campaign ID from route params
+    const updatedData = req.body; // Get updated data from request body
+    dboperations.updateCampaign(id, updatedData, (error, campaign) => {
+        if (error) {
+            return res.status(500).json({ message: 'Error updating campaign', error });
+        }
+        return res.status(200).json(campaign);
+    });
+});
+
+app.delete('/campaign/:id', (req, res) => {
+    const { id } = req.params; // Get campaign ID from route params
+    dboperations.deleteCampaign(id, (error, message) => {
+        if (error) {
+            return res.status(500).json({ message: 'Error deleting campaign', error });
+        }
+        return res.status(200).json({ message });
+    });
+});
+
 // server.js
 
 app.listen(port, () => {
