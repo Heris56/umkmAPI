@@ -701,6 +701,78 @@ WHERE
     }
 }
 
+async function getdatadashboardprodukpalingbaru(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak ditemukan di parameter');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+        if (!umkm) {
+            throw new Error('UMKM tidak ditemukan');
+        }
+
+        const result = await Produk.findAll({
+            where: { id_umkm: id },
+            order: [['id_produk', 'DESC']],
+            limit: 1
+        });
+
+        callback(null, result);
+    } catch (error) {
+        console.error(error);
+        callback(error, null);
+    }
+}
+
+async function getdatadashboardpesanpalingbaru(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak ditemukan di parameter');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+        if (!umkm) {
+            throw new Error('UMKM tidak ditemukan');
+        }
+
+        const result = await Message.findAll({
+            where: { id_umkm: id, is_read: 0 },
+            order: [['id_chat', 'DESC']],
+            limit: 1
+        });
+
+        callback(null, result);
+    } catch (error) {
+        console.error(error);
+        callback(error, null);
+    }
+}
+
+async function getdatadashboardcampaignpalingbaru(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('id tidak ditemukan di parameter');
+        }
+
+        const umkm = await UMKM.findByPk(id);
+        if (!umkm) {
+            throw new Error('UMKM tidak ditemukan');
+        }
+
+        const result = await Message.findAll({
+            where: { id_umkm: id, is_read: 0 },
+            order: [['id_chat', 'DESC']],
+            limit: 1
+        });
+
+        callback(null, result);
+    } catch (error) {
+        console.error(error);
+        callback(error, null);
+    }
+}
+
 async function getpesananmasuk(id, callback) {
     try {
         const result = await sequelize.query(`
@@ -1128,4 +1200,6 @@ module.exports = {
     uploadFileToBlob,
     getdatadashboardproduklaris,
     getdatadashboardpesananmasuk,
+    getdatadashboardprodukpalingbaru,
+    getdatadashboardpesanpalingbaru,
 };
