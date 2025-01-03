@@ -1226,12 +1226,22 @@ async function getinboxpesanan(callback) {
 
 async function getCampaign(id) {
     try {
-        const campaigns = await Campaign.findByPk(id);
+        const campaigns = await Campaign.findAll({where:{id_umkm: id}});
         return campaigns;
     } catch (error) {
         console.error("Error fetching campaigns:", error);
         throw error;
     }
+}
+
+async function getCampaignById(id) {
+  try {
+      const campaigns = await Campaign.findByPk(id);
+      return campaigns;
+  } catch (error) {
+      console.error("Error fetching campaigns:", error);
+      throw error;
+  }
 }
 
 async function createCampaign(data, callback) {
@@ -1341,4 +1351,5 @@ module.exports = {
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
+    getCampaignById
 };
