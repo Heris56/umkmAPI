@@ -1256,7 +1256,7 @@ async function getinboxpesanan(callback) {
 
 async function getCampaign(id) {
     try {
-        const campaigns = await Campaign.findAll({ where: { id_umkm: id } });
+        const campaigns = await Campaign.findByPk(id);
         return campaigns;
     } catch (error) {
         console.error("Error fetching campaigns:", error);
@@ -1274,33 +1274,34 @@ async function createCampaign(data, callback) {
     }
 }
 
-async function updateCampaign(id, data, callback) {
+async function updateCampaign( id_campaign, id_umkm, data, callback) {
     try {
-        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); // Find the campaign by ID
+        
+        const campaign = await Campaign.findOne({ where: { id_campaign: id_campaign, id_umkm: id_umkm} }); 
         if (campaign) {
-            await campaign.update(data); // Update the campaign with new data
-            callback(null, campaign); // Return the updated campaign
+            await campaign.update(data);
+            callback(null, campaign); 
         } else {
-            callback("Campaign not found", null); // If no campaign found
+            callback("Campaign not found", null); 
         }
     } catch (error) {
         console.error("Error updating campaign:", error);
-        callback(error, null); // Return error
+        callback(error, null); 
     }
 }
 
 async function deleteCampaign(id, callback) {
     try {
-        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); // Find the campaign by ID
+        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); 
         if (campaign) {
-            await campaign.destroy(); // Delete the campaign
-            callback(null, "Campaign deleted successfully"); // Return success message
+            await campaign.destroy(); 
+            callback(null, "Campaign deleted successfully"); 
         } else {
-            callback("Campaign not found", null); // If no campaign found
+            callback("Campaign not found", null); 
         }
     } catch (error) {
         console.error("Error deleting campaign:", error);
-        callback(error, null); // Return error
+        callback(error, null);
     }
 }
 

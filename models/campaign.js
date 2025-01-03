@@ -47,11 +47,4 @@ const Campaign = sequelize.define('Campaign', {
     timestamps: false, // No timestamps since it's not present in the SQL table
 });
 
-// Association with UMKM model
-Campaign.belongsTo(UMKM, {
-    foreignKey: 'id_umkm', // The foreign key
-    as: 'umkm', // Alias for the relationship
-    onDelete: 'SET NULL', // If UMKM is deleted, set the UMKM id to NULL in campaign
-});
-
 module.exports = Campaign;

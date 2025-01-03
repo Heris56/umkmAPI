@@ -857,17 +857,17 @@ app.get("/getcampaign/:id", async (req, res) => {
     }
 });
 
-app.put("/campaignEdit/:id/:data", (req, res) => {
-    const id = req.params.id;
-    const data = req.body.data;
-    dboperations.updateCampaign(id, data, (error, campaign) => {
-        if (error) {
-            return res
-                .status(500)
-                .json({ message: "Error updating campaign", error });
-        }
-        return res.status(200).json(campaign);
-    });
+app.put("/updatecampaign/:id_umkm/:id_campaign", (req, res) => {
+  const id_umkm = req.params.id_umkm;
+  const id_campaign = req.params.id_campaign;
+  const data = req.body;
+  dboperations.updateCampaign( id_campaign, id_umkm, data, (error, result) => {
+      if (error) {
+          console.error("error update data Campaign:", error);
+          return res.status(500).send("error update data ");
+      }
+      res.status(200).json(result);
+  });
 });
 
 app.delete("/campaign/:id", (req, res) => {
