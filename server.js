@@ -281,6 +281,20 @@ app.post("/message/msgPembeli/:id", (req, res) => {
     });
 });
 
+app.post("/sendchat/:id_umkm/:id_pembeli", (req, res) => {
+    const data = req.body;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
+        if (error) {
+            console.error("error insert riwayat:", error);
+            return res.status(500).send("error nambah riwayat");
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.post("/message/msgKurir/:id/:data", (req, res) => {
     const data = req.body;
     const id = req.params.id;
@@ -677,22 +691,6 @@ app.post("/addriwayat", (req, res) => {
         res.status(200).json(result);
     });
 });
-
-app.post("/sendchat/:id_umkm/:id_pembeli", (req, res) => {
-    const data = req.body;
-    const id_umkm = req.params.id_umkm;
-    const id_pembeli = req.params.id_pembeli;
-
-    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
-        if (error) {
-            console.error("error insert riwayat:", error);
-            return res.status(500).send("error nambah riwayat");
-        }
-        res.status(200).json(result);
-    });
-});
-
-
 
 app.post("/addpesanan", (req, res) => {
     const data = req.body;
