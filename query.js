@@ -237,7 +237,37 @@ async function getMessages(callback) {
 }
 
 // Get messages by sender and receiver
-async function getMessagesByUMKM(id_umkm, id_pembeli, callback) {
+async function getMessagesByUMKM(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+                LEFT JOIN
+                umkm ON pembeli.id_pembeli = umkm.id_umkm
+				WHERE umkm.id_umkm = :id_umkm;
+        `,
+            {
+                replacements: { id_umkm: id_umkm },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+async function getmessagesbyumkmandpembeli(id_umkm, id_pembeli, callback) {
     try {
         const result = await sequelize.query(
             `
@@ -338,19 +368,19 @@ async function sendMessagePembeliKeKurir(id, data, callback) {
     }
 }
 
-async function sendMessageUMKMKePembeli(id, data, callback) {
+async function sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, callback) {
     try {
         // const messages = await Message.findOne({ where: { id_umkm : id } });
         // if (!messages){
         //     throw new Error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-            where: { id_umkm: id },
+            where: { id_umkm: id_umkm },
             message: data.message,
             sent_at: data.sent_at,
             is_read: data.is_read,
-            id_umkm: id,
-            id_pembeli: data.id_pembeli,
+            id_umkm: id_umkm,
+            id_pembeli: id_pembeli,
             id_kurir: null,
             receiver_type: "Pembeli",
         });
@@ -1351,5 +1381,6 @@ module.exports = {
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
+    getmessagesbyumkmandpembeli,
     getCampaignById
 };
