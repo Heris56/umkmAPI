@@ -828,10 +828,10 @@ app.get("/getcampaign/:id", async (req, res) => {
   }
 });
 
-app.put("/campaignEdit/:id/:data", (req, res) => {
+app.put("/campaignEdit/:id", (req, res) => {
   const id = req.params.id;
-  const data = req.body.data;
-  dboperations.updateCampaign(id, data, (error, campaign) => {
+  const dataCampaign = req.body.data;
+  dboperations.updateCampaign(id, dataCampaign, (error, campaign) => {
     if (error) {
       return res
         .status(500)
