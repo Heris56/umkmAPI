@@ -181,11 +181,10 @@ app.get("/message", (req, res) => {
 });
 
 // Route to get messages by sender and receiver
-app.get("/message/msgUMKM/:id_umkm/:id_pembeli", (req, res) => {
+app.get("/message/msgUMKM/:id_umkm", (req, res) => {
     const id_umkm = req.params.id_umkm;
-    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByUMKM(id_umkm, id_pembeli, (error, result) => {
+    dboperations.getMessagesByUMKM(id_umkm, (error, result) => {
         if (error) {
             console.error("Error fetching messages by sender and receiver:", error);
             return res.status(500).send("Error fetching messages");
@@ -219,9 +218,10 @@ app.get("/message/msgKurir/:id", (req, res) => {
 });
 
 // Route to send a message
-app.post("/message/msgUMKM/:id", (req, res) => {
+app.post("/message/msgUMKM/:id_umkm/id_pembeli", (req, res) => {
     const data = req.body;
-    const id = req.params.id;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
 
     if (!data || Object.keys(data).length === 0) {
         return res.status(400).send("Message data is required");
@@ -241,7 +241,7 @@ app.post("/message/msgUMKM/:id", (req, res) => {
         }
     }
 
-    dboperations.sendMessageUMKMKePembeli(id, data, (error, result) => {
+    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
         if (error) {
             console.error("Error sending message:", error);
             return res.status(500).send("Error sending message");
@@ -653,6 +653,20 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
     });
 });
 
+app.get("/getmessagebyumkmandpembeli/:id_umkm/:id_pembeli", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
+
+
+    dboperations.getmessagesbyumkmandpembeli(id_umkm, id_pembeli, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
+
 app.post("/addriwayat", (req, res) => {
     const data = req.body;
     dboperations.addriwayat(data, (error, result) => {
@@ -663,6 +677,22 @@ app.post("/addriwayat", (req, res) => {
         res.status(200).json(result);
     });
 });
+
+app.post("/sendchat/:id_umkm/:id_pembeli", (req, res) => {
+    const data = req.body;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
+        if (error) {
+            console.error("error insert riwayat:", error);
+            return res.status(500).send("error nambah riwayat");
+        }
+        res.status(200).json(result);
+    });
+});
+
+
 
 app.post("/addpesanan", (req, res) => {
     const data = req.body;
