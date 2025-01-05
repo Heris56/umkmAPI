@@ -1135,7 +1135,8 @@ async function getriwayatpesanan(id, callback) {
             ps.total_belanja AS total_harga,
             pb.alamat AS alamat_pembeli,
             p.Deskripsi_Barang AS deskripsi_barang,
-            k.kuantitas as kuantitas_barang
+            k.kuantitas as kuantitas_barang,
+            p.image_url
             FROM riwayat r
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
@@ -1403,7 +1404,7 @@ async function getinboxpesanan(callback) {
 
 async function getCampaign(id) {
     try {
-        const campaigns = await Campaign.findAll({where:{id_umkm: id}});
+        const campaigns = await Campaign.findAll({ where: { id_umkm: id } });
         return campaigns;
     } catch (error) {
         console.error("Error fetching campaigns:", error);
@@ -1412,13 +1413,13 @@ async function getCampaign(id) {
 }
 
 async function getCampaignById(id) {
-  try {
-      const campaigns = await Campaign.findByPk(id);
-      return campaigns;
-  } catch (error) {
-      console.error("Error fetching campaigns:", error);
-      throw error;
-  }
+    try {
+        const campaigns = await Campaign.findByPk(id);
+        return campaigns;
+    } catch (error) {
+        console.error("Error fetching campaigns:", error);
+        throw error;
+    }
 }
 
 async function createCampaign(data, callback) {
@@ -1431,30 +1432,30 @@ async function createCampaign(data, callback) {
     }
 }
 
-async function updateCampaign( id_campaign, id_umkm, data, callback) {
+async function updateCampaign(id_campaign, id_umkm, data, callback) {
     try {
-        
-        const campaign = await Campaign.findOne({ where: { id_campaign: id_campaign, id_umkm: id_umkm} }); 
+
+        const campaign = await Campaign.findOne({ where: { id_campaign: id_campaign, id_umkm: id_umkm } });
         if (campaign) {
             await campaign.update(data);
-            callback(null, campaign); 
+            callback(null, campaign);
         } else {
-            callback("Campaign not found", null); 
+            callback("Campaign not found", null);
         }
     } catch (error) {
         console.error("Error updating campaign:", error);
-        callback(error, null); 
+        callback(error, null);
     }
 }
 
 async function deleteCampaign(id, callback) {
     try {
-        const campaign = await Campaign.findOne({ where: { id_campaign: id } }); 
+        const campaign = await Campaign.findOne({ where: { id_campaign: id } });
         if (campaign) {
-            await campaign.destroy(); 
-            callback(null, "Campaign deleted successfully"); 
+            await campaign.destroy();
+            callback(null, "Campaign deleted successfully");
         } else {
-            callback("Campaign not found", null); 
+            callback("Campaign not found", null);
         }
     } catch (error) {
         console.error("Error deleting campaign:", error);

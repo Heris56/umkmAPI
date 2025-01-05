@@ -933,35 +933,35 @@ app.get("/getcampaign/:id", async (req, res) => {
 });
 
 app.get("/getcampaignbyid/:id", async (req, res) => {
-  const id = req.params.id;
+    const id = req.params.id;
 
-  try {
-      const campaigns = await dboperations.getCampaignById(id); // Correctly assign the value
-      if (campaigns.length === 0) {
-          return res
-              .status(404)
-              .json({ message: "No campaigns found for this ID" });
-      }
-      res.status(200).json(campaigns); // Use `campaigns` here
-  } catch (error) {
-      res
-          .status(500)
-          .json({ message: "Error fetching campaigns", error: error.message });
-  }
+    try {
+        const campaigns = await dboperations.getCampaignById(id); // Correctly assign the value
+        if (campaigns.length === 0) {
+            return res
+                .status(404)
+                .json({ message: "No campaigns found for this ID" });
+        }
+        res.status(200).json(campaigns); // Use `campaigns` here
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error fetching campaigns", error: error.message });
+    }
 });
 
 
 app.put("/updatecampaign/:id_umkm/:id_campaign", (req, res) => {
-  const id_umkm = req.params.id_umkm;
-  const id_campaign = req.params.id_campaign;
-  const data = req.body;
-  dboperations.updateCampaign( id_campaign, id_umkm, data, (error, result) => {
-      if (error) {
-          console.error("error update data Campaign:", error);
-          return res.status(500).send("error update data ");
-      }
-      res.status(200).json(result);
-  });
+    const id_umkm = req.params.id_umkm;
+    const id_campaign = req.params.id_campaign;
+    const data = req.body;
+    dboperations.updateCampaign(id_campaign, id_umkm, data, (error, result) => {
+        if (error) {
+            console.error("error update data Campaign:", error);
+            return res.status(500).send("error update data ");
+        }
+        res.status(200).json(result);
+    });
 });
 
 app.delete("/campaign/:id", (req, res) => {
