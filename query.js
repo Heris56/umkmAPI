@@ -224,6 +224,8 @@ async function loginUMKM(data, callback) {
     }
 }
 
+//START API EL SIPIT
+
 // Get all messages
 async function getMessages(callback) {
     try {
@@ -236,7 +238,7 @@ async function getMessages(callback) {
     }
 }
 
-// Get messages by sender and receiver
+// Get messages by sender and receiver UMKM
 async function getMessagesByUMKM(id_umkm, callback) {
     try {
         const result = await sequelize.query(
@@ -249,9 +251,12 @@ async function getMessagesByUMKM(id_umkm, callback) {
                 Chat
             LEFT JOIN
                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-                LEFT JOIN
-                umkm ON pembeli.id_pembeli = umkm.id_umkm
-				WHERE umkm.id_umkm = :id_umkm;
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                umkm.id_umkm = :id_umkm
+                ORDER BY
+                Chat.id_pembeli ASC;
         `,
             {
                 replacements: { id_umkm: id_umkm },
@@ -267,7 +272,7 @@ async function getMessagesByUMKM(id_umkm, callback) {
     }
 }
 
-async function getmessagesbyumkmandpembeli(id_umkm, id_pembeli, callback) {
+async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
     try {
         const result = await sequelize.query(
             `
@@ -279,9 +284,10 @@ async function getmessagesbyumkmandpembeli(id_umkm, id_pembeli, callback) {
                 Chat
             LEFT JOIN
                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-                LEFT JOIN
-                umkm ON pembeli.id_pembeli = umkm.id_umkm
-				WHERE umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
         `,
             {
                 replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
@@ -297,49 +303,188 @@ async function getmessagesbyumkmandpembeli(id_umkm, id_pembeli, callback) {
     }
 }
 
-async function getMessagesByPembeli(id, callback) {
+
+// Get messages by sender and receiver Pembeli
+async function getMessagesByPembeli(id_pembeli, callback) {
     try {
-        const messages = await Message.findAll({
-            where: {
-                id_pembeli: id,
-            },
-            order: [["sent_at", "ASC"]],
-        });
-        callback(null, messages);
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                pembeli.id_pembeli = :id_pembeli
+            ORDER BY
+                Chat.receiver_type ASC,
+                Chat.id_umkm ASC;
+            `,
+            {
+                replacements: { id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
     }
 }
 
-async function getMessagesByKurir(id, callback) {
+async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
     try {
-        const messages = await Message.findAll({
-            where: {
-                id_kurir: id,
-            },
-            order: [["sent_at", "ASC"]],
-        });
-        callback(null, messages);
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                pembeli.id_pembeli = :id_pembeli AND umkm.id_umkm = :id_umkm
+            `,
+            {
+                replacements: { id_pembeli: id_pembeli, id_umkm: id_umkm },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+// Fungsi untuk mendapatkan pesan berdasarkan ID Pembeli dan ID Kurir
+async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                kurir.nama_kurir
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                pembeli.id_pembeli = :id_pembeli AND kurir.id_kurir = :id_kurir
+            `,
+            {
+                replacements: { id_pembeli: id_pembeli, id_kurir: id_kurir },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+// Get messages by sender and receiver Kurir
+async function getMessagesByKurir(id_kurir, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                kurir.nama_kurir
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                kurir.id_kurir = :id_kurir
+            ORDER BY
+                Chat.id_pembeli ASC;
+            `,
+            {
+                replacements: { id_kurir: id_kurir },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                kurir.nama_kurir
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                kurir.id_kurir = :id_kurir AND pembeli.id_pembeli = :id_pembeli
+            `,
+            {
+                replacements: { id_kurir: id_kurir, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
     }
 }
 
 // Send a message
-async function sendMessagePembeliKeUMKM(id, data, callback) {
+async function sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, callback) {
     try {
         // const messages = Message.findOne({ where: { id_pembeli : id } });
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-            where: { id_pembeli: id },
+            where: { id_pembeli: id_pembeli },
             message: data.message,
             sent_at: data.sent_at,
             is_read: data.is_read,
-            id_umkm: data.id_umkm,
-            id_pembeli: id,
+            id_umkm: id_umkm,
+            id_pembeli: id_pembeli,
             id_kurir: null,
+            receiver_type: "UMKM",
         });
         callback(null, newMessage);
     } catch (error) {
@@ -347,20 +492,21 @@ async function sendMessagePembeliKeUMKM(id, data, callback) {
     }
 }
 
-async function sendMessagePembeliKeKurir(id, data, callback) {
+async function sendMessagePembeliKeKurir(id_pembeli, id_kurir, data, callback) {
     try {
         // const messages = Message.findOne({ where: { id_pembeli : id } });
         // if (!messages){
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-            where: { id_pembeli: id },
+            where: { id_pembeli: id_pembeli },
             message: data.message,
             sent_at: data.sent_at,
             is_read: data.is_read,
             id_umkm: null,
-            id_pembeli: id,
-            id_kurir: data.id_kurir,
+            id_pembeli: id_pembeli,
+            id_kurir: id_kurir,
+            receiver_type: "Kurir",
         });
         callback(null, newMessage);
     } catch (error) {
@@ -397,13 +543,14 @@ async function sendMessageKurirKePembeli(id, data, callback) {
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-            where: { id_kurir: id },
+            where: { id_kurir: id_kurir },
             message: data.message,
             sent_at: data.sent_at,
             is_read: data.is_read,
             id_umkm: null,
-            id_pembeli: data.id_pembeli,
-            id_kurir: id,
+            id_pembeli: id_pembeli,
+            id_kurir: id_kurir,
+            receiver_type: "Pembeli",
         });
         callback(null, newMessage);
     } catch (error) {
@@ -1333,6 +1480,10 @@ module.exports = {
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,
+    getMessagesByPembeliAndUMKM,
+    getmessagesbyUMKMandPembeli,
+    getMessagesByPembeliAndKurir,
+    getMessagesByKurirAndPembeli,
     getMessagesByKurir,
     sendMessagePembeliKeUMKM,
     sendMessagePembeliKeKurir,
@@ -1381,6 +1532,5 @@ module.exports = {
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
-    getmessagesbyumkmandpembeli,
     getCampaignById
 };
