@@ -762,7 +762,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             return res.status(400).json({ message: "File tidak ditemukan!" });
         }
 
-        const containerName = "storeimg"; // Ganti dengan nama container Anda
+        const containerName = "storeimg";
         const blobName = `${Date.now()}-${req.file.originalname}`;
         const contentType = req.file.mimetype;
 
