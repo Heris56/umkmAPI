@@ -31,6 +31,10 @@ const Pembeli = sequelize.define('Pembeli', {
     password: {
         type: DataTypes.STRING(255),
         allowNull: false
+    },
+    profileImg: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
     tableName: 'pembeli',

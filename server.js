@@ -181,11 +181,36 @@ app.get("/message", (req, res) => {
 });
 
 // Route to get messages by sender and receiver
-app.get("/message/msgUMKM/:id_umkm/:id_pembeli", (req, res) => {
+app.get("/message/msgUMKM/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getMessagesByUMKM(id_umkm, (error, result) => {
+        if (error) {
+            console.error("Error fetching messages by sender and receiver:", error);
+            return res.status(500).send("Error fetching messages");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
     const id_umkm = req.params.id_umkm;
     const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByUMKM(id_umkm, id_pembeli, (error, result) => {
+
+    dboperations.getmessagesbyumkmandpembeli(id_umkm, id_pembeli, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
+    });
+});
+
+app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.getMessagesByPembeli(id_pembeli, (error, result) => {
         if (error) {
             console.error("Error fetching messages by sender and receiver:", error);
             return res.status(500).send("Error fetching messages");
@@ -194,10 +219,39 @@ app.get("/message/msgUMKM/:id_umkm/:id_pembeli", (req, res) => {
     });
 });
 
-app.get("/message/msgPembeli/:id", (req, res) => {
-    const { id } = req.params;
+app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
 
-    dboperations.getMessagesByPembeli(id, (error, result) => {
+
+    dboperations.getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
+    });
+});
+
+app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_kurir = req.params.id_kurir;
+
+
+    dboperations.getMessagesByPembeliAndKurir(id_pembeli, id_kurir, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
+    });
+});
+
+
+app.get("/message/msgKurir/:id_kurir", (req, res) => {
+    const id_kurir = req.params.kurir;
+
+    dboperations.getMessagesByKurir(id_kurir, (error, result) => {
         if (error) {
             console.error("Error fetching messages by sender and receiver:", error);
             return res.status(500).send("Error fetching messages");
@@ -206,109 +260,171 @@ app.get("/message/msgPembeli/:id", (req, res) => {
     });
 });
 
-app.get("/message/msgKurir/:id", (req, res) => {
-    const { id } = req.params;
+app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByKurir(id, (error, result) => {
+
+    dboperations.getMessagesByKurirAndPembeli(id_kurir,id_pembeli, (error, result) => {
         if (error) {
-            console.error("Error fetching messages by sender and receiver:", error);
-            return res.status(500).send("Error fetching messages");
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
         }
-        res.status(200).json(result);
+        res.json(result);
     });
 });
 
+//mungkin dihapus
 // Route to send a message
-app.post("/message/msgUMKM/:id", (req, res) => {
+// app.post("/message/msgUMKM/:id_umkm/id_pembeli", (req, res) => {
+//     const data = req.body;
+//     const id_umkm = req.params.id_umkm;
+//     const id_pembeli = req.params.id_pembeli;
+
+//     if (!data || Object.keys(data).length === 0) {
+//         return res.status(400).send("Message data is required");
+//     }
+
+//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
+//     if (data.sent_at) {
+//         const time = data.sent_at.trim(); // Ensure no extra spaces
+//         const timeParts = time.split(":");
+
+//         // If time is valid (HH:MM:SS format)
+//         if (timeParts.length === 3) {
+//             // Ensure the format is correct
+//             data.sent_at = time; // Store only time portion
+//         } else {
+//             return res.status(400).send("Invalid time format for sent_at");
+//         }
+//     }
+
+//     dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
+//         if (error) {
+//             console.error("Error sending message:", error);
+//             return res.status(500).send("Error sending message");
+//         }
+//         res.status(201).json(result);
+//     });
+// });
+
+app.post("/sendchat/umkmkepembeli/:id_umkm/:id_pembeli", (req, res) => {
     const data = req.body;
-    const id = req.params.id;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
-
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
-        }
-    }
-
-    dboperations.sendMessageUMKMKePembeli(id, data, (error, result) => {
+    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
     });
 });
 
-app.post("/message/msgPembeli/:id", (req, res) => {
+//mungkin dihapus
+// app.post("/message/msgPembeli/:id", (req, res) => {
+//     const data = req.body;
+//     const id = req.params.id;
+
+//     if (!data || Object.keys(data).length === 0) {
+//         return res.status(400).send("Message data is required");
+//     }
+
+//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
+//     if (data.sent_at) {
+//         const time = data.sent_at.trim(); // Ensure no extra spaces
+//         const timeParts = time.split(":");
+
+//         // If time is valid (HH:MM:SS format)
+//         if (timeParts.length === 3) {
+//             // Ensure the format is correct
+//             data.sent_at = time; // Store only time portion
+//         } else {
+//             return res.status(400).send("Invalid time format for sent_at");
+//         }
+//     }
+
+//     dboperations.sendMessagePembeliKeUMKM(id, data, (error, result) => {
+//         if (error) {
+//             console.error("Error sending message:", error);
+//             return res.status(500).send("Error sending message");
+//         }
+//         res.status(201).json(result);
+//     });
+// });
+
+app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
     const data = req.body;
-    const id = req.params.id;
+    const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
-
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
-        }
-    }
-
-    dboperations.sendMessagePembeliKeUMKM(id, data, (error, result) => {
+    dboperations.sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
     });
 });
 
-app.post("/message/msgKurir/:id/:data", (req, res) => {
+app.post("/sendchat/pembelikekurir/:id_pembeli/:id_kurir", (req, res) => {
     const data = req.body;
-    const id = req.params.id;
+    const id_pembeli = req.params.id_pembeli;
+    const id_kurir = req.params.id_kurir;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
-
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
-        }
-    }
-
-    dboperations.sendMessageKurirKePembeli(id, data, (error, result) => {
+    dboperations.sendMessagePembeliKeKurir(id_pembeli, id_kurir, data, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
+    });
+});
+
+//mungkin dihapus
+// app.post("/message/msgKurir/:id/:data", (req, res) => {
+//     const data = req.body;
+//     const id = req.params.id;
+
+//     if (!data || Object.keys(data).length === 0) {
+//         return res.status(400).send("Message data is required");
+//     }
+
+//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
+//     if (data.sent_at) {
+//         const time = data.sent_at.trim(); // Ensure no extra spaces
+//         const timeParts = time.split(":");
+
+//         // If time is valid (HH:MM:SS format)
+//         if (timeParts.length === 3) {
+//             // Ensure the format is correct
+//             data.sent_at = time; // Store only time portion
+//         } else {
+//             return res.status(400).send("Invalid time format for sent_at");
+//         }
+//     }
+
+//     dboperations.sendMessageKurirKePembeli(id, data, (error, result) => {
+//         if (error) {
+//             console.error("Error sending message:", error);
+//             return res.status(500).send("Error sending message");
+//         }
+//         res.status(201).json(result);
+//     });
+// });
+
+app.post("/sendchat/kurirkepembeli/:id_pembeli/:id_kurir", (req, res) => {
+    const data = req.body;
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.sendMessageKurirKePembeli(id_kurir, id_pembeli, data, (error, result) => {
+        if (error) {
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
+        }
+        res.status(200).json(result);
     });
 });
 
@@ -653,6 +769,7 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
     });
 });
 
+
 app.post("/addriwayat", (req, res) => {
     const data = req.body;
     dboperations.addriwayat(data, (error, result) => {
@@ -829,16 +946,35 @@ app.get("/getcampaign/:id", async (req, res) => {
     }
 });
 
-app.put("/campaignEdit/:id/:data", (req, res) => {
+app.get("/getcampaignbyid/:id", async (req, res) => {
     const id = req.params.id;
-    const data = req.body.data;
-    dboperations.updateCampaign(id, data, (error, campaign) => {
-        if (error) {
+
+    try {
+        const campaigns = await dboperations.getCampaignById(id); // Correctly assign the value
+        if (campaigns.length === 0) {
             return res
-                .status(500)
-                .json({ message: "Error updating campaign", error });
+                .status(404)
+                .json({ message: "No campaigns found for this ID" });
         }
-        return res.status(200).json(campaign);
+        res.status(200).json(campaigns); // Use `campaigns` here
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error fetching campaigns", error: error.message });
+    }
+});
+
+
+app.put("/updatecampaign/:id_umkm/:id_campaign", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_campaign = req.params.id_campaign;
+    const data = req.body;
+    dboperations.updateCampaign(id_campaign, id_umkm, data, (error, result) => {
+        if (error) {
+            console.error("error update data Campaign:", error);
+            return res.status(500).send("error update data ");
+        }
+        res.status(200).json(result);
     });
 });
 
