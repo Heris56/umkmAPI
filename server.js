@@ -137,6 +137,16 @@ app.delete("/produk/:id", (req, res) => {
     });
 });
 
+app.get("/umkm/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getuserUMKMbyID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.get("/umkm", (req, res) => {
     dboperations.getuserUMKM((error, result) => {
         if (error) {
@@ -265,7 +275,7 @@ app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
 
 
-    dboperations.getMessagesByKurirAndPembeli(id_kurir,id_pembeli, (error, result) => {
+    dboperations.getMessagesByKurirAndPembeli(id_kurir, id_pembeli, (error, result) => {
         if (error) {
             console.error("error get message:", error);
             return res.status(500).send("error fetch message");
