@@ -260,6 +260,20 @@ app.get("/message/msgKurir/:id_kurir", (req, res) => {
     });
 });
 
+app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
+
+
+    dboperations.getMessagesByKurirAndPembeli(id_kurir,id_pembeli, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
+    });
+});
+
 //mungkin dihapus
 // Route to send a message
 // app.post("/message/msgUMKM/:id_umkm/id_pembeli", (req, res) => {
