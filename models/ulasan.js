@@ -24,6 +24,10 @@ const Ulasan = sequelize.define('Ulasan', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  rating: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
 }, {
   tableName: 'ulasans',
   timestamps: true,
