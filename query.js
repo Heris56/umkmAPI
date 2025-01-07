@@ -1223,17 +1223,31 @@ WHERE
     }
 }
 
+
+
 async function addpesanan(data, callback) {
     try {
-        if (!data.total_belanja || !data.id_keranjang) {
-            throw new Error("Incomplete data");
-        }
-        const result = await Pesanan.create({
-            status_pesanan: "Pesanan Masuk",
-            total_belanja: data.total_belanja,
-            id_keranjang: data.id_keranjang,
+        // Ambil semua keranjang berdasarkan id_batch
+        const keranjangItems = await Keranjang.findAll({
+            where: { id_batch: idBatch },
+            include: [{ model: Produk }],
         });
-        callback(null, result);
+
+        if (keranjangItems.length === 0) {
+            throw new Error("Tidak ada data keranjang untuk id_batch ini");
+        }
+
+        const pesananBaru = await Promise.all(
+            keranjangItems.map(async (item) => {
+                return Pesanan.create({
+                    total_belanja: item.total,
+                    id_keranjang: item.id_keranjang,
+                    status_pesanan: "Standby",
+                });
+            })
+        );
+
+        callback(null, pesananBaru);
     } catch (error) {
         callback(error, null);
     }
@@ -1379,6 +1393,8 @@ async function updatedataumkm(id, data, callback) {
         return { success: false, message: "Ada kesalahan saat mengganti Password" };
     }
 }
+
+
 
 async function getprofileumkm(id, callback) {
     try {

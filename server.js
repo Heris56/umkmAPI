@@ -881,6 +881,17 @@ app.put("/updatedataumkm/:id", (req, res) => {
     });
 });
 
+app.put("/updatestatuskeranjang/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.updatedataumkm(id, (error, result) => {
+        if (error) {
+            console.error("error update status Keranjang", error);
+            return res.status(500).send("error update status Keranjang");
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.get("/getbloburl/", async (req, res) => {
     try {
         const containerName = "storeimg";
