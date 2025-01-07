@@ -312,11 +312,11 @@ async function getulasans(callback) {
     }
 }
 
-async function getulasansByProdukId(id_umkm, callback) {
+async function getulasansByProdukId(id_produk, callback) {
     try {
         const result = await Ulasan.findAll({
             where: {
-                id_umkm: id_umkm
+                id_produk: id_produk
             }
         });
         callback(null, result);
