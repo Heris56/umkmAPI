@@ -266,7 +266,7 @@ async function getulasansByProdukId(id_produk, callback) {
         });
         callback(null, result);
     } catch (error) {
-        callback(error, null); 
+        callback(error, null);
     }
 }
 //  End query ulasans

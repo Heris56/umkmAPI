@@ -4,8 +4,13 @@ const sequelize = require('../db'); // Import instance Sequelize
 const Ulasan = sequelize.define('Ulasan', {
   id_pembeli: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
+    allowNull: false,
+    autoIncrement: false
+  },
+  id_produk: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    autoIncrement: false
   },
   username: {
     type: DataTypes.STRING(255),
