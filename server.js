@@ -213,6 +213,27 @@ app.post("/login", (req, res) => {
     });
 });
 
+app.get("/ulasans", (req, res) => {
+    dboperations.getulasans((error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/:id_produk", (req, res) => {
+    const id_produk = req.params.id_produk;
+
+    dboperations.getulasansByProdukId(id_produk, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 // Route to get all messages
 app.get("/message", (req, res) => {
     dboperations.getMessages((error, result) => {

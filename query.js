@@ -2,6 +2,7 @@
 const connection = require("./db");
 const Produk = require("./models/produk");
 const UMKM = require("./models/umkm");
+const Ulasan = require("./models/ulasan");
 const Message = require("./models/message");
 const Pembeli = require("./models/pembeli");
 const Pesanan = require("./models/pesanan");
@@ -301,7 +302,31 @@ async function loginUMKM(data, callback) {
 }
 // end of bagian UMKM
 
-//START API EL SIPIT
+// Start query ulasans
+async function getulasans(callback) {
+    try {
+        const result = await Ulasan.findAll();
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getulasansByProdukId(id_produk, callback) {
+    try {
+        const result = await Ulasan.findAll({
+            where: {
+                id_produk: id_produk
+            }
+        });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+//  End query ulasans
+
+// START API EL SIPIT
 
 // Get all messages
 async function getMessages(callback) {
@@ -1602,6 +1627,8 @@ module.exports = {
     getuserUMKM: getalluserUMKM,
     registUMKM,
     loginUMKM,
+    getulasans,
+    getulasansByProdukId,
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,
