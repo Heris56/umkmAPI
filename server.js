@@ -105,9 +105,43 @@ app.get("/produkbytipe/tipe", async (req, res) => {
     });
 });
 
+// keranjang
+app.post("/keranjang", (req, res) => {
+    const data = req.body;
+    dboperations.addtoKeranjang(data, (error, result) => {
+        if (error) {
+            return res.status(500).send('gagal memasukan ke keranjang');
+        }
+        res.json(result).status(200);
+    });
+});
+
+app.put("/order/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli
+    dboperations.updatestatuskeranjang(id_pembeli, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send('gagal order pesanan:');
+        }
+        res.json(result).status(200);
+    });
+});
+
+app.get("/keranjangstandby/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    dboperations.getkeranjangstandby(id_pembeli, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send('gagal get keranjang stand by');
+        }
+        return res.json(result).status(200);
+    });
+})
+
 app.get("/keranjang", (req, res) => {
     dboperations.getallKeranjang((error, result) => {
         if (error) {
+            console.error(error)
             return res.status(500).send("error memasukan ke keranjang");
         }
         res.json(result).status(200);
@@ -130,6 +164,16 @@ app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
 
     dboperations.deleteproduk(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/umkm/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getuserUMKMbyID(id, (error, result) => {
         if (error) {
             return res.status(500).send(error.message);
         }
@@ -164,6 +208,27 @@ app.post("/login", (req, res) => {
     dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans", (req, res) => {
+    dboperations.getulasans((error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/:id_produk", (req, res) => {
+    const id_produk = req.params.id_produk;
+
+    dboperations.getulasansByProdukId(id_produk, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
         res.status(200).json(result);
     });
@@ -265,7 +330,7 @@ app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
 
 
-    dboperations.getMessagesByKurirAndPembeli(id_kurir,id_pembeli, (error, result) => {
+    dboperations.getMessagesByKurirAndPembeli(id_kurir, id_pembeli, (error, result) => {
         if (error) {
             console.error("error get message:", error);
             return res.status(500).send("error fetch message");
@@ -668,6 +733,17 @@ app.get("/getriwayatpesanan/:id", (req, res) => {
     });
 });
 
+app.get("/getpesananaktifpembeli/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getallpesananaktifpembeli(id, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getprofileumkm/:id", (req, res) => {
     const id = req.params.id;
 
@@ -850,7 +926,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             return res.status(400).json({ message: "File tidak ditemukan!" });
         }
 
-        const containerName = "storeimg"; // Ganti dengan nama container Anda
+        const containerName = "storeimg";
         const blobName = `${Date.now()}-${req.file.originalname}`;
         const contentType = req.file.mimetype;
 
