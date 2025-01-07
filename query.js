@@ -638,26 +638,26 @@ async function sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, callback) {
     }
 }
 
-async function sendMessageKurirKePembeli(id, data, callback) {
-    try {
-        // const messages = Message.findOne({ where: { id_kurir : id } });
-        // if (!messages){
-        //     throw new error('id tidak ditemukan');
-        // }
-        const newMessage = await Message.create({
-            where: { id_kurir: id_kurir },
-            message: data.message,
-            sent_at: data.sent_at,
-            is_read: data.is_read,
-            id_umkm: null,
-            id_pembeli: id_pembeli,
-            id_kurir: id_kurir,
-            receiver_type: "Pembeli",
-        });
-        callback(null, newMessage);
-    } catch (error) {
-        callback(error, null);
-    }
+async function sendMessageKurirKePembeli(id_kurir, id_pembeli, data, callback) {
+  try {
+    // const messages = Message.findOne({ where: { id_kurir : id } });
+    // if (!messages){
+    //     throw new error('id tidak ditemukan');
+    // }
+    const newMessage = await Message.create({
+      where: { id_kurir: id_kurir },
+      message: data.message,
+      sent_at: data.sent_at,
+      is_read: data.is_read,
+      id_umkm: null,
+      id_pembeli: id_pembeli,
+      id_kurir: id_kurir,
+      receiver_type: "Pembeli",
+    });
+    callback(null, newMessage);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
 // Mark a message as read
@@ -778,83 +778,87 @@ async function deletePembeli(id, callback) {
     }
 }
 
-// Get all kurirs
+// Get all kurir data
 async function getKurir(callback) {
-    try {
-        const kurirs = await Kurir.findAll({
-            include: [
-                { model: UMKM, attributes: ["nama_umkm"] },
-                { model: Pesanan, attributes: ["kode_pesanan"] },
-            ],
-        });
-        callback(null, kurirs);
-    } catch (error) {
-        callback(error, null);
-    }
+  try {
+    const result = await Kurir.findAll();
+    callback(null, result);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
 // Get kurir by ID
 async function getKurirByID(id, callback) {
-    try {
-        const kurir = await Kurir.findByPk(id, {
-            include: [
-                { model: UMKM, attributes: ["nama_umkm"] },
-                { model: Pesanan, attributes: ["kode_pesanan"] },
-            ],
-        });
-        if (!kurir) {
-            return callback(new Error("Kurir not found"), null);
-        }
-        callback(null, kurir);
-    } catch (error) {
-        callback(error, null);
+  try {
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
+    callback(null, kurir);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
 // Add a new kurir
 async function addKurir(data, callback) {
-    try {
-        const newKurir = await Kurir.create({
-            nama_kurir: data.nama_kurir,
-            id_umkm: data.id_umkm,
-            id_pesanan: data.id_pesanan,
-        });
-        callback(null, newKurir);
-    } catch (error) {
-        callback(error, null);
+  try {
+    if (!data.nama_kurir || !data.id_umkm || !data.email || !data.password) {
+      throw new Error("Incomplete data");
     }
+
+    const result = await Kurir.create(data);
+    callback(null, result);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
-// Update kurir by ID
+// Update kurir information
 async function updateKurir(id, data, callback) {
-    try {
-        const kurir = await Kurir.findByPk(id);
-        if (!kurir) {
-            return callback(new Error("Kurir not found"), null);
-        }
-        await kurir.update({
-            nama_kurir: data.nama_kurir,
-            id_umkm: data.id_umkm,
-            id_pesanan: data.id_pesanan,
-        });
-        callback(null, kurir);
-    } catch (error) {
-        callback(error, null);
+  try {
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
+    const updatedKurir = await kurir.update(data);
+    callback(null, updatedKurir);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
-// Delete kurir by ID
+// Delete kurir
 async function deleteKurir(id, callback) {
-    try {
-        const kurir = await Kurir.findByPk(id);
-        if (!kurir) {
-            return callback(new Error("Kurir not found"), null);
-        }
-        await kurir.destroy();
-        callback(null, { message: "Kurir deleted successfully" });
-    } catch (error) {
-        callback(error, null);
+  try {
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
+    await kurir.destroy();
+    callback(null, { message: `Kurir with ID ${id} has been deleted` });
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
 async function getDailyStatsByUMKM(umkmId, month, year) {
