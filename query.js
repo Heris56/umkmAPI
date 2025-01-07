@@ -536,7 +536,7 @@ async function sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, callback) {
   }
 }
 
-async function sendMessageKurirKePembeli(id, data, callback) {
+async function sendMessageKurirKePembeli(id_kurir, id_pembeli, data, callback) {
   try {
     // const messages = Message.findOne({ where: { id_kurir : id } });
     // if (!messages){
@@ -676,16 +676,11 @@ async function deletePembeli(id, callback) {
   }
 }
 
-// Get all kurirs
+// Get all kurir data
 async function getKurir(callback) {
   try {
-    const kurirs = await Kurir.findAll({
-      include: [
-        { model: UMKM, attributes: ["nama_umkm"] },
-        { model: Pesanan, attributes: ["kode_pesanan"] },
-      ],
-    });
-    callback(null, kurirs);
+    const result = await Kurir.findAll();
+    callback(null, result);
   } catch (error) {
     callback(error, null);
   }
@@ -694,15 +689,16 @@ async function getKurir(callback) {
 // Get kurir by ID
 async function getKurirByID(id, callback) {
   try {
-    const kurir = await Kurir.findByPk(id, {
-      include: [
-        { model: UMKM, attributes: ["nama_umkm"] },
-        { model: Pesanan, attributes: ["kode_pesanan"] },
-      ],
-    });
-    if (!kurir) {
-      return callback(new Error("Kurir not found"), null);
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
     callback(null, kurir);
   } catch (error) {
     callback(error, null);
@@ -712,44 +708,52 @@ async function getKurirByID(id, callback) {
 // Add a new kurir
 async function addKurir(data, callback) {
   try {
-    const newKurir = await Kurir.create({
-      nama_kurir: data.nama_kurir,
-      id_umkm: data.id_umkm,
-      id_pesanan: data.id_pesanan,
-    });
-    callback(null, newKurir);
+    if (!data.nama_kurir || !data.id_umkm || !data.email || !data.password) {
+      throw new Error("Incomplete data");
+    }
+
+    const result = await Kurir.create(data);
+    callback(null, result);
   } catch (error) {
     callback(error, null);
   }
 }
 
-// Update kurir by ID
+// Update kurir information
 async function updateKurir(id, data, callback) {
   try {
-    const kurir = await Kurir.findByPk(id);
-    if (!kurir) {
-      return callback(new Error("Kurir not found"), null);
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
-    await kurir.update({
-      nama_kurir: data.nama_kurir,
-      id_umkm: data.id_umkm,
-      id_pesanan: data.id_pesanan,
-    });
-    callback(null, kurir);
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
+    const updatedKurir = await kurir.update(data);
+    callback(null, updatedKurir);
   } catch (error) {
     callback(error, null);
   }
 }
 
-// Delete kurir by ID
+// Delete kurir
 async function deleteKurir(id, callback) {
   try {
-    const kurir = await Kurir.findByPk(id);
-    if (!kurir) {
-      return callback(new Error("Kurir not found"), null);
+    if (!id) {
+      throw new Error("ID cannot be empty");
     }
+
+    const kurir = await Kurir.findByPk(id);
+
+    if (!kurir) {
+      throw new Error(`Kurir with ID ${id} not found`);
+    }
+
     await kurir.destroy();
-    callback(null, { message: "Kurir deleted successfully" });
+    callback(null, { message: `Kurir with ID ${id} has been deleted` });
   } catch (error) {
     callback(error, null);
   }
