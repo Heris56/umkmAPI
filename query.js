@@ -358,7 +358,7 @@ async function getMessagesByUMKM(id_umkm, callback) {
             WHERE
                 umkm.id_umkm = :id_umkm
                 ORDER BY
-                Chat.id_pembeli ASC;
+                Chat.id_chat ASC;
         `,
             {
                 replacements: { id_umkm: id_umkm },
@@ -390,6 +390,8 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
                 umkm ON Chat.id_umkm = umkm.id_umkm
             WHERE
                 umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
+            ORDER BY
+                Chat.id_chat ASC;
         `,
             {
                 replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
@@ -426,7 +428,7 @@ async function getMessagesByPembeli(id_pembeli, callback) {
                 pembeli.id_pembeli = :id_pembeli
             ORDER BY
                 
-                Chat.id_umkm ASC;
+                Chat.id_chat ASC;
             `,
             // tambah Chat.receiver_type ASC klo mau enak liat postmannya
             {
@@ -459,6 +461,8 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
                 umkm ON Chat.id_umkm = umkm.id_umkm
             WHERE
                 pembeli.id_pembeli = :id_pembeli AND umkm.id_umkm = :id_umkm
+            ORDER BY
+                Chat.id_chat ASC;
             `,
             {
                 replacements: { id_pembeli: id_pembeli, id_umkm: id_umkm },
@@ -491,6 +495,8 @@ async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
                 kurir ON Chat.id_kurir = kurir.id_kurir
             WHERE
                 pembeli.id_pembeli = :id_pembeli AND kurir.id_kurir = :id_kurir
+            ORDER BY
+                Chat.id_chat ASC;
             `,
             {
                 replacements: { id_pembeli: id_pembeli, id_kurir: id_kurir },
@@ -524,7 +530,7 @@ async function getMessagesByKurir(id_kurir, callback) {
             WHERE
                 kurir.id_kurir = :id_kurir
             ORDER BY
-                Chat.id_pembeli ASC;
+                Chat.id_chat ASC;
             `,
             {
                 replacements: { id_kurir: id_kurir },
@@ -556,6 +562,8 @@ async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
                 kurir ON Chat.id_kurir = kurir.id_kurir
             WHERE
                 kurir.id_kurir = :id_kurir AND pembeli.id_pembeli = :id_pembeli
+            ORDER BY
+                Chat.id_chat ASC;
             `,
             {
                 replacements: { id_kurir: id_kurir, id_pembeli: id_pembeli },
