@@ -137,6 +137,16 @@ app.delete("/produk/:id", (req, res) => {
     });
 });
 
+app.get("/umkm/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getuserUMKMbyID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.get("/umkm", (req, res) => {
     dboperations.getuserUMKM((error, result) => {
         if (error) {
@@ -257,6 +267,20 @@ app.get("/message/msgKurir/:id_kurir", (req, res) => {
             return res.status(500).send("Error fetching messages");
         }
         res.status(200).json(result);
+    });
+});
+
+app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
+
+
+    dboperations.getMessagesByKurirAndPembeli(id_kurir, id_pembeli, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
     });
 });
 
@@ -876,7 +900,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             return res.status(400).json({ message: "File tidak ditemukan!" });
         }
 
-        const containerName = "storeimg"; // Ganti dengan nama container Anda
+        const containerName = "storeimg";
         const blobName = `${Date.now()}-${req.file.originalname}`;
         const contentType = req.file.mimetype;
 

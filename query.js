@@ -145,6 +145,7 @@ async function getProdukByType(tipe_barang, callback) {
 
 // end of // Produk - Haikal
 
+// bagian keranjang
 async function getallKeranjang(callback) {
     try {
         const result = await Keranjang.findAll();
@@ -185,7 +186,27 @@ async function addtoKeranjang(data, callback) {
     }
 }
 
-async function getuserUMKM(callback) {
+// end of keranjang
+
+// UMKM
+async function getuserUMKMbyID(id, callback) {
+    try {
+        if (!id) {
+            throw new Error('tidak ada ID di parameter');
+        }
+        const umkm = await UMKM.findByPk(id);
+
+        if (!umkm) {
+            throw new Error('tidak menemukan umkm');
+        }
+
+        callback(null, umkm);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function getalluserUMKM(callback) {
     try {
         const result = await UMKM.findAll(); // ambil data tari tabel umkm
         callback(null, result); //return data umkm
@@ -223,6 +244,7 @@ async function loginUMKM(data, callback) {
         callback(error, null);
     }
 }
+// end of bagian UMKM
 
 //START API EL SIPIT
 
@@ -303,7 +325,6 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
     }
 }
 
-
 // Get messages by sender and receiver Pembeli
 async function getMessagesByPembeli(id_pembeli, callback) {
     try {
@@ -324,9 +345,10 @@ async function getMessagesByPembeli(id_pembeli, callback) {
             WHERE
                 pembeli.id_pembeli = :id_pembeli
             ORDER BY
-                Chat.receiver_type ASC,
+                
                 Chat.id_umkm ASC;
             `,
+            // tambah Chat.receiver_type ASC klo mau enak liat postmannya
             {
                 replacements: { id_pembeli: id_pembeli },
                 type: QueryTypes.SELECT,
@@ -890,10 +912,12 @@ INNER JOIN
 WHERE 
     ps.status_pesanan = 'Pesanan Masuk' 
     AND p.id_umkm = :id;
-        `, {
-            replacements: { id: id },
-            type: QueryTypes.SELECT
-        });
+        `,
+            {
+                replacements: { id: id },
+                type: QueryTypes.SELECT,
+            }
+        );
 
         callback(null, result);
     } catch (error) {
@@ -954,12 +978,12 @@ async function getdatadashboardpesanpalingbaru(id, callback) {
 async function getpesanread(id, callback) {
     try {
         if (!id) {
-            throw new Error('id tidak ditemukan di parameter');
+            throw new Error("id tidak ditemukan di parameter");
         }
 
         const umkm = await UMKM.findByPk(id);
         if (!umkm) {
-            throw new Error('UMKM tidak ditemukan');
+            throw new Error("UMKM tidak ditemukan");
         }
 
         const result = await Message.findAll({
@@ -976,12 +1000,12 @@ async function getpesanread(id, callback) {
 async function getdatadashboardcampaignpalingbaru(id, callback) {
     try {
         if (!id) {
-            throw new Error('id tidak ditemukan di parameter');
+            throw new Error("id tidak ditemukan di parameter");
         }
 
         const umkm = await UMKM.findByPk(id);
         if (!umkm) {
-            throw new Error('UMKM tidak ditemukan');
+            throw new Error("UMKM tidak ditemukan");
         }
 
         const result = await Campaign.findAll({
@@ -1475,8 +1499,9 @@ async function createCampaign(data, callback) {
 
 async function updateCampaign(id_campaign, id_umkm, data, callback) {
     try {
-
-        const campaign = await Campaign.findOne({ where: { id_campaign: id_campaign, id_umkm: id_umkm } });
+        const campaign = await Campaign.findOne({
+            where: { id_campaign: id_campaign, id_umkm: id_umkm },
+        });
         if (campaign) {
             await campaign.update(data);
             callback(null, campaign);
@@ -1516,7 +1541,8 @@ module.exports = {
     getkeranjangbyID,
     getallKeranjang,
     addtoKeranjang,
-    getuserUMKM,
+    getuserUMKMbyID,
+    getuserUMKM: getalluserUMKM,
     registUMKM,
     loginUMKM,
     getMessages,
