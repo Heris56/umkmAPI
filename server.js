@@ -105,9 +105,43 @@ app.get("/produkbytipe/tipe", async (req, res) => {
     });
 });
 
+// keranjang
+app.post("/keranjang", (req, res) => {
+    const data = req.body;
+    dboperations.addtoKeranjang(data, (error, result) => {
+        if (error) {
+            return res.status(500).send('gagal memasukan ke keranjang');
+        }
+        res.json(result).status(200);
+    });
+});
+
+app.put("/order/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli
+    dboperations.updatestatuskeranjang(id_pembeli, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send('gagal order pesanan:');
+        }
+        res.json(result).status(200);
+    });
+});
+
+app.get("/keranjangstandby/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    dboperations.getkeranjangstandby(id_pembeli, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send('gagal get keranjang stand by');
+        }
+        return res.json(result).status(200);
+    });
+})
+
 app.get("/keranjang", (req, res) => {
     dboperations.getallKeranjang((error, result) => {
         if (error) {
+            console.error(error)
             return res.status(500).send("error memasukan ke keranjang");
         }
         res.json(result).status(200);

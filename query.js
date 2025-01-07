@@ -146,6 +146,27 @@ async function getProdukByType(tipe_barang, callback) {
 // end of // Produk - Haikal
 
 // bagian keranjang
+async function getkeranjangstandby(id_pembeli, callback) {
+    try {
+        if (!id_pembeli) {
+            throw new Error('id pembeli tidak ditemukan');
+        }
+
+        const keranjang = await Keranjang.findAll(
+            {
+                where: { id_pembeli: id_pembeli, status: "Standby" },
+                include: {
+                    model: Produk,
+                    attributes: ["nama_barang", "image_url", "harga"]
+                }
+            }
+        );
+        callback(null, keranjang);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 async function getallKeranjang(callback) {
     try {
         const result = await Keranjang.findAll();
@@ -179,8 +200,42 @@ async function addtoKeranjang(data, callback) {
         if (!data.total || !data.kuantitas || !data.id_pembeli || !data.id_produk) {
             throw new Error("Data Harus terisi semua");
         }
+
+        data.status = 'Standby'
         const result = await Keranjang.create(data);
         callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function updatestatuskeranjang(id, callback) {
+    try {
+        if (!id) {
+            throw new Error("id tidak boleh kosong");
+        }
+
+        const updatestatus = await Keranjang.update(
+            { status: "Deleted" },
+            { where: { id_pembeli: id } }
+        );
+
+
+        callback(null, updatestatus);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function order(callback) {
+    try {
+
+
+        if (!data.total_belanja || !data.id_keranjang) {
+            throw new Error("Incomplete data");
+        }
+        addpesanan()
+
     } catch (error) {
         callback(error, null);
     }
@@ -1538,9 +1593,11 @@ module.exports = {
     addproduk,
     updateProduk,
     deleteproduk,
+    getkeranjangstandby,
     getkeranjangbyID,
     getallKeranjang,
     addtoKeranjang,
+    updatestatuskeranjang,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
     registUMKM,
