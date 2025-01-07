@@ -312,16 +312,43 @@ async function getulasans(callback) {
     }
 }
 
-async function getulasansByProdukId(id_produk, callback) {
+async function getulasansByProdukId(id_umkm, callback) {
     try {
         const result = await Ulasan.findAll({
             where: {
-                id_produk: id_produk
+                id_umkm: id_umkm
             }
         });
         callback(null, result);
     } catch (error) {
         callback(error, null);
+    }
+}
+
+async function getOverallRating(id_umkm, callback) {
+    try {
+        // Fetch all ratings for the given shop (id_umkm)
+        const reviews = await Ulasan.findAll({
+            where: {
+                id_umkm: id_umkm // Assuming id_produk is the product/shop ID
+            }
+        });
+
+        // Check if there are any reviews
+        if (reviews.length === 0) {
+            return callback(null, { overallRating: 0, totalReviews: 0 }); // No reviews for the shop
+        }
+
+        // Calculate the sum of ratings
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+
+        // Calculate the average rating
+        const overallRating = totalRating / reviews.length;
+
+        // Return the calculated overall rating and the total number of reviews
+        callback(null, { overallRating: parseFloat(overallRating.toFixed(2)), totalReviews: reviews.length });
+    } catch (error) {
+        callback(error, null); // Handle errors
     }
 }
 //  End query ulasans
@@ -1629,6 +1656,7 @@ module.exports = {
     loginUMKM,
     getulasans,
     getulasansByProdukId,
+    getOverallRating,
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,

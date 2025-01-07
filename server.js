@@ -234,6 +234,17 @@ app.get("/ulasans/:id_produk", (req, res) => {
     });
 });
 
+app.get("/overallratings", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getOverallRating(id_umkm, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 // Route to get all messages
 app.get("/message", (req, res) => {
     dboperations.getMessages((error, result) => {
