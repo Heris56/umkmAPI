@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db'); // Import instance Sequelize
 
 const Ulasan = sequelize.define('Ulasan', {
+  id_ulasan: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    autoIncrement: true
+  },
   id_pembeli: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -23,7 +28,8 @@ const Ulasan = sequelize.define('Ulasan', {
 }, {
   tableName: 'ulasans',
   timestamps: true,
-  createdAt: 'tanggal_dibuat',
+  createdAt: 'createdAt',
+  updatedAt: false,
 });
 
 module.exports = Ulasan;
