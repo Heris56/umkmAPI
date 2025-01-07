@@ -234,7 +234,7 @@ app.get("/ulasans/:id_produk", (req, res) => {
     });
 });
 
-app.get("/overallratings", (req, res) => {
+app.get("/overallrating/:id_umkm", (req, res) => {
     const id_umkm = req.params.id_umkm;
 
     dboperations.getOverallRating(id_umkm, (error, result) => {
