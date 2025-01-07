@@ -683,6 +683,17 @@ app.get("/getriwayatpesanan/:id", (req, res) => {
     });
 });
 
+app.get("/getpesananaktifpembeli/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getallpesananaktifpembeli(id, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getprofileumkm/:id", (req, res) => {
     const id = req.params.id;
 
