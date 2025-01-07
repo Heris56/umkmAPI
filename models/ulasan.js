@@ -5,17 +5,16 @@ const Ulasan = sequelize.define('Ulasan', {
   id_ulasan: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    primaryKey: true,
     autoIncrement: true
   },
   id_pembeli: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    autoIncrement: false
   },
   id_produk: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    autoIncrement: false
   },
   username: {
     type: DataTypes.STRING(255),
