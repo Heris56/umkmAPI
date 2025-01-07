@@ -1212,6 +1212,7 @@ async function getriwayatpesanan(id, callback) {
 			tanggal as Tanggal_Pesanan,
             p.Nama_Barang AS nama_barang,
             ps.total_belanja AS total_harga,
+            ps.status_pesanan,
             pb.alamat AS alamat_pembeli,
             p.Deskripsi_Barang AS deskripsi_barang,
             k.kuantitas as kuantitas_barang,
@@ -1222,6 +1223,46 @@ async function getriwayatpesanan(id, callback) {
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
             WHERE pb.id_pembeli = :id;
+        `,
+            {
+                replacements: { id: id },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+async function getallpesananaktifpembeli(id, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+    ps.id_pesanan,
+    ps.status_pesanan,
+    p.nama_barang,
+    k.kuantitas AS kuantitas_barang,
+    ps.total_belanja,
+    pb.alamat AS alamat_pembeli,
+	ps.id_keranjang,
+	k.id_pembeli,
+    p.image_url
+FROM
+    pesanan ps
+INNER JOIN
+    keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN
+    produk p ON k.id_produk = p.id_produk
+INNER JOIN
+    pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE
+    pb.id_pembeli = 1
+    AND ps.status_pesanan != 'Pesanan Selesai';
         `,
             {
                 replacements: { id: id },
@@ -1617,4 +1658,5 @@ module.exports = {
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
     getCampaignById,
+    getallpesananaktifpembeli,
 };
