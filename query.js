@@ -148,6 +148,26 @@ async function getProdukByType(tipe_barang, callback) {
 // end of // Produk - Haikal
 
 // bagian keranjang
+async function addbatch(id_pembeli, id_batch, data) {
+    try {
+        if (!id_pembeli) {
+            throw new Error('pembeli tidak ditemukan');
+        }
+        data.id_produk = null;
+        data.kuantitas = null;
+        data.total = null;
+        data.status = "Deleted";
+        data.id_pembeli = id_pembeli;
+        data.id_batch = id_batch;
+
+        const addbatch = await Keranjang.create(data);
+
+        return addbatch;
+    } catch (error) {
+        throw error;
+    }
+}
+
 async function getkeranjangstandby(id_pembeli) {
     try {
         if (!id_pembeli) {
@@ -177,7 +197,7 @@ async function getbatchkeranjang(id_pembeli) {
             throw new Error('tidak menemukan ID')
         }
 
-        const keranjang = await getkeranjangstandby(id_pembeli)
+        const keranjang = await getkeranjangbyID(id_pembeli)
 
         if (keranjang.length === 0) {
             return null;
@@ -240,9 +260,10 @@ async function getkeranjangbyID(id_pembeli, callback) {
         if (!result || result.length === 0) {
             throw new Error("data keranjang tidak ditemukan");
         }
-        callback(null, result);
+
+        return result;
     } catch (error) {
-        callback(error, null);
+        throw error;
     }
 }
 
@@ -384,10 +405,15 @@ async function getulasansByProdukId(id_produk, callback) {
 async function getulasansByIdUMKM(id_umkm, callback) {
     try {
         const result = await Ulasan.findAll({
-            include: {
+            include: [{
                 model: Produk,
                 where: { id_umkm: id_umkm },
             },
+            {
+                model: Pembeli,
+                attributes: ['id_pembeli', 'username', 'profileImg'],
+            },
+        ]
         });
         callback(null, result);
     } catch (error) {
@@ -1801,6 +1827,7 @@ module.exports = {
     getkeranjangstandby,
     getkeranjangbyID,
     getallKeranjang,
+    addbatch,
     addtoKeranjang,
     updatestatuskeranjang,
     getuserUMKMbyID,

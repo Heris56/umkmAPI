@@ -131,6 +131,24 @@ app.post("/keranjang", (req, res) => {
 //     });
 // });
 
+app.post("/addbatch/:id_pembeli/:id_batch", async (req, res) => {
+    const { id_pembeli, id_batch } = req.params; // Mengambil id_pembeli dan id_batch dari URL
+
+    try {
+        // Memanggil fungsi addbatch dengan data default
+        const result = await dboperations.addbatch(id_pembeli, id_batch, {});
+
+        res.status(201).json({
+            message: "Batch berhasil ditambahkan",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+        });
+    }
+});
+
 app.get("/lastbatch/:id_pembeli", async (req, res) => {
     const id_pembeli = req.params.id_pembeli;
     try {
@@ -173,15 +191,14 @@ app.get("/keranjang", (req, res) => {
     });
 });
 
-app.get("/keranjang/:id", (req, res) => {
+app.get("/keranjang/:id", async (req, res) => {
     const id = req.params.id;
-    dboperations.getkeranjangbyID(id, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
-        }
-        res.json(result).status(200);
-        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
-    });
+    try {
+        const keranjangid = await dboperations.getkeranjangbyID(id);
+        res.status(200).json(keranjangid);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
 });
 
 app.delete("/produk/:id", (req, res) => {
