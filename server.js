@@ -860,11 +860,13 @@ app.post("/addriwayat", (req, res) => {
     });
 });
 
-app.post("/addpesanan/:id_keranjang/:total_belanja", (req, res) => {
+app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
     const id_keranjang = req.params.id_keranjang;
     const total_belanja = req.params.total_belanja;
+    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.addpesanan(id_keranjang, total_belanja, (error, result) => {
+
+    dboperations.addpesanan(id_keranjang, total_belanja, id_pembeli, (error, result) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
@@ -886,9 +888,11 @@ app.put("/updatestatuspesananmasuk/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananditerima/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananditerima(id, (error, result) => {
+app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananditerima(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
