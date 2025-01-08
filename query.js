@@ -1137,18 +1137,19 @@ async function getpesananmasuk(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-			id_pesanan ,
-			status_pesanan,
-            p.Nama_Barang AS nama_barang,
-            k.kuantitas as kuantitas_barang,
-			total_belanja,
-            pb.alamat AS alamat_pembeli
-            FROM pesanan ps
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Masuk'
-            AND p.id_umkm = :id;
+	k.id_batch,
+	SUM(k.total) as total_belanja,
+	SUM(k.kuantitas) as kuantitas,
+	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+	FROM keranjang k
+	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+	INNER JOIN produk p ON k.id_produk = p.id_produk
+	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+	WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Masuk'
+	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
+	ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1169,18 +1170,19 @@ async function getpesananditerima(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-			id_pesanan ,
-			status_pesanan,
-            p.Nama_Barang AS nama_barang,
-            k.kuantitas as kuantitas_barang,
-			total_belanja,
-            pb.alamat AS alamat_pembeli
-            FROM pesanan ps
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Diterima'
-            AND p.id_umkm = :id;
+	k.id_batch,
+	SUM(k.total) as total_belanja,
+	SUM(k.kuantitas) as kuantitas,
+	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+	FROM keranjang k
+	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+	INNER JOIN produk p ON k.id_produk = p.id_produk
+	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Diterima'
+	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
+	ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1201,18 +1203,19 @@ async function getpesananditolak(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-			id_pesanan ,
-			status_pesanan,
-            p.Nama_Barang AS nama_barang,
-            k.kuantitas as kuantitas_barang,
-			total_belanja,
-            pb.alamat AS alamat_pembeli
-            FROM pesanan ps
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Ditolak'
-            AND p.id_umkm = :id;
+	k.id_batch,
+	SUM(k.total) as total_belanja,
+	SUM(k.kuantitas) as kuantitas,
+	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+	FROM keranjang k
+	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+	INNER JOIN produk p ON k.id_produk = p.id_produk
+	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Ditolak'
+	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
+	ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1233,18 +1236,19 @@ async function getpesananselesai(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-			id_pesanan ,
-			status_pesanan,
-            p.Nama_Barang AS nama_barang,
-            k.kuantitas as kuantitas_barang,
-			total_belanja,
-            pb.alamat AS alamat_pembeli
-            FROM pesanan ps
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-			WHERE ps.status_pesanan = 'Pesanan Selesai'
-            AND p.id_umkm = :id;
+	k.id_batch,
+	SUM(k.total) as total_belanja,
+	SUM(k.kuantitas) as kuantitas,
+	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+	FROM keranjang k
+	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+	INNER JOIN produk p ON k.id_produk = p.id_produk
+	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Selesai'
+	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
+	ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1375,27 +1379,13 @@ WHERE
 }
 
 
-async function addpesanan(data, callback) {
+async function addpesanan(id_keranjang, total_belanja, callback) {
     try {
-        // Ambil semua keranjang berdasarkan id_batch
-        const keranjangItems = await Keranjang.findAll({
-            where: { id_batch: idBatch },
-            include: [{ model: Produk }],
-        });
-
-        if (keranjangItems.length === 0) {
-            throw new Error("Tidak ada data keranjang untuk id_batch ini");
+        if (!id_keranjang || !total_belanja) {
+            throw new Error("Data tidak lengkap");
         }
 
-        const pesananBaru = await Promise.all(
-            keranjangItems.map(async (item) => {
-                return Pesanan.create({
-                    total_belanja: item.total,
-                    id_keranjang: item.id_keranjang,
-                    status_pesanan: "Standby",
-                });
-            })
-        );
+        const pesananBaru = await Pesanan.create({ id_keranjang: id_keranjang, total_belanja: total_belanja, status_pesanan: "Pesanan Masuk" });
 
         callback(null, pesananBaru);
     } catch (error) {
@@ -1416,89 +1406,113 @@ async function addriwayat(data, callback) {
     }
 }
 
-async function updatestatuspesananmasuk(id, callback) {
+async function updatestatuspesananmasuk(id_umkm, id_batch, callback) {
     try {
-        if (!id) {
-            throw new Error("id tidak boleh kosong");
-        }
+        const query = `
+            UPDATE ps
+SET ps.status_pesanan = 'Pesanan Masuk'
+FROM Pesanan ps
+INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+WHERE k.id_batch = :id_batch
+  AND p.id_umkm = :id_umkm;
+        `;
 
-        const pesanan = await Pesanan.findByPk(id);
-
-        if (!pesanan) {
-            throw new Error("produk tidak ditemukan");
-        }
-
-        const updatestatus = await pesanan.update({
-            status_pesanan: "Pesanan Masuk",
+        const [result] = await sequelize.query(query, {
+            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            type: sequelize.QueryTypes.UPDATE,
         });
 
-        callback(null, updatestatus);
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
     }
 }
 
-async function updatestatuspesananditerima(id, callback) {
+async function updatestatuspesananditerima(id_umkm, id_batch, callback) {
     try {
-        if (!id) {
-            throw new Error("id tidak boleh kosong");
-        }
+        const query = `
+            UPDATE ps
+SET ps.status_pesanan = 'Pesanan Diterima'
+FROM Pesanan ps
+INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+WHERE k.id_batch = :id_batch
+  AND p.id_umkm = :id_umkm;
+        `;
 
-        const pesanan = await Pesanan.findByPk(id);
-
-        if (!pesanan) {
-            throw new Error("produk tidak ditemukan");
-        }
-
-        const updatestatus = await pesanan.update({
-            status_pesanan: "Pesanan Diterima",
+        const [result] = await sequelize.query(query, {
+            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            type: sequelize.QueryTypes.UPDATE,
         });
 
-        callback(null, updatestatus);
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
     }
 }
 
-async function updatestatuspesananditolak(id, callback) {
+async function updatestatuspesananditolak(id_umkm, id_batch, callback) {
     try {
-        if (!id) {
-            throw new Error("id tidak boleh kosong");
-        }
+        const query = `
+            UPDATE ps
+SET ps.status_pesanan = 'Pesanan Ditolak'
+FROM Pesanan ps
+INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+WHERE k.id_batch = :id_batch
+  AND p.id_umkm = :id_umkm;
+        `;
 
-        const pesanan = await Pesanan.findByPk(id);
-
-        if (!pesanan) {
-            throw new Error("produk tidak ditemukan");
-        }
-
-        const updatestatus = await pesanan.update({
-            status_pesanan: "Pesanan Ditolak",
+        const [result] = await sequelize.query(query, {
+            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            type: sequelize.QueryTypes.UPDATE,
         });
 
-        callback(null, updatestatus);
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
     }
 }
 
-async function updatestatuspesananselesai(id, callback) {
+async function updatestatuspesananselesai(id_umkm, id_batch, callback) {
     try {
-        if (!id) {
-            throw new Error("id tidak boleh kosong");
-        }
+        const query = `
+            UPDATE ps
+SET ps.status_pesanan = 'Pesanan Selesai'
+FROM Pesanan ps
+INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+WHERE k.id_batch = :id_batch
+  AND p.id_umkm = :id_umkm;
+        `;
 
-        const pesanan = await Pesanan.findByPk(id);
-
-        if (!pesanan) {
-            throw new Error("produk tidak ditemukan");
-        }
-
-        const updatestatus = await pesanan.update({
-            status_pesanan: "Pesanan Selesai",
+        const [result] = await sequelize.query(query, {
+            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            type: sequelize.QueryTypes.UPDATE,
         });
 
-        callback(null, updatestatus);
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
     } catch (error) {
         callback(error, null);
     }
