@@ -213,6 +213,38 @@ app.post("/login", (req, res) => {
     });
 });
 
+app.get("/ulasans", (req, res) => {
+    dboperations.getulasans((error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/:id_produk", (req, res) => {
+    const id_produk = req.params.id_produk;
+
+    dboperations.getulasansByProdukId(id_produk, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/overallrating/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getOverallRating(id_umkm, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 // Route to get all messages
 app.get("/message", (req, res) => {
     dboperations.getMessages((error, result) => {
@@ -293,7 +325,7 @@ app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", (req, res) => {
 
 
 app.get("/message/msgKurir/:id_kurir", (req, res) => {
-    const id_kurir = req.params.kurir;
+    const id_kurir = req.params.id_kurir;
 
     dboperations.getMessagesByKurir(id_kurir, (error, result) => {
         if (error) {
@@ -458,7 +490,7 @@ app.post("/sendchat/pembelikekurir/:id_pembeli/:id_kurir", (req, res) => {
 //     });
 // });
 
-app.post("/sendchat/kurirkepembeli/:id_pembeli/:id_kurir", (req, res) => {
+app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
     const data = req.body;
     const id_kurir = req.params.id_kurir;
     const id_pembeli = req.params.id_pembeli;
@@ -562,90 +594,61 @@ app.delete("/pembeli/:id", (req, res) => {
     });
 });
 
-// Get all kurirs
-app.get("/kurir", async (req, res) => {
-    try {
-        const kurirs = await Kurir.findAll();
-        res.json(kurirs);
-    } catch (error) {
-        console.error("Error fetching kurirs:", error);
-        res.status(500).send("Error fetching kurirs");
-    }
+// Get all kurir
+app.get("/kurir", (req, res) => {
+    dboperations.getKurir((error, result) => {
+        if (error) {
+            console.error("Error fetching kurir:", error);
+            return res.status(500).send("Error fetching kurir");
+        }
+        res.json(result); // Send all kurir data
+    });
 });
 
 // Get kurir by ID
-app.get("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.get("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getKurirByID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        res.json(kurir);
-    } catch (error) {
-        console.error("Error fetching kurir by ID:", error);
-        res.status(500).send("Error fetching kurir by ID");
-    }
+        res.json(result); // Send kurir data by ID
+    });
 });
 
 // Add a new kurir
-app.post("/kurir", async (req, res) => {
-    try {
-        const { nama_kurir, id_umkm, id_pesanan } = req.body;
-
-        const newKurir = await Kurir.create({
-            nama_kurir,
-            id_umkm,
-            id_pesanan,
-        });
-
-        res.status(201).json(newKurir);
-    } catch (error) {
-        console.error("Error adding kurir:", error);
-        res.status(500).send("Error adding kurir");
-    }
+app.post("/kurir", (req, res) => {
+    const data = req.body;
+    dboperations.addKurir(data, (error, result) => {
+        if (error) {
+            console.error("Error adding kurir:", error);
+            return res.status(500).send(`Error adding kurir: ${error.message}`);
+        }
+        res.status(200).json(result); // Send the newly created kurir
+    });
 });
 
 // Update kurir by ID
-app.put("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { nama_kurir, id_umkm, id_pesanan } = req.body;
-
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.put("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updateKurir(id, data, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        await kurir.update({ nama_kurir, id_umkm, id_pesanan });
-
-        res.json(kurir);
-    } catch (error) {
-        console.error("Error updating kurir:", error);
-        res.status(500).send("Error updating kurir");
-    }
+        res.status(200).json(result); // Send updated kurir data
+    });
 });
 
 // Delete kurir by ID
-app.delete("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.delete("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.deleteKurir(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        await kurir.destroy();
-
-        res.status(204).send(); // No Content
-    } catch (error) {
-        console.error("Error deleting kurir:", error);
-        res.status(500).send("Error deleting kurir");
-    }
+        res.status(200).json(result); // Send success message
+    });
 });
 
 app.get("/monthly-stats/:umkmId", async (req, res) => {
