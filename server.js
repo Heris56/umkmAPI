@@ -309,35 +309,36 @@ app.get("/message", (req, res) => {
 });
 
 // Route to get messages by sender and receiver
-app.get("/message/msgUMKM/:id_umkm/:id_pembeli", (req, res) => {
+app.get("/message/msgUMKM/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getMessagesByUMKM(id_umkm, (error, result) => {
+        if (error) {
+            console.error("Error fetching messages by sender and receiver:", error);
+            return res.status(500).send("Error fetching messages");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
     const id_umkm = req.params.id_umkm;
     const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByUMKM(id_umkm, id_pembeli, (error, result) => {
+
+    dboperations.getmessagesbyumkmandpembeli(id_umkm, id_pembeli, (error, result) => {
         if (error) {
-            console.error("Error fetching messages by sender and receiver:", error);
-            return res.status(500).send("Error fetching messages");
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
         }
-        res.status(200).json(result);
+        res.json(result);
     });
 });
 
-app.get("/message/msgPembeli/:id", (req, res) => {
-    const { id } = req.params;
+app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.getMessagesByPembeli(id, (error, result) => {
-        if (error) {
-            console.error("Error fetching messages by sender and receiver:", error);
-            return res.status(500).send("Error fetching messages");
-        }
-        res.status(200).json(result);
-    });
-});
-
-app.get("/message/msgKurir/:id", (req, res) => {
-    const { id } = req.params;
-
-    dboperations.getMessagesByKurir(id, (error, result) => {
+    dboperations.getMessagesByPembeli(id_pembeli, (error, result) => {
         if (error) {
             console.error("Error fetching messages by sender and receiver:", error);
             return res.status(500).send("Error fetching messages");
@@ -380,10 +381,10 @@ app.get("/message/msgKurir/:id_kurir", (req, res) => {
 
     dboperations.getMessagesByKurir(id_kurir, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error fetching messages by sender and receiver:", error);
+            return res.status(500).send("Error fetching messages");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
     });
 });
 
@@ -426,14 +427,14 @@ app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
 
     dboperations.sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
     });
 });
 
-app.post("/message/msgKurir/:id/:data", (req, res) => {
+app.post("/sendchat/pembelikekurir/:id_pembeli/:id_kurir", (req, res) => {
     const data = req.body;
     const id_pembeli = req.params.id_pembeli;
     const id_kurir = req.params.id_kurir;
@@ -455,10 +456,10 @@ app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
 
     dboperations.sendMessageKurirKePembeli(id_kurir, id_pembeli, data, (error, result) => {
         if (error) {
-            console.error("Error sending message:", error);
-            return res.status(500).send("Error sending message");
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-        res.status(201).json(result);
+        res.status(200).json(result);
     });
 });
 
