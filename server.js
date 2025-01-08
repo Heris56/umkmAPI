@@ -173,15 +173,14 @@ app.get("/keranjang", (req, res) => {
     });
 });
 
-app.get("/keranjang/:id", (req, res) => {
+app.get("/keranjang/:id", async (req, res) => {
     const id = req.params.id;
-    dboperations.getkeranjangbyID(id, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
-        }
-        res.json(result).status(200);
-        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
-    });
+    try {
+        const keranjangid = await dboperations.getkeranjangbyID(id);
+        res.status(200).json(keranjangid);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
 });
 
 app.delete("/produk/:id", (req, res) => {
@@ -251,6 +250,17 @@ app.get("/ulasans/:id_produk", (req, res) => {
     const id_produk = req.params.id_produk;
 
     dboperations.getulasansByProdukId(id_produk, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/umkm/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getulasansByIdUMKM(id_umkm, (error, result) => {
         if (error) {
             return res.status(500).send(error.message);
         }
@@ -374,39 +384,7 @@ app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
     });
 });
 
-//mungkin dihapus
-// Route to send a message
-// app.post("/message/msgUMKM/:id_umkm/id_pembeli", (req, res) => {
-//     const data = req.body;
-//     const id_umkm = req.params.id_umkm;
-//     const id_pembeli = req.params.id_pembeli;
 
-//     if (!data || Object.keys(data).length === 0) {
-//         return res.status(400).send("Message data is required");
-//     }
-
-//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-//     if (data.sent_at) {
-//         const time = data.sent_at.trim(); // Ensure no extra spaces
-//         const timeParts = time.split(":");
-
-//         // If time is valid (HH:MM:SS format)
-//         if (timeParts.length === 3) {
-//             // Ensure the format is correct
-//             data.sent_at = time; // Store only time portion
-//         } else {
-//             return res.status(400).send("Invalid time format for sent_at");
-//         }
-//     }
-
-//     dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
-//         if (error) {
-//             console.error("Error sending message:", error);
-//             return res.status(500).send("Error sending message");
-//         }
-//         res.status(201).json(result);
-//     });
-// });
 
 app.post("/sendchat/umkmkepembeli/:id_umkm/:id_pembeli", (req, res) => {
     const data = req.body;
@@ -422,37 +400,7 @@ app.post("/sendchat/umkmkepembeli/:id_umkm/:id_pembeli", (req, res) => {
     });
 });
 
-//mungkin dihapus
-// app.post("/message/msgPembeli/:id", (req, res) => {
-//     const data = req.body;
-//     const id = req.params.id;
 
-//     if (!data || Object.keys(data).length === 0) {
-//         return res.status(400).send("Message data is required");
-//     }
-
-//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-//     if (data.sent_at) {
-//         const time = data.sent_at.trim(); // Ensure no extra spaces
-//         const timeParts = time.split(":");
-
-//         // If time is valid (HH:MM:SS format)
-//         if (timeParts.length === 3) {
-//             // Ensure the format is correct
-//             data.sent_at = time; // Store only time portion
-//         } else {
-//             return res.status(400).send("Invalid time format for sent_at");
-//         }
-//     }
-
-//     dboperations.sendMessagePembeliKeUMKM(id, data, (error, result) => {
-//         if (error) {
-//             console.error("Error sending message:", error);
-//             return res.status(500).send("Error sending message");
-//         }
-//         res.status(201).json(result);
-//     });
-// });
 
 app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
     const data = req.body;
@@ -482,37 +430,6 @@ app.post("/sendchat/pembelikekurir/:id_pembeli/:id_kurir", (req, res) => {
     });
 });
 
-//mungkin dihapus
-// app.post("/message/msgKurir/:id/:data", (req, res) => {
-//     const data = req.body;
-//     const id = req.params.id;
-
-//     if (!data || Object.keys(data).length === 0) {
-//         return res.status(400).send("Message data is required");
-//     }
-
-//     // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-//     if (data.sent_at) {
-//         const time = data.sent_at.trim(); // Ensure no extra spaces
-//         const timeParts = time.split(":");
-
-//         // If time is valid (HH:MM:SS format)
-//         if (timeParts.length === 3) {
-//             // Ensure the format is correct
-//             data.sent_at = time; // Store only time portion
-//         } else {
-//             return res.status(400).send("Invalid time format for sent_at");
-//         }
-//     }
-
-//     dboperations.sendMessageKurirKePembeli(id, data, (error, result) => {
-//         if (error) {
-//             console.error("Error sending message:", error);
-//             return res.status(500).send("Error sending message");
-//         }
-//         res.status(201).json(result);
-//     });
-// });
 
 app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
     const data = req.body;
