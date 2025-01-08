@@ -1,41 +1,45 @@
 // models/kurir.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
-const UMKM = require('./umkm');  
-const Pesanan = require('./pesanan');  
+const { DataTypes } = require("sequelize");
+const sequelize = require("../db");
+const UMKM = require("./umkm");
 
-
-const Kurir = sequelize.define('Kurir', {
+const Kurir = sequelize.define(
+  "Kurir",
+  {
     id_kurir: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
     nama_kurir: {
-        type: DataTypes.STRING(255),
-        allowNull: false
+      type: DataTypes.STRING(255),
+      allowNull: false,
     },
     id_umkm: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: UMKM,
+        key: "id_umkm",
+      },
     },
     email: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        unique: true
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
     },
     password: {
-        type: DataTypes.STRING(255),
-        allowNull: false
+      type: DataTypes.STRING(255),
+      allowNull: false,
     },
-}, {
-    tableName: 'kurir',
-    timestamps: false
-});
+  },
+  {
+    tableName: "kurir",
+    timestamps: false,
+  }
+);
 
 // Associations
-Kurir.belongsTo(UMKM, { foreignKey: 'id_umkm', targetKey: 'id_umkm' });
-// Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id_pesanan' });
-
+Kurir.belongsTo(UMKM, { foreignKey: "id_umkm", targetKey: "id_umkm" });
 
 module.exports = Kurir;

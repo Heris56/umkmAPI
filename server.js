@@ -105,9 +105,67 @@ app.get("/produkbytipe/tipe", async (req, res) => {
     });
 });
 
+// keranjang
+app.post("/keranjang", (req, res) => {
+    const data = req.body;
+    dboperations.addtoKeranjang(data, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(400).send({ message: error.message || "Terjadi kesalahan" });
+        }
+        res.json({
+            "message": "berhasil menambahkan ke keranjang",
+            "data": result
+        }).status(200);
+    });
+});
+
+// app.put("/order/:id_pembeli", (req, res) => {
+//     const id_pembeli = req.params.id_pembeli
+//     dboperations.(id_pembeli, (error, result) => {
+//         if (error) {
+//             console.error(error);
+//             return res.status(500).send('gagal order pesanan:');
+//         }
+//         res.json(result).status(200);
+//     });
+// });
+
+app.get("/lastbatch/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const latest_batch = await dboperations.getbatchkeranjang(id_pembeli);
+        res.status(200).json({ latest_batch });
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+});
+
+app.get("/keranjangstandby/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const keranjangstandby = await dboperations.getkeranjangstandby(id_pembeli);
+        res.status(200).json(keranjangstandby);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
+
+app.get("/searchkeranjang/:id_pembeli/:id_produk/:id_batch", async (req, res) => {
+    const { id_pembeli, id_produk, id_batch } = req.params;
+
+    try {
+        const foundkeranjang = await dboperations.searchproductonKeranjang(id_pembeli, id_produk, id_batch);
+        res.status(200).json(foundkeranjang);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 app.get("/keranjang", (req, res) => {
     dboperations.getallKeranjang((error, result) => {
         if (error) {
+            console.error(error)
             return res.status(500).send("error memasukan ke keranjang");
         }
         res.json(result).status(200);
@@ -115,21 +173,30 @@ app.get("/keranjang", (req, res) => {
     });
 });
 
-app.get("/keranjang/:id", (req, res) => {
+app.get("/keranjang/:id", async (req, res) => {
     const id = req.params.id;
-    dboperations.getkeranjangbyID(id, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
-        }
-        res.json(result).status(200);
-        console.log(`berhasil mendapatkan keranjang dengan user id:${id}`);
-    });
+    try {
+        const keranjangid = await dboperations.getkeranjangbyID(id);
+        res.status(200).json(keranjangid);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
 });
 
 app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
 
     dboperations.deleteproduk(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/umkm/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getuserUMKMbyID(id, (error, result) => {
         if (error) {
             return res.status(500).send(error.message);
         }
@@ -164,6 +231,49 @@ app.post("/login", (req, res) => {
     dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans", (req, res) => {
+    dboperations.getulasans((error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/:id_produk", (req, res) => {
+    const id_produk = req.params.id_produk;
+
+    dboperations.getulasansByProdukId(id_produk, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/ulasans/umkm/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getulasansByIdUMKM(id_umkm, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.get("/overallrating/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getOverallRating(id_umkm, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
         res.status(200).json(result);
     });
@@ -218,30 +328,39 @@ app.get("/message/msgKurir/:id", (req, res) => {
     });
 });
 
-// Route to send a message
-app.post("/message/msgUMKM/:id", (req, res) => {
-    const data = req.body;
-    const id = req.params.id;
+app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
 
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
+    dboperations.getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
         }
-    }
+        res.json(result);
+    });
+});
 
-    dboperations.sendMessageUMKMKePembeli(id, data, (error, result) => {
+app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_kurir = req.params.id_kurir;
+
+
+    dboperations.getMessagesByPembeliAndKurir(id_pembeli, id_kurir, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
+        }
+        res.json(result);
+    });
+});
+
+
+app.get("/message/msgKurir/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.getMessagesByKurir(id_kurir, (error, result) => {
         if (error) {
             console.error("Error sending message:", error);
             return res.status(500).send("Error sending message");
@@ -250,29 +369,44 @@ app.post("/message/msgUMKM/:id", (req, res) => {
     });
 });
 
-app.post("/message/msgPembeli/:id", (req, res) => {
-    const data = req.body;
-    const id = req.params.id;
+app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
 
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
+    dboperations.getMessagesByKurirAndPembeli(id_kurir, id_pembeli, (error, result) => {
+        if (error) {
+            console.error("error get message:", error);
+            return res.status(500).send("error fetch message");
         }
-    }
+        res.json(result);
+    });
+});
 
-    dboperations.sendMessagePembeliKeUMKM(id, data, (error, result) => {
+
+
+app.post("/sendchat/umkmkepembeli/:id_umkm/:id_pembeli", (req, res) => {
+    const data = req.body;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, (error, result) => {
+        if (error) {
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
+        }
+        res.status(200).json(result);
+    });
+});
+
+
+
+app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
+    const data = req.body;
+    const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, (error, result) => {
         if (error) {
             console.error("Error sending message:", error);
             return res.status(500).send("Error sending message");
@@ -283,27 +417,25 @@ app.post("/message/msgPembeli/:id", (req, res) => {
 
 app.post("/message/msgKurir/:id/:data", (req, res) => {
     const data = req.body;
-    const id = req.params.id;
+    const id_pembeli = req.params.id_pembeli;
+    const id_kurir = req.params.id_kurir;
 
-    if (!data || Object.keys(data).length === 0) {
-        return res.status(400).send("Message data is required");
-    }
-
-    // Ensure 'sent_at' is a valid time string (HH:MM:SS)
-    if (data.sent_at) {
-        const time = data.sent_at.trim(); // Ensure no extra spaces
-        const timeParts = time.split(":");
-
-        // If time is valid (HH:MM:SS format)
-        if (timeParts.length === 3) {
-            // Ensure the format is correct
-            data.sent_at = time; // Store only time portion
-        } else {
-            return res.status(400).send("Invalid time format for sent_at");
+    dboperations.sendMessagePembeliKeKurir(id_pembeli, id_kurir, data, (error, result) => {
+        if (error) {
+            console.error("Error insert message:", error);
+            return res.status(500).send("Error inserting message.");
         }
-    }
+        res.status(200).json(result);
+    });
+});
 
-    dboperations.sendMessageKurirKePembeli(id, data, (error, result) => {
+
+app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
+    const data = req.body;
+    const id_kurir = req.params.id_kurir;
+    const id_pembeli = req.params.id_pembeli;
+
+    dboperations.sendMessageKurirKePembeli(id_kurir, id_pembeli, data, (error, result) => {
         if (error) {
             console.error("Error sending message:", error);
             return res.status(500).send("Error sending message");
@@ -423,32 +555,26 @@ app.post("/loginpembeli",  (req, res) => {
 });
 
 
-// Get all kurirs
-app.get("/kurir", async (req, res) => {
-    try {
-        const kurirs = await Kurir.findAll();
-        res.json(kurirs);
-    } catch (error) {
-        console.error("Error fetching kurirs:", error);
-        res.status(500).send("Error fetching kurirs");
-    }
+// Get all kurir
+app.get("/kurir", (req, res) => {
+    dboperations.getKurir((error, result) => {
+        if (error) {
+            console.error("Error fetching kurir:", error);
+            return res.status(500).send("Error fetching kurir");
+        }
+        res.json(result); // Send all kurir data
+    });
 });
 
 // Get kurir by ID
-app.get("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.get("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getKurirByID(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        res.json(kurir);
-    } catch (error) {
-        console.error("Error fetching kurir by ID:", error);
-        res.status(500).send("Error fetching kurir by ID");
-    }
+        res.json(result); // Send kurir data by ID
+    });
 });
 
 // Add a new kurir
@@ -471,43 +597,26 @@ app.post("/kurir", async (req, res) => {
 });
 
 // Update kurir by ID
-app.put("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { nama_kurir, id_umkm } = req.body;
-
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.put("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    dboperations.updateKurir(id, data, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        await kurir.update({ nama_kurir, id_umkm });
-
-        res.json(kurir);
-    } catch (error) {
-        console.error("Error updating kurir:", error);
-        res.status(500).send("Error updating kurir");
-    }
+        res.status(200).json(result); // Send updated kurir data
+    });
 });
 
 // Delete kurir by ID
-app.delete("/kurir/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const kurir = await Kurir.findByPk(id);
-
-        if (!kurir) {
-            return res.status(404).send("Kurir not found");
+app.delete("/kurir/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.deleteKurir(id, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
         }
-
-        await kurir.destroy();
-
-        res.status(204).send(); // No Content
-    } catch (error) {
-        console.error("Error deleting kurir:", error);
-        res.status(500).send("Error deleting kurir");
-    }
+        res.status(200).json(result); // Send success message
+    });
 });
 
 
@@ -625,6 +734,17 @@ app.get("/getriwayatpesanan/:id", (req, res) => {
     });
 });
 
+app.get("/getpesananaktifpembeli/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.getallpesananaktifpembeli(id, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getprofileumkm/:id", (req, res) => {
     const id = req.params.id;
 
@@ -696,6 +816,19 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
         res.json(result);
     });
 });
+app.get("/getkeranjangbyidbatch/:id_pembeli/:id_batch", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_batch = req.params.id_batch;
+
+
+    dboperations.getkeranjangbyidbatch(id_pembeli, id_batch, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
 
 app.post("/addriwayat", (req, res) => {
     const data = req.body;
@@ -708,9 +841,11 @@ app.post("/addriwayat", (req, res) => {
     });
 });
 
-app.post("/addpesanan", (req, res) => {
-    const data = req.body;
-    dboperations.addpesanan(data, (error, result) => {
+app.post("/addpesanan/:id_keranjang/:total_belanja", (req, res) => {
+    const id_keranjang = req.params.id_keranjang;
+    const total_belanja = req.params.total_belanja;
+
+    dboperations.addpesanan(id_keranjang, total_belanja, (error, result) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
@@ -719,9 +854,11 @@ app.post("/addpesanan", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananmasuk/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananmasuk(id, (error, result) => {
+app.put("/updatestatuspesananmasuk/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananmasuk(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
@@ -787,6 +924,16 @@ app.put("/updatedataumkm/:id", (req, res) => {
     });
 });
 
+app.put("/updatestatuskeranjang/:id", (req, res) => {
+    const id = req.params.id;
+    try {
+        const statuskeranjang = dboperations.updatestatuskeranjang(id);
+        res.status(200).json({ message: "berhasil mengupdate keranjang" });
+    } catch (error) {
+        res.status(500).json({ message: "error update status" })
+    }
+});
+
 app.get("/getbloburl/", async (req, res) => {
     try {
         const containerName = "storeimg";
@@ -806,7 +953,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             return res.status(400).json({ message: "File tidak ditemukan!" });
         }
 
-        const containerName = "storeimg"; // Ganti dengan nama container Anda
+        const containerName = "storeimg";
         const blobName = `${Date.now()}-${req.file.originalname}`;
         const contentType = req.file.mimetype;
 

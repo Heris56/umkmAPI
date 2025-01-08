@@ -13,10 +13,14 @@ const Keranjang = sequelize.define('Keranjang', {
     },
     total: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
     kuantitas: {
         type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    status: {
+        type: DataTypes.STRING,
         allowNull: false
     },
     id_pembeli: {
@@ -34,6 +38,10 @@ const Keranjang = sequelize.define('Keranjang', {
             model: Produk,
             key: 'id_produk'
         }
+    },
+    id_batch: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     },
 }, {
     tableName: 'Keranjang',

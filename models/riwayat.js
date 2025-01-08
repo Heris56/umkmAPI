@@ -22,14 +22,6 @@ const Riwayat = sequelize.define('Riwayat', {
             key: 'id_pesanan'
         }
     },
-    id_umkm: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: UMKM,
-            key: 'id_umkm'
-        }
-    },
 
 }, {
     tableName: 'Riwayat',
