@@ -275,7 +275,7 @@ async function addtoKeranjang(data, callback) {
         const found = await searchproductonKeranjang(data.id_pembeli, data.id_produk, data.id_batch)
         console
         if (found['found'] === true) {
-            throw new Error('Barang sudah ada di keranjang')
+            return 'Barang sudah ada di keranjang';
         } else {
             data.status = 'Standby'
             const result = await Keranjang.create(data);
@@ -853,8 +853,8 @@ async function getPembeliByID(id, callback) {
 //login pembeli
 async function loginPembeli(data, callback) {
     try {
-        const pembeli = await Pembeli.findOne({where: {email: data.email}});
-        if(pembeli && pembeli.password === data.password){
+        const pembeli = await Pembeli.findOne({ where: { email: data.email } });
+        if (pembeli && pembeli.password === data.password) {
             const result = {
                 id_pembeli: pembeli.id_pembeli,
                 nama_lengkap: pembeli.nama_lengkap,
@@ -863,16 +863,16 @@ async function loginPembeli(data, callback) {
                 alamat: pembeli.alamat,
                 email: pembeli.email,
                 profileImage: pembeli.profileImg,
-                
+
             }
             callback(null, result);
-        }else{
+        } else {
             callback(new Error('Email atau Password salah!'), null);
         };
         return (null, pembeli);
-    }catch (error) {
+    } catch (error) {
         callback(error, null);
-    }   
+    }
 };
 
 // async function logi(email, password, callback) {
@@ -895,13 +895,13 @@ async function addPembeli(data, callback) {
             !data.nomor_telepon ||
             !data.username ||
             !data.email ||
-            !data.password||
+            !data.password ||
             !data.alamat
         ) {
             throw new Error("Incomplete data");
         }
 
-        const result = await Pembeli.create(data); 
+        const result = await Pembeli.create(data);
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -950,8 +950,8 @@ async function deletePembeli(id, callback) {
 //Check Pembeli kalo pake email atau username
 async function checkPembeli(emailInput, usernameInput, callback) {
     try {
-        const email = await Pembeli.findOne({where: {email: emailInput } });
-        const username = await Pembeli.findOne({ where: {username: usernameInput } });
+        const email = await Pembeli.findOne({ where: { email: emailInput } });
+        const username = await Pembeli.findOne({ where: { username: usernameInput } });
         if (email || username) {
             callback(null, { emailExists: !!email, usernameExists: !!username });
         } else {
