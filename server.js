@@ -827,6 +827,19 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
     });
 });
 
+app.get("/getkeranjangbyidbatch/:id_pembeli/:id_batch", (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_batch = req.params.id_batch;
+
+
+    dboperations.getkeranjangbyidbatch(id_pembeli, id_batch, (error, result) => {
+        if (error) {
+            console.error("error get riwayat:", error);
+            return res.status(500).send("error fetch riwayat");
+        }
+        res.json(result);
+    });
+});
 
 app.post("/addriwayat", (req, res) => {
     const data = req.body;
@@ -913,6 +926,17 @@ app.put("/updatedataumkm/:id", (req, res) => {
         if (error) {
             console.error("error update data UMKM:", error);
             return res.status(500).send("error update data UMKM");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updatestatuskeranjang/:id", (req, res) => {
+    const id = req.params.id;
+    dboperations.updatedataumkm(id, (error, result) => {
+        if (error) {
+            console.error("error update status Keranjang", error);
+            return res.status(500).send("error update status Keranjang");
         }
         res.status(200).json(result);
     });

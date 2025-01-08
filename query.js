@@ -666,25 +666,25 @@ async function sendMessageUMKMKePembeli(id_umkm, id_pembeli, data, callback) {
 }
 
 async function sendMessageKurirKePembeli(id_kurir, id_pembeli, data, callback) {
-  try {
-    // const messages = Message.findOne({ where: { id_kurir : id } });
-    // if (!messages){
-    //     throw new error('id tidak ditemukan');
-    // }
-    const newMessage = await Message.create({
-      where: { id_kurir: id_kurir },
-      message: data.message,
-      sent_at: data.sent_at,
-      is_read: data.is_read,
-      id_umkm: null,
-      id_pembeli: id_pembeli,
-      id_kurir: id_kurir,
-      receiver_type: "Pembeli",
-    });
-    callback(null, newMessage);
-  } catch (error) {
-    callback(error, null);
-  }
+    try {
+        // const messages = Message.findOne({ where: { id_kurir : id } });
+        // if (!messages){
+        //     throw new error('id tidak ditemukan');
+        // }
+        const newMessage = await Message.create({
+            where: { id_kurir: id_kurir },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: null,
+            id_pembeli: id_pembeli,
+            id_kurir: id_kurir,
+            receiver_type: "Pembeli",
+        });
+        callback(null, newMessage);
+    } catch (error) {
+        callback(error, null);
+    }
 }
 
 // Mark a message as read
@@ -807,85 +807,85 @@ async function deletePembeli(id, callback) {
 
 // Get all kurir data
 async function getKurir(callback) {
-  try {
-    const result = await Kurir.findAll();
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-  }
+    try {
+        const result = await Kurir.findAll();
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
 }
 
 // Get kurir by ID
 async function getKurirByID(id, callback) {
-  try {
-    if (!id) {
-      throw new Error("ID cannot be empty");
+    try {
+        if (!id) {
+            throw new Error("ID cannot be empty");
+        }
+
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            throw new Error(`Kurir with ID ${id} not found`);
+        }
+
+        callback(null, kurir);
+    } catch (error) {
+        callback(error, null);
     }
-
-    const kurir = await Kurir.findByPk(id);
-
-    if (!kurir) {
-      throw new Error(`Kurir with ID ${id} not found`);
-    }
-
-    callback(null, kurir);
-  } catch (error) {
-    callback(error, null);
-  }
 }
 
 // Add a new kurir
 async function addKurir(data, callback) {
-  try {
-    if (!data.nama_kurir || !data.id_umkm || !data.email || !data.password) {
-      throw new Error("Incomplete data");
-    }
+    try {
+        if (!data.nama_kurir || !data.id_umkm || !data.email || !data.password) {
+            throw new Error("Incomplete data");
+        }
 
-    const result = await Kurir.create(data);
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-  }
+        const result = await Kurir.create(data);
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
 }
 
 // Update kurir information
 async function updateKurir(id, data, callback) {
-  try {
-    if (!id) {
-      throw new Error("ID cannot be empty");
+    try {
+        if (!id) {
+            throw new Error("ID cannot be empty");
+        }
+
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            throw new Error(`Kurir with ID ${id} not found`);
+        }
+
+        const updatedKurir = await kurir.update(data);
+        callback(null, updatedKurir);
+    } catch (error) {
+        callback(error, null);
     }
-
-    const kurir = await Kurir.findByPk(id);
-
-    if (!kurir) {
-      throw new Error(`Kurir with ID ${id} not found`);
-    }
-
-    const updatedKurir = await kurir.update(data);
-    callback(null, updatedKurir);
-  } catch (error) {
-    callback(error, null);
-  }
 }
 
 // Delete kurir
 async function deleteKurir(id, callback) {
-  try {
-    if (!id) {
-      throw new Error("ID cannot be empty");
+    try {
+        if (!id) {
+            throw new Error("ID cannot be empty");
+        }
+
+        const kurir = await Kurir.findByPk(id);
+
+        if (!kurir) {
+            throw new Error(`Kurir with ID ${id} not found`);
+        }
+
+        await kurir.destroy();
+        callback(null, { message: `Kurir with ID ${id} has been deleted` });
+    } catch (error) {
+        callback(error, null);
     }
-
-    const kurir = await Kurir.findByPk(id);
-
-    if (!kurir) {
-      throw new Error(`Kurir with ID ${id} not found`);
-    }
-
-    await kurir.destroy();
-    callback(null, { message: `Kurir with ID ${id} has been deleted` });
-  } catch (error) {
-    callback(error, null);
-  }
 }
 
 async function getDailyStatsByUMKM(umkmId, month, year) {
@@ -1334,17 +1334,70 @@ WHERE
     }
 }
 
+async function getkeranjangbyidbatch(id_pembeli, id_batch, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            	SELECT
+    k.id_keranjang,
+    k.total,
+    k.kuantitas,
+    k.status,
+    k.id_pembeli,
+    k.id_produk,
+    k.id_batch,
+    p.nama_barang,
+    p.Harga,
+    p.image_url,
+    pb.nama_lengkap AS nama_pembeli
+FROM
+    Keranjang k
+JOIN
+    Produk p ON k.id_produk = p.id_produk
+JOIN
+    Pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE
+    k.id_batch = :id_batch
+    AND k.id_pembeli = :id_pembeli;
+        `,
+            {
+                replacements: { id_batch: id_batch, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+
 async function addpesanan(data, callback) {
     try {
-        if (!data.total_belanja || !data.id_keranjang) {
-            throw new Error("Incomplete data");
-        }
-        const result = await Pesanan.create({
-            status_pesanan: "Pesanan Masuk",
-            total_belanja: data.total_belanja,
-            id_keranjang: data.id_keranjang,
+        // Ambil semua keranjang berdasarkan id_batch
+        const keranjangItems = await Keranjang.findAll({
+            where: { id_batch: idBatch },
+            include: [{ model: Produk }],
         });
-        callback(null, result);
+
+        if (keranjangItems.length === 0) {
+            throw new Error("Tidak ada data keranjang untuk id_batch ini");
+        }
+
+        const pesananBaru = await Promise.all(
+            keranjangItems.map(async (item) => {
+                return Pesanan.create({
+                    total_belanja: item.total,
+                    id_keranjang: item.id_keranjang,
+                    status_pesanan: "Standby",
+                });
+            })
+        );
+
+        callback(null, pesananBaru);
     } catch (error) {
         callback(error, null);
     }
@@ -1490,6 +1543,8 @@ async function updatedataumkm(id, data, callback) {
         return { success: false, message: "Ada kesalahan saat mengganti Password" };
     }
 }
+
+
 
 async function getprofileumkm(id, callback) {
     try {
@@ -1718,4 +1773,5 @@ module.exports = {
     getdatadashboardcampaignpalingbaru,
     getCampaignById,
     getallpesananaktifpembeli,
+    getkeranjangbyidbatch,
 };
