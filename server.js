@@ -110,33 +110,57 @@ app.post("/keranjang", (req, res) => {
     const data = req.body;
     dboperations.addtoKeranjang(data, (error, result) => {
         if (error) {
-            return res.status(500).send('gagal memasukan ke keranjang');
-        }
-        res.json(result).status(200);
-    });
-});
-
-app.put("/order/:id_pembeli", (req, res) => {
-    const id_pembeli = req.params.id_pembeli
-    dboperations.updatestatuskeranjang(id_pembeli, (error, result) => {
-        if (error) {
             console.error(error);
-            return res.status(500).send('gagal order pesanan:');
+            return res.status(400).send({ message: error.message || "Terjadi kesalahan" });
         }
-        res.json(result).status(200);
+        res.json({
+            "message": "berhasil menambahkan ke keranjang",
+            "data": result
+        }).status(200);
     });
 });
 
-app.get("/keranjangstandby/:id_pembeli", (req, res) => {
+// app.put("/order/:id_pembeli", (req, res) => {
+//     const id_pembeli = req.params.id_pembeli
+//     dboperations.(id_pembeli, (error, result) => {
+//         if (error) {
+//             console.error(error);
+//             return res.status(500).send('gagal order pesanan:');
+//         }
+//         res.json(result).status(200);
+//     });
+// });
+
+app.get("/lastbatch/:id_pembeli", async (req, res) => {
     const id_pembeli = req.params.id_pembeli;
-    dboperations.getkeranjangstandby(id_pembeli, (error, result) => {
-        if (error) {
-            console.error(error);
-            return res.status(500).send('gagal get keranjang stand by');
-        }
-        return res.json(result).status(200);
-    });
+    try {
+        const latest_batch = await dboperations.getbatchkeranjang(id_pembeli);
+        res.status(200).json({ latest_batch });
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+});
+
+app.get("/keranjangstandby/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const keranjangstandby = await dboperations.getkeranjangstandby(id_pembeli);
+        res.status(200).json(keranjangstandby);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 })
+
+app.get("/searchkeranjang/:id_pembeli/:id_produk/:id_batch", async (req, res) => {
+    const { id_pembeli, id_produk, id_batch } = req.params;
+
+    try {
+        const foundkeranjang = await dboperations.searchproductonKeranjang(id_pembeli, id_produk, id_batch);
+        res.status(200).json(foundkeranjang);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 app.get("/keranjang", (req, res) => {
     dboperations.getallKeranjang((error, result) => {
@@ -863,9 +887,11 @@ app.post("/addriwayat", (req, res) => {
     });
 });
 
-app.post("/addpesanan", (req, res) => {
-    const data = req.body;
-    dboperations.addpesanan(data, (error, result) => {
+app.post("/addpesanan/:id_keranjang/:total_belanja", (req, res) => {
+    const id_keranjang = req.params.id_keranjang;
+    const total_belanja = req.params.total_belanja;
+
+    dboperations.addpesanan(id_keranjang, total_belanja, (error, result) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
@@ -874,9 +900,11 @@ app.post("/addpesanan", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananmasuk/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananmasuk(id, (error, result) => {
+app.put("/updatestatuspesananmasuk/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananmasuk(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
@@ -944,13 +972,12 @@ app.put("/updatedataumkm/:id", (req, res) => {
 
 app.put("/updatestatuskeranjang/:id", (req, res) => {
     const id = req.params.id;
-    dboperations.updatedataumkm(id, (error, result) => {
-        if (error) {
-            console.error("error update status Keranjang", error);
-            return res.status(500).send("error update status Keranjang");
-        }
-        res.status(200).json(result);
-    });
+    try {
+        const statuskeranjang = dboperations.updatestatuskeranjang(id);
+        res.status(200).json({ message: "berhasil mengupdate keranjang" });
+    } catch (error) {
+        res.status(500).json({ message: "error update status" })
+    }
 });
 
 app.get("/getbloburl/", async (req, res) => {
