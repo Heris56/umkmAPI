@@ -258,6 +258,17 @@ app.get("/ulasans/:id_produk", (req, res) => {
     });
 });
 
+app.get("/ulasans/umkm/:id_umkm", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+
+    dboperations.getulasansByIdUMKM(id_umkm, (error, result) => {
+        if (error) {
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.get("/overallrating/:id_umkm", (req, res) => {
     const id_umkm = req.params.id_umkm;
 
