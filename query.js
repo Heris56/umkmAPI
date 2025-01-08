@@ -616,6 +616,45 @@ async function getPembeliByID(id, callback) {
     }
 }
 
+//get
+
+//login pembeli
+async function loginPembeli(data, callback) {
+    try {
+        const pembeli = await Pembeli.findOne({where: {email: data.email}});
+        if(pembeli && pembeli.password === data.password){
+            const result = {
+                id_pembeli: pembeli.id_pembeli,
+                nama_lengkap: pembeli.nama_lengkap,
+                username: pembeli.username,
+                nomor_telepon: pembeli.nomor_telepon,
+                alamat: pembeli.alamat,
+                email: pembeli.email,
+                profileImage: pembeli.profileImg,
+                
+            }
+            callback(null, result);
+        }else{
+            callback(new Error('Email atau Password salah!'), null);
+        };
+        return (null, pembeli);
+    }catch (error) {
+        callback(error, null);
+    }   
+};
+
+// async function logi(email, password, callback) {
+//     try {
+//         const result = await Pembeli.findAll({
+//             where: {email: email, password: password}
+//         }); // Get all pembeli data
+//         callback(null, result);
+//     } catch (error) {
+//         callback(error, null); // Send error if something goes wrong
+//     }
+// }
+
+
 // Add a new pembeli
 async function addPembeli(data, callback) {
     try {
@@ -624,12 +663,13 @@ async function addPembeli(data, callback) {
             !data.nomor_telepon ||
             !data.username ||
             !data.email ||
-            !data.password
+            !data.password||
+            !data.alamat
         ) {
             throw new Error("Incomplete data");
         }
 
-        const result = await Pembeli.create(data); // Add new pembeli to the table
+        const result = await Pembeli.create(data); 
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -675,7 +715,34 @@ async function deletePembeli(id, callback) {
         callback(error, null);
     }
 }
+//Check Pembeli kalo pake email atau username
+async function checkPembeli(emailInput, usernameInput, callback) {
+    try {
+        const email = await Pembeli.findOne({where: {email: emailInput } });
+        const username = await Pembeli.findOne({ where: {username: usernameInput } });
+        if (email || username) {
+            callback(null, { emailExists: !!email, usernameExists: !!username });
+        } else {
+            callback(null, { emailExists: false, usernameExists: false });
+        }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+//Check user tapi Pembeli juga cuman pake select from pembeli
+async function checkUser(email, username, callback) {
+    const query = 'SELECT COUNT(*) AS count FROM pembeli WHERE email = ? OR username = ?';
+    db.query(query, [email, username], (error, results) => {
+        if (error) {
+            return callback(error, null);
+        }
+        const exists = results[0].count > 0;
+        callback(null, { exists });
+    });
+}
 
+
+//Query Kurir
 // Get all kurirs
 async function getKurir(callback) {
     try {
@@ -715,7 +782,9 @@ async function addKurir(data, callback) {
         const newKurir = await Kurir.create({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            id_pesanan: data.id_pesanan,
+            // id_pesanan: data.id_pesanan,
+            email: data.email,
+            password: data.password,
         });
         callback(null, newKurir);
     } catch (error) {
@@ -733,7 +802,7 @@ async function updateKurir(id, data, callback) {
         await kurir.update({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            id_pesanan: data.id_pesanan,
+            // id_pesanan: data.id_pesanan,
         });
         callback(null, kurir);
     } catch (error) {
@@ -750,6 +819,49 @@ async function deleteKurir(id, callback) {
         }
         await kurir.destroy();
         callback(null, { message: "Kurir deleted successfully" });
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// Login Kurir
+async function loginKurir(data, callback) {
+    try {
+        if (!data.email) {
+            return callback(new Error("Email is required"), null);
+        }
+
+        const kurir = await Kurir.findOne({
+            where: { email: data.email },
+        });
+
+        if (kurir && kurir.password === data.password) {
+            const result = {
+                id_kurir: kurir.id_kurir,
+                nama_kurir: kurir.nama_kurir,
+                id_umkm: kurir.id_umkm,
+                // username: kurir.username,
+                // nomor_telepon: kurir.nomor_telepon,
+                email: kurir.email,
+            };
+            callback(null, result);
+        } else {
+            callback(new Error("Invalid email or password"), null);
+        }
+    } catch (error) {
+        return callback(error, null);
+    }
+}
+
+//check kurir
+async function checkKurir(email, callback) {
+    try {
+        const result = await Kurir.findOne({ where: { email: email } });
+        if (result) {
+            callback(null, { exists: true });
+        } else {
+            callback(null, { exists: false });
+        }
     } catch (error) {
         callback(error, null);
     }
@@ -1533,5 +1645,10 @@ module.exports = {
     getdatadashboardprodukpalingbaru,
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
-    getCampaignById
+    getCampaignById,
+    loginPembeli,
+    loginKurir,
+    checkPembeli,
+    checkUser,
+    checkKurir
 };

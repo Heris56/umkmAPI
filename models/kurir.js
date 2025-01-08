@@ -19,10 +19,15 @@ const Kurir = sequelize.define('Kurir', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    id_pesanan: {
-        type: DataTypes.INTEGER,
+    email: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique: true
+    },
+    password: {
+        type: DataTypes.STRING(255),
         allowNull: false
-    }
+    },
 }, {
     tableName: 'kurir',
     timestamps: false
@@ -30,7 +35,7 @@ const Kurir = sequelize.define('Kurir', {
 
 // Associations
 Kurir.belongsTo(UMKM, { foreignKey: 'id_umkm', targetKey: 'id_umkm' });
-Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id_pesanan' });
+// Kurir.belongsTo(Pesanan, { foreignKey: 'id_pesanan', targetKey: 'id_pesanan' });
 
 
 module.exports = Kurir;
