@@ -387,10 +387,15 @@ async function getulasansByProdukId(id_produk, callback) {
 async function getulasansByIdUMKM(id_umkm, callback) {
     try {
         const result = await Ulasan.findAll({
-            include: {
+            include: [{
                 model: Produk,
                 where: { id_umkm: id_umkm },
             },
+            {
+                model: Pembeli,
+                attributes: ['id_pembeli', 'username', 'profileImg'],
+            },
+        ]
         });
         callback(null, result);
     } catch (error) {
