@@ -148,6 +148,8 @@ async function getProdukByType(tipe_barang, callback) {
 // end of // Produk - Haikal
 
 // bagian keranjang
+
+
 async function getkeranjangstandby(id_pembeli) {
     try {
         if (!id_pembeli) {
@@ -177,7 +179,7 @@ async function getbatchkeranjang(id_pembeli) {
             throw new Error('tidak menemukan ID')
         }
 
-        const keranjang = await getkeranjangstandby(id_pembeli)
+        const keranjang = await getkeranjangbyID(id_pembeli)
 
         if (keranjang.length === 0) {
             return null;
@@ -240,9 +242,10 @@ async function getkeranjangbyID(id_pembeli, callback) {
         if (!result || result.length === 0) {
             throw new Error("data keranjang tidak ditemukan");
         }
-        callback(null, result);
+
+        return result;
     } catch (error) {
-        callback(error, null);
+        throw error;
     }
 }
 
