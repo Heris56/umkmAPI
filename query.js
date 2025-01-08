@@ -197,11 +197,10 @@ async function getbatchkeranjang(id_pembeli) {
             throw new Error('tidak menemukan ID')
         }
 
-        const keranjang = await getkeranjangbyID(id_pembeli)
+        const keranjang = await getkeranjangbyID(id_pembeli).catch(() => []);
 
-        if (keranjang.length === 0) {
+        if (!keranjang || keranjang.length === 0) {
             return null;
-
         }
 
         const latest_batch = keranjang[keranjang.length - 1].id_batch
@@ -413,7 +412,7 @@ async function getulasansByIdUMKM(id_umkm, callback) {
                 model: Pembeli,
                 attributes: ['id_pembeli', 'username', 'profileImg'],
             },
-        ]
+            ]
         });
         callback(null, result);
     } catch (error) {
