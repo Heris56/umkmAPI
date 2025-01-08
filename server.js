@@ -878,9 +878,11 @@ app.put("/updatestatuspesananmasuk/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananditerima/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananditerima(id, (error, result) => {
+app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananditerima(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");

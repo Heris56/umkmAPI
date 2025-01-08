@@ -1386,6 +1386,7 @@ async function addpesanan(id_keranjang, total_belanja, callback) {
         }
 
         const pesananBaru = await Pesanan.create({ id_keranjang: id_keranjang, total_belanja: total_belanja, status_pesanan: "Pesanan Masuk" });
+        updatestatuskeranjang(id_keranjang, callback);
 
         callback(null, pesananBaru);
     } catch (error) {
