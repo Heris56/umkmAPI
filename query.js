@@ -511,7 +511,7 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
             LEFT JOIN
                 umkm ON Chat.id_umkm = umkm.id_umkm
             WHERE
-                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
+                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli
             ORDER BY
                 Chat.id_chat ASC;
         `,
@@ -848,6 +848,45 @@ async function getPembeliByID(id, callback) {
     }
 }
 
+//get
+
+//login pembeli
+async function loginPembeli(data, callback) {
+    try {
+        const pembeli = await Pembeli.findOne({where: {email: data.email}});
+        if(pembeli && pembeli.password === data.password){
+            const result = {
+                id_pembeli: pembeli.id_pembeli,
+                nama_lengkap: pembeli.nama_lengkap,
+                username: pembeli.username,
+                nomor_telepon: pembeli.nomor_telepon,
+                alamat: pembeli.alamat,
+                email: pembeli.email,
+                profileImage: pembeli.profileImg,
+                
+            }
+            callback(null, result);
+        }else{
+            callback(new Error('Email atau Password salah!'), null);
+        };
+        return (null, pembeli);
+    }catch (error) {
+        callback(error, null);
+    }   
+};
+
+// async function logi(email, password, callback) {
+//     try {
+//         const result = await Pembeli.findAll({
+//             where: {email: email, password: password}
+//         }); // Get all pembeli data
+//         callback(null, result);
+//     } catch (error) {
+//         callback(error, null); // Send error if something goes wrong
+//     }
+// }
+
+
 // Add a new pembeli
 async function addPembeli(data, callback) {
     try {
@@ -856,12 +895,13 @@ async function addPembeli(data, callback) {
             !data.nomor_telepon ||
             !data.username ||
             !data.email ||
-            !data.password
+            !data.password||
+            !data.alamat
         ) {
             throw new Error("Incomplete data");
         }
 
-        const result = await Pembeli.create(data); // Add new pembeli to the table
+        const result = await Pembeli.create(data); 
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -907,7 +947,34 @@ async function deletePembeli(id, callback) {
         callback(error, null);
     }
 }
+//Check Pembeli kalo pake email atau username
+async function checkPembeli(emailInput, usernameInput, callback) {
+    try {
+        const email = await Pembeli.findOne({where: {email: emailInput } });
+        const username = await Pembeli.findOne({ where: {username: usernameInput } });
+        if (email || username) {
+            callback(null, { emailExists: !!email, usernameExists: !!username });
+        } else {
+            callback(null, { emailExists: false, usernameExists: false });
+        }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+//Check user tapi Pembeli juga cuman pake select from pembeli
+async function checkUser(email, username, callback) {
+    const query = 'SELECT COUNT(*) AS count FROM pembeli WHERE email = ? OR username = ?';
+    db.query(query, [email, username], (error, results) => {
+        if (error) {
+            return callback(error, null);
+        }
+        const exists = results[0].count > 0;
+        callback(null, { exists });
+    });
+}
 
+
+//Query Kurir
 // Get all kurir data
 async function getKurir(callback) {
     try {
@@ -940,12 +1007,14 @@ async function getKurirByID(id, callback) {
 // Add a new kurir
 async function addKurir(data, callback) {
     try {
-        if (!data.nama_kurir || !data.id_umkm || !data.email || !data.password) {
-            throw new Error("Incomplete data");
-        }
-
-        const result = await Kurir.create(data);
-        callback(null, result);
+        const newKurir = await Kurir.create({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            // id_pesanan: data.id_pesanan,
+            email: data.email,
+            password: data.password,
+        });
+        callback(null, newKurir);
     } catch (error) {
         callback(error, null);
     }
@@ -963,9 +1032,12 @@ async function updateKurir(id, data, callback) {
         if (!kurir) {
             throw new Error(`Kurir with ID ${id} not found`);
         }
-
-        const updatedKurir = await kurir.update(data);
-        callback(null, updatedKurir);
+        await kurir.update({
+            nama_kurir: data.nama_kurir,
+            id_umkm: data.id_umkm,
+            // id_pesanan: data.id_pesanan,
+        });
+        callback(null, kurir);
     } catch (error) {
         callback(error, null);
     }
@@ -990,6 +1062,50 @@ async function deleteKurir(id, callback) {
         callback(error, null);
     }
 }
+
+// Login Kurir
+async function loginKurir(data, callback) {
+    try {
+        if (!data.email) {
+            return callback(new Error("Email is required"), null);
+        }
+
+        const kurir = await Kurir.findOne({
+            where: { email: data.email },
+        });
+
+        if (kurir && kurir.password === data.password) {
+            const result = {
+                id_kurir: kurir.id_kurir,
+                nama_kurir: kurir.nama_kurir,
+                id_umkm: kurir.id_umkm,
+                // username: kurir.username,
+                // nomor_telepon: kurir.nomor_telepon,
+                email: kurir.email,
+            };
+            callback(null, result);
+        } else {
+            callback(new Error("Invalid email or password"), null);
+        }
+    } catch (error) {
+        return callback(error, null);
+    }
+}
+
+//check kurir
+async function checkKurir(email, callback) {
+    try {
+        const result = await Kurir.findOne({ where: { email: email } });
+        if (result) {
+            callback(null, { exists: true });
+        } else {
+            callback(null, { exists: false });
+        }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
@@ -1240,19 +1356,22 @@ async function getpesananmasuk(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-	k.id_batch,
-	SUM(k.total) as total_belanja,
-	SUM(k.kuantitas) as kuantitas,
-	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-	FROM keranjang k
-	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-	INNER JOIN produk p ON k.id_produk = p.id_produk
-	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-	WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Masuk'
-	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
-	ORDER BY k.id_batch ASC;
+    k.id_batch,
+    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    SUM(k.kuantitas) AS kuantitas,
+    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Masuk' AND k.id_produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
+    CAST(pb.alamat AS NVARCHAR(MAX))
+ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1273,19 +1392,22 @@ async function getpesananditerima(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-	k.id_batch,
-	SUM(k.total) as total_belanja,
-	SUM(k.kuantitas) as kuantitas,
-	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-	FROM keranjang k
-	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-	INNER JOIN produk p ON k.id_produk = p.id_produk
-	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Diterima'
-	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
-	ORDER BY k.id_batch ASC;
+    k.id_batch,
+    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    SUM(k.kuantitas) AS kuantitas,
+    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Diterima' AND k.id_produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
+    CAST(pb.alamat AS NVARCHAR(MAX))
+ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1306,19 +1428,22 @@ async function getpesananditolak(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-	k.id_batch,
-	SUM(k.total) as total_belanja,
-	SUM(k.kuantitas) as kuantitas,
-	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-	FROM keranjang k
-	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-	INNER JOIN produk p ON k.id_produk = p.id_produk
-	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Ditolak'
-	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
-	ORDER BY k.id_batch ASC;
+    k.id_batch,
+    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    SUM(k.kuantitas) AS kuantitas,
+    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Ditolak' AND k.id_produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
+    CAST(pb.alamat AS NVARCHAR(MAX))
+ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1339,19 +1464,22 @@ async function getpesananselesai(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-	k.id_batch,
-	SUM(k.total) as total_belanja,
-	SUM(k.kuantitas) as kuantitas,
-	STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-	CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-	CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-	FROM keranjang k
-	INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-	INNER JOIN produk p ON k.id_produk = p.id_produk
-	INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-	WHERE p.id_umkm =:id AND ps.status_pesanan = 'Pesanan Selesai'
-	GROUP BY k.id_batch, CAST(ps.status_pesanan AS NVARCHAR(MAX)), CAST(pb.alamat AS NVARCHAR(MAX))
-	ORDER BY k.id_batch ASC;
+    k.id_batch,
+    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    SUM(k.kuantitas) AS kuantitas,
+    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
+    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Selesai' AND k.id_produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
+    CAST(pb.alamat AS NVARCHAR(MAX))
+ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: { id: id },
@@ -1482,13 +1610,14 @@ WHERE
 }
 
 
-async function addpesanan(id_keranjang, total_belanja, callback) {
+async function addpesanan(id_keranjang, total_belanja, id_pembeli, callback) {
     try {
         if (!id_keranjang || !total_belanja) {
             throw new Error("Data tidak lengkap");
         }
 
         const pesananBaru = await Pesanan.create({ id_keranjang: id_keranjang, total_belanja: total_belanja, status_pesanan: "Pesanan Masuk" });
+        updatestatuskeranjang(id_pembeli);
 
         callback(null, pesananBaru);
     } catch (error) {
@@ -1893,6 +2022,11 @@ module.exports = {
     getdatadashboardpesanpalingbaru,
     getdatadashboardcampaignpalingbaru,
     getCampaignById,
+    loginPembeli,
+    loginKurir,
+    checkPembeli,
+    checkUser,
+    checkKurir,
     getallpesananaktifpembeli,
     getkeranjangbyidbatch,
 };

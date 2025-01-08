@@ -326,7 +326,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
 
 
-    dboperations.getmessagesbyumkmandpembeli(id_umkm, id_pembeli, (error, result) => {
+    dboperations.getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, (error, result) => {
         if (error) {
             console.error("error get message:", error);
             return res.status(500).send("error fetch message");
@@ -553,6 +553,27 @@ app.delete("/pembeli/:id", (req, res) => {
     });
 });
 
+app.post("/checkPembeli", (req, res) => {
+    const { email, username } = req.body;
+    dboperations.checkPembeli(email, username, (error, result) => {
+        if (error) {
+            return res.status(500).json({ error: "Error checking user" });
+        }
+        return res.status(200).json(result);
+    });
+});
+
+app.post("/loginpembeli",  (req, res) => {
+    const { email, password } = req.body;
+    dboperations.loginPembeli( {email, password} , (error, result) => {
+        if (error) {
+            return res.status(401).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+
 // Get all kurir
 app.get("/kurir", (req, res) => {
     dboperations.getKurir((error, result) => {
@@ -576,15 +597,22 @@ app.get("/kurir/:id", (req, res) => {
 });
 
 // Add a new kurir
-app.post("/kurir", (req, res) => {
-    const data = req.body;
-    dboperations.addKurir(data, (error, result) => {
-        if (error) {
-            console.error("Error adding kurir:", error);
-            return res.status(500).send(`Error adding kurir: ${error.message}`);
-        }
-        res.status(200).json(result); // Send the newly created kurir
-    });
+app.post("/kurir", async (req, res) => {
+    try {
+        const { nama_kurir, id_umkm, email, password } = req.body;
+        const newKurir = await Kurir.create({
+            nama_kurir,
+            id_umkm,
+            // id_pesanan,
+            email,
+            password,
+        });
+
+        res.status(201).json(newKurir);
+    } catch (error) {
+        console.error("Error adding kurir:", error);
+        res.status(500).send("Error adding kurir");
+    }
 });
 
 // Update kurir by ID
@@ -609,6 +637,28 @@ app.delete("/kurir/:id", (req, res) => {
         res.status(200).json(result); // Send success message
     });
 });
+
+
+app.post("/loginkurir",  (req, res) => {
+    const { email, password } = req.body;
+    dboperations.loginKurir( {email, password} , (error, result) => {
+        if (error) {
+            return res.status(401).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.post("/checkkurir", (req, res) => {
+    const { email } = req.body;
+    dboperations.checkKurir(email, (error, result) => {
+        if (error) {
+            return res.status(500).send("Error checking Kurir");
+        }
+        return res.status(200).json({ emailExists: result.exists });
+    });
+});
+
 
 app.get("/monthly-stats/:umkmId", async (req, res) => {
     const { umkmId } = req.params;
@@ -785,7 +835,6 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
         res.json(result);
     });
 });
-
 app.get("/getkeranjangbyidbatch/:id_pembeli/:id_batch", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
     const id_batch = req.params.id_batch;
@@ -811,11 +860,13 @@ app.post("/addriwayat", (req, res) => {
     });
 });
 
-app.post("/addpesanan/:id_keranjang/:total_belanja", (req, res) => {
+app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
     const id_keranjang = req.params.id_keranjang;
     const total_belanja = req.params.total_belanja;
+    const id_pembeli = req.params.id_pembeli;
 
-    dboperations.addpesanan(id_keranjang, total_belanja, (error, result) => {
+
+    dboperations.addpesanan(id_keranjang, total_belanja, id_pembeli, (error, result) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
@@ -837,9 +888,11 @@ app.put("/updatestatuspesananmasuk/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananditerima/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananditerima(id, (error, result) => {
+app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananditerima(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
@@ -990,35 +1043,16 @@ app.get("/getcampaign/:id", async (req, res) => {
     }
 });
 
-app.get("/getcampaignbyid/:id", async (req, res) => {
+app.put("/campaignEdit/:id/:data", (req, res) => {
     const id = req.params.id;
-
-    try {
-        const campaigns = await dboperations.getCampaignById(id); // Correctly assign the value
-        if (campaigns.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No campaigns found for this ID" });
-        }
-        res.status(200).json(campaigns); // Use `campaigns` here
-    } catch (error) {
-        res
-            .status(500)
-            .json({ message: "Error fetching campaigns", error: error.message });
-    }
-});
-
-
-app.put("/updatecampaign/:id_umkm/:id_campaign", (req, res) => {
-    const id_umkm = req.params.id_umkm;
-    const id_campaign = req.params.id_campaign;
-    const data = req.body;
-    dboperations.updateCampaign(id_campaign, id_umkm, data, (error, result) => {
+    const data = req.body.data;
+    dboperations.updateCampaign(id, data, (error, campaign) => {
         if (error) {
-            console.error("error update data Campaign:", error);
-            return res.status(500).send("error update data ");
+            return res
+                .status(500)
+                .json({ message: "Error updating campaign", error });
         }
-        res.status(200).json(result);
+        return res.status(200).json(campaign);
     });
 });
 
