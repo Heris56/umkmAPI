@@ -325,6 +325,20 @@ async function getulasansByProdukId(id_produk, callback) {
     }
 }
 
+async function getulasansByIdUMKM(id_umkm, callback) {
+    try {
+        const result = await Ulasan.findAll({
+            include: {
+                model: Produk,
+                where: { id_umkm: id_umkm },
+            },
+        });
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 async function getOverallRating(id_umkm, callback) {
     try {
         // Fetch all ratings for the given shop (id_umkm)
@@ -1715,6 +1729,7 @@ module.exports = {
     loginUMKM,
     getulasans,
     getulasansByProdukId,
+    getulasansByIdUMKM,
     getOverallRating,
     getMessages,
     getMessagesByUMKM,
