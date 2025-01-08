@@ -17,7 +17,7 @@ const Keranjang = sequelize.define('Keranjang', {
     },
     kuantitas: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
     status: {
         type: DataTypes.STRING,
@@ -25,7 +25,7 @@ const Keranjang = sequelize.define('Keranjang', {
     },
     id_pembeli: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: Pembeli,
             key: 'id_pembeli'
@@ -33,7 +33,7 @@ const Keranjang = sequelize.define('Keranjang', {
     },
     id_produk: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: Produk,
             key: 'id_produk'
