@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db'); // Import instance Sequelize
 const Produk = require('./produk');
+const Pembeli = require('./pembeli');
 
 const Ulasan = sequelize.define('Ulasan', {
   id_ulasan: {
@@ -39,3 +40,4 @@ const Ulasan = sequelize.define('Ulasan', {
 module.exports = Ulasan;
 
 Ulasan.belongsTo(Produk, { foreignKey: 'id_produk' });
+Ulasan.belongsTo(Pembeli, { foreignKey: 'id_pembeli' });
