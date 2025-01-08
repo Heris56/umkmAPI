@@ -512,7 +512,7 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
             LEFT JOIN
                 umkm ON Chat.id_umkm = umkm.id_umkm
             WHERE
-                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli;
+                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli
             ORDER BY
                 Chat.id_chat ASC;
         `,
