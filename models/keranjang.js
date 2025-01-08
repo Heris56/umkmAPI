@@ -13,7 +13,7 @@ const Keranjang = sequelize.define('Keranjang', {
     },
     total: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
     kuantitas: {
         type: DataTypes.INTEGER,
