@@ -1435,14 +1435,14 @@ WHERE
 }
 
 
-async function addpesanan(id_keranjang, total_belanja, callback) {
+async function addpesanan(id_keranjang, total_belanja, id_pembeli, callback) {
     try {
         if (!id_keranjang || !total_belanja) {
             throw new Error("Data tidak lengkap");
         }
 
         const pesananBaru = await Pesanan.create({ id_keranjang: id_keranjang, total_belanja: total_belanja, status_pesanan: "Pesanan Masuk" });
-        updatestatuskeranjang(id_keranjang, callback);
+        updatestatuskeranjang(id_pembeli);
 
         callback(null, pesananBaru);
     } catch (error) {
