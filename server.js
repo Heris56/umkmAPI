@@ -309,7 +309,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
 
 
-    dboperations.getmessagesbyumkmandpembeli(id_umkm, id_pembeli, (error, result) => {
+    dboperations.getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, (error, result) => {
         if (error) {
             console.error("error get message:", error);
             return res.status(500).send("error fetch message");
