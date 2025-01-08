@@ -148,7 +148,25 @@ async function getProdukByType(tipe_barang, callback) {
 // end of // Produk - Haikal
 
 // bagian keranjang
+async function addbatch(id_pembeli, id_batch, data) {
+    try {
+        if (!id_pembeli) {
+            throw new Error('pembeli tidak ditemukan');
+        }
+        data.id_produk = null;
+        data.kuantitas = null;
+        data.total = null;
+        data.status = "Deleted";
+        data.id_pembeli = id_pembeli;
+        data.id_batch = id_batch;
 
+        const addbatch = await Keranjang.create(data);
+
+        return addbatch;
+    } catch (error) {
+        throw error;
+    }
+}
 
 async function getkeranjangstandby(id_pembeli) {
     try {
@@ -1804,6 +1822,7 @@ module.exports = {
     getkeranjangstandby,
     getkeranjangbyID,
     getallKeranjang,
+    addbatch,
     addtoKeranjang,
     updatestatuskeranjang,
     getuserUMKMbyID,
