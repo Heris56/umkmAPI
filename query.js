@@ -467,9 +467,15 @@ async function getulasans(callback) {
 async function getulasansByProdukId(id_produk, callback) {
     try {
         const result = await Ulasan.findAll({
-            where: {
-                id_produk: id_produk
-            }
+            include: [{
+                model: Produk,
+                where: { id_produk: id_produk },
+            },
+            {
+                model: Pembeli,
+                attributes: ['id_pembeli', 'username', 'profileImg'],
+            },
+            ]
         });
         callback(null, result);
     } catch (error) {
@@ -1037,6 +1043,36 @@ async function checkPembeli(emailInput, usernameInput, callback) {
         callback(error, null);
     }
 }
+
+async function checkPembeliByEmail(emailInput, callback) {
+    try {
+        const email = await Pembeli.findOne({ where: { email: emailInput } });
+        if (email) {
+            callback(null, { emailExists: true });
+        } else {
+            callback(null, { emailExists: false });
+        }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+async function changePasswordPembeli(email, newPassword, callback) {
+    try {
+        const user = await Pembeli.findOne({ where: { email: email } });
+        if (!user) {
+            return callback(new Error("User not found"), null);
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        callback(null, { message: "Password changed successfully" });
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 //Check user tapi Pembeli juga cuman pake select from pembeli
 async function checkUser(email, username, callback) {
     const query = 'SELECT COUNT(*) AS count FROM pembeli WHERE email = ? OR username = ?';
@@ -2112,4 +2148,6 @@ module.exports = {
     checkKurir,
     getallpesananaktifpembeli,
     getkeranjangbyidbatch,
+    checkPembeliByEmail,
+    changePasswordPembeli
 };
