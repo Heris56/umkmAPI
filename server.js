@@ -21,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 80;
 
 app.use(express.json());
+app.use("/otp", require("./route/routes"));
 
 // Konfigurasi multer untuk file upload
 const storage = multer.memoryStorage(); // Simpan file di memori (buffer)
@@ -604,6 +605,16 @@ app.post("/checkPembeli", (req, res) => {
     });
 });
 
+app.post("/checkPembeliByEmail", (req, res) => {
+    const { email } = req.body;
+    dboperations.checkPembeliByEmail(email, (error, result) => {
+        if (error) {
+            return res.status(500).json({ error: "Error checking user" });
+        }
+        return res.status(200).json(result);
+    });
+});
+
 app.post("/loginpembeli", (req, res) => {
     const { email, password } = req.body;
     dboperations.loginPembeli({ email, password }, (error, result) => {
@@ -611,6 +622,17 @@ app.post("/loginpembeli", (req, res) => {
             return res.status(401).send(error.message);
         }
         res.status(200).json(result);
+    });
+});
+
+app.put("/changepassword", (req, res) => {
+    const { email, newPassword } = req.body;
+
+    dboperations.changePasswordPembeli(email, newPassword, (error, result) => {
+        if (error) {
+            return res.status(500).json({ message: "Error changing password", error: error.message });
+        }
+        res.status(200).json({ message: "Password changed successfully", data: result });
     });
 });
 
