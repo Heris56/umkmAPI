@@ -160,7 +160,7 @@ app.put('/keranjangmin/:id_keranjang', async (req, res) => {
         const updatedKeranjang = await dboperations.minQTY(id_keranjang);
         if (updatedKeranjang.message) {
             // delete keranjang
-            res.status(200).json(updatedKeranjang.message);
+            res.status(200).json({ message: updatedKeranjang.message });
         } else {
             res.status(200).json({
                 // ngurangin qty di keranjang
