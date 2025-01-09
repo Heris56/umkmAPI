@@ -275,11 +275,14 @@ async function addtoKeranjang(data, callback) {
         const found = await searchproductonKeranjang(data.id_pembeli, data.id_produk, data.id_batch)
         console
         if (found['found'] === true) {
-            return 'Barang sudah ada di keranjang';
+            callback(null, { message: 'Barang sudah ada di keranjang' });
         } else {
             data.status = 'Standby'
             const result = await Keranjang.create(data);
-            callback(null, result);
+            callback(null, {
+                message: 'berhasil menambahkan ke keranjang',
+                data: result
+            });
         }
     } catch (error) {
         callback(error, null);
@@ -1642,7 +1645,7 @@ async function getallpesananaktifpembeli(id, callback) {
     k.id_batch,
     STRING_AGG(CAST(p.nama_barang AS NVARCHAR(MAX)), ', ') AS nama_barang, -- Menggabungkan nama barang
     MAX(ps.status_pesanan) AS status_pesanan, -- Mengambil salah satu nilai status_pesanan
-    SUM(k.kuantitas) AS kuantitas_barang, -- Menjumlahkan kuantitas
+    STRING_AGG(CAST(k.kuantitas AS NVARCHAR(MAX)), ', ') AS kuantitas_barang, -- Menjumlahkan kuantitas
     MAX(ps.total_belanja) as total_belanja,
     CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli, -- Cast alamat ke NVARCHAR
     MAX(ps.id_keranjang) AS id_keranjang, -- Mengambil salah satu id_keranjang
