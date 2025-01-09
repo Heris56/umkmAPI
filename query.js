@@ -1625,7 +1625,7 @@ async function getriwayatpesanan(id, callback) {
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-            WHERE pb.id_pembeli =1 AND k.id_produk IS NOT NULL
+            WHERE pb.id_pembeli =:id AND k.id_produk IS NOT NULL
 			GROUP BY k.id_batch
 			ORDER BY k.id_batch;
         `,
