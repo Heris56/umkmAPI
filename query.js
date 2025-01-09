@@ -467,9 +467,15 @@ async function getulasans(callback) {
 async function getulasansByProdukId(id_produk, callback) {
     try {
         const result = await Ulasan.findAll({
-            where: {
-                id_produk: id_produk
-            }
+            include: [{
+                model: Produk,
+                where: { id_produk: id_produk },
+            },
+            {
+                model: Pembeli,
+                attributes: ['id_pembeli', 'username', 'profileImg'],
+            },
+            ]
         });
         callback(null, result);
     } catch (error) {
@@ -1044,7 +1050,7 @@ async function checkPembeliByEmail(emailInput, callback) {
         if (email) {
             callback(null, { emailExists: true });
         } else {
-            callback(null, { emailExists: false});
+            callback(null, { emailExists: false });
         }
     } catch (error) {
         callback(error, null);
