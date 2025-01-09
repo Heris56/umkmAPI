@@ -1576,20 +1576,22 @@ async function getriwayatpesanan(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-			tanggal as Tanggal_Pesanan,
-            p.Nama_Barang AS nama_barang,
-            ps.total_belanja AS total_harga,
-            ps.status_pesanan,
-            pb.alamat AS alamat_pembeli,
-            p.Deskripsi_Barang AS deskripsi_barang,
-            k.kuantitas as kuantitas_barang,
-            p.image_url
+            k.id_batch,
+			MAX(tanggal) as Tanggal_Pesanan,
+            STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)),',') AS nama_barang,
+            MAX(ps.total_belanja) AS total_harga,
+            MAX(ps.status_pesanan) AS status_pesanan,
+            MAX(CAST(pb.alamat AS NVARCHAR(MAX))) AS alamat_pembeli,
+            SUM(k.kuantitas) as kuantitas_barang,
+			STRING_AGG(CAST(p.image_url AS NVARCHAR(MAX)),',') AS image_url
             FROM riwayat r
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-            WHERE pb.id_pembeli = :id;
+            WHERE pb.id_pembeli =1 AND k.id_produk IS NOT NULL
+			GROUP BY k.id_batch
+			ORDER BY k.id_batch;
         `,
             {
                 replacements: { id: id },
@@ -1610,15 +1612,15 @@ async function getallpesananaktifpembeli(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-    ps.id_pesanan,
-    ps.status_pesanan,
-    p.nama_barang,
-    k.kuantitas AS kuantitas_barang,
-    ps.total_belanja,
-    pb.alamat AS alamat_pembeli,
-	ps.id_keranjang,
-	k.id_pembeli,
-    p.image_url
+    k.id_batch,
+    STRING_AGG(CAST(p.nama_barang AS NVARCHAR(MAX)), ', ') AS nama_barang, -- Menggabungkan nama barang
+    MAX(ps.status_pesanan) AS status_pesanan, -- Mengambil salah satu nilai status_pesanan
+    SUM(k.kuantitas) AS kuantitas_barang, -- Menjumlahkan kuantitas
+    MAX(ps.total_belanja) as total_belanja,
+    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli, -- Cast alamat ke NVARCHAR
+    MAX(ps.id_keranjang) AS id_keranjang, -- Mengambil salah satu id_keranjang
+    k.id_pembeli,
+    STRING_AGG(CAST(p.image_url AS NVARCHAR(MAX)),', ') AS image_url
 FROM
     pesanan ps
 INNER JOIN
@@ -1628,8 +1630,12 @@ INNER JOIN
 INNER JOIN
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE
-    pb.id_pembeli = 1
-    AND ps.status_pesanan != 'Pesanan Selesai';
+    pb.id_pembeli = :id
+    AND ps.status_pesanan != 'Pesanan Selesai'
+GROUP BY
+    k.id_batch, k.id_pembeli, CAST(pb.alamat AS NVARCHAR(MAX))
+ORDER BY
+    k.id_batch;
         `,
             {
                 replacements: { id: id },
@@ -2071,7 +2077,6 @@ module.exports = {
     addKurir,
     updateKurir,
     deleteKurir,
-    getpesananmasuk,
     getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
     getRiwayat,
