@@ -1659,14 +1659,14 @@ async function getriwayatpesanan(id, callback) {
             MAX(ps.total_belanja) AS total_harga,
             MAX(ps.status_pesanan) AS status_pesanan,
             MAX(CAST(pb.alamat AS NVARCHAR(MAX))) AS alamat_pembeli,
-            SUM(k.kuantitas) as kuantitas_barang,
+            STRING_AGG(CAST(k.kuantitas AS NVARCHAR(MAX)),',') as kuantitas_barang,
 			STRING_AGG(CAST(p.image_url AS NVARCHAR(MAX)),',') AS image_url
             FROM riwayat r
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
             INNER JOIN produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-            WHERE pb.id_pembeli =1 AND k.id_produk IS NOT NULL
+            WHERE pb.id_pembeli =:id AND k.id_produk IS NOT NULL
 			GROUP BY k.id_batch
 			ORDER BY k.id_batch;
         `,
