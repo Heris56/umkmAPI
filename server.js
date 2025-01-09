@@ -113,10 +113,7 @@ app.post("/keranjang", (req, res) => {
             console.error(error);
             return res.status(400).send({ message: error.message || "Terjadi kesalahan" });
         }
-        res.json({
-            "message": "berhasil menambahkan ke keranjang",
-            "data": result
-        }).status(200);
+        res.json(result).status(200);
     });
 });
 
