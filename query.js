@@ -275,11 +275,14 @@ async function addtoKeranjang(data, callback) {
         const found = await searchproductonKeranjang(data.id_pembeli, data.id_produk, data.id_batch)
         console
         if (found['found'] === true) {
-            return 'Barang sudah ada di keranjang';
+            callback(null, { message: 'Barang sudah ada di keranjang' });
         } else {
             data.status = 'Standby'
             const result = await Keranjang.create(data);
-            callback(null, result);
+            callback(null, {
+                message: 'berhasil menambahkan ke keranjang',
+                data: result
+            });
         }
     } catch (error) {
         callback(error, null);
