@@ -304,6 +304,52 @@ async function updatestatuskeranjang(id) {
     }
 }
 
+async function plusQTY(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal mendapatkan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+
+        if (!keranjang) {
+            throw new Error('keranjang tidak ditemukan')
+        }
+
+        keranjang.kuantitas += 1;
+
+        await keranjang.save();
+
+        return keranjang;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function minQTY(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal mendapatkan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+
+        if (!keranjang) {
+            throw new Error('keranjang tidak ditemukan')
+        }
+
+        keranjang.kuantitas -= 1;
+
+        await keranjang.save();
+
+        return keranjang;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 async function order(callback) {
     try {
 
@@ -1957,6 +2003,8 @@ module.exports = {
     getallKeranjang,
     addbatch,
     addtoKeranjang,
+    plusQTY,
+    minQTY,
     updatestatuskeranjang,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
