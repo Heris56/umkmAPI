@@ -316,12 +316,17 @@ async function plusQTY(id_keranjang) {
             throw new Error('keranjang tidak ditemukan')
         }
 
-        keranjang.kuantitas += 1;
+        var produk = await Produk.findByPk(keranjang.id_produk);
 
-        await keranjang.save();
+        if (keranjang.kuantitas < produk.stok) {
+            keranjang.kuantitas += 1;
+
+            await keranjang.save();
+        } else {
+            return { message: 'Kuantitas sudah mencapai stok maksimum' }
+        }
 
         return keranjang;
-
     } catch (error) {
         throw error;
     }
@@ -339,12 +344,34 @@ async function minQTY(id_keranjang) {
             throw new Error('keranjang tidak ditemukan')
         }
 
-        keranjang.kuantitas -= 1;
+        if (keranjang.kuantitas > 1) {
+            keranjang.kuantitas -= 1;
 
-        await keranjang.save();
+            await keranjang.save();
+        } else {
+            deletekeranjang(id_keranjang);
+            return { message: 'Keranjang Dihapus' }
+        }
 
         return keranjang;
+    } catch (error) {
+        throw error;
+    }
+}
 
+//fungsi untuk dipanggil di controller/query.js aja
+async function deletekeranjang(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal menemukan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+        if (!keranjang) {
+            throw new Error('keranjang tidak ada');
+        }
+
+        await keranjang.destroy();
     } catch (error) {
         throw error;
     }
