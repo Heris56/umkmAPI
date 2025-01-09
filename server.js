@@ -134,11 +134,21 @@ app.post("/keranjang", (req, res) => {
 app.put('/keranjangplus/:id_keranjang', async (req, res) => {
     try {
         const id_keranjang = req.params.id_keranjang;
-        const updatedKeranjang = await dboperations.plusQTY(id_keranjang);
-        res.status(200).json({
-            message: 'Kuantitas berhasil ditambah',
-            data: updatedKeranjang
-        });
+
+        const result = await dboperations.plusQTY(id_keranjang);
+
+        if (result.message) {
+            // Jika kuantitas sudah mencapai stok maksimum
+            res.status(200).json({
+                message: result.message
+            });
+        } else {
+            // Jika kuantitas berhasil ditambah
+            res.status(200).json({
+                message: 'Kuantitas berhasil ditambah',
+                data: result
+            });
+        }
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -148,10 +158,16 @@ app.put('/keranjangmin/:id_keranjang', async (req, res) => {
     try {
         const id_keranjang = req.params.id_keranjang;
         const updatedKeranjang = await dboperations.minQTY(id_keranjang);
-        res.status(200).json({
-            message: 'Kuantitas berhasil ditambah',
-            data: updatedKeranjang
-        });
+        if (updatedKeranjang.message) {
+            // delete keranjang
+            res.status(200).json(updatedKeranjang.message);
+        } else {
+            res.status(200).json({
+                // ngurangin qty di keranjang
+                message: 'Kuantitas berhasil dikurangi',
+                data: updatedKeranjang
+            });
+        }
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
