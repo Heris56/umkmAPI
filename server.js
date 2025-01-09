@@ -563,9 +563,9 @@ app.post("/checkPembeli", (req, res) => {
     });
 });
 
-app.post("/loginpembeli",  (req, res) => {
+app.post("/loginpembeli", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginPembeli( {email, password} , (error, result) => {
+    dboperations.loginPembeli({ email, password }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
@@ -639,9 +639,9 @@ app.delete("/kurir/:id", (req, res) => {
 });
 
 
-app.post("/loginkurir",  (req, res) => {
+app.post("/loginkurir", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginKurir( {email, password} , (error, result) => {
+    dboperations.loginKurir({ email, password }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
@@ -753,7 +753,7 @@ app.get("/getriwayatpesanan/:id", (req, res) => {
     });
 });
 
-app.get("/getpesananaktifpembeli/:id", (req, res) => {
+app.get("/getallpesananaktifpembeli/:id", (req, res) => {
     const id = req.params.id;
     dboperations.getallpesananaktifpembeli(id, (error, result) => {
         if (error) {
@@ -901,9 +901,11 @@ app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananditolak/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananditolak(id, (error, result) => {
+app.put("/updatestatuspesananditolak/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananditolak(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
@@ -912,9 +914,11 @@ app.put("/updatestatuspesananditolak/:id", (req, res) => {
     });
 });
 
-app.put("/updatestatuspesananselesai/:id", (req, res) => {
-    const id = req.params.id;
-    dboperations.updatestatuspesananselesai(id, (error, result) => {
+app.put("/updatestatuspesananselesai/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesananselesai(id_umkm, id_batch, (error, result) => {
         if (error) {
             console.error("error update status pesanan diterima:", error);
             return res.status(500).send("error status pesanan diterima");
