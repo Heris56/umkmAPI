@@ -197,11 +197,10 @@ async function getbatchkeranjang(id_pembeli) {
             throw new Error('tidak menemukan ID')
         }
 
-        const keranjang = await getkeranjangbyID(id_pembeli)
+        const keranjang = await getkeranjangbyID(id_pembeli).catch(() => []);
 
-        if (keranjang.length === 0) {
+        if (!keranjang || keranjang.length === 0) {
             return null;
-
         }
 
         const latest_batch = keranjang[keranjang.length - 1].id_batch
@@ -276,7 +275,7 @@ async function addtoKeranjang(data, callback) {
         const found = await searchproductonKeranjang(data.id_pembeli, data.id_produk, data.id_batch)
         console
         if (found['found'] === true) {
-            throw new Error('Barang sudah ada di keranjang')
+            return 'Barang sudah ada di keranjang';
         } else {
             data.status = 'Standby'
             const result = await Keranjang.create(data);
@@ -300,6 +299,79 @@ async function updatestatuskeranjang(id) {
 
 
         return updatestatus;
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function plusQTY(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal mendapatkan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+
+        if (!keranjang) {
+            throw new Error('keranjang tidak ditemukan')
+        }
+
+        var produk = await Produk.findByPk(keranjang.id_produk);
+
+        if (keranjang.kuantitas < produk.stok) {
+            keranjang.kuantitas += 1;
+
+            await keranjang.save();
+        } else {
+            return { message: 'Kuantitas sudah mencapai stok maksimum' }
+        }
+
+        return keranjang;
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function minQTY(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal mendapatkan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+
+        if (!keranjang) {
+            throw new Error('keranjang tidak ditemukan')
+        }
+
+        if (keranjang.kuantitas > 1) {
+            keranjang.kuantitas -= 1;
+
+            await keranjang.save();
+        } else {
+            deletekeranjang(id_keranjang);
+            return { message: 'Keranjang Dihapus' }
+        }
+
+        return keranjang;
+    } catch (error) {
+        throw error;
+    }
+}
+
+//fungsi untuk dipanggil di controller/query.js aja
+async function deletekeranjang(id_keranjang) {
+    try {
+        if (!id_keranjang) {
+            throw new Error('gagal menemukan keranjang')
+        }
+
+        var keranjang = await Keranjang.findByPk(id_keranjang);
+        if (!keranjang) {
+            throw new Error('keranjang tidak ada');
+        }
+
+        await keranjang.destroy();
     } catch (error) {
         throw error;
     }
@@ -1964,6 +2036,8 @@ module.exports = {
     getallKeranjang,
     addbatch,
     addtoKeranjang,
+    plusQTY,
+    minQTY,
     updatestatuskeranjang,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
