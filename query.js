@@ -226,6 +226,10 @@ async function searchproductonKeranjang(id_pembeli, id_produk, id_batch) {
                 }
             }
         )
+
+        const produk = Produk.findByPk(id_produk);
+
+
         if (produkkeranjang) {
             return { found: true, data: produkkeranjang }
         } else {
@@ -273,8 +277,12 @@ async function addtoKeranjang(data, callback) {
         }
 
         const found = await searchproductonKeranjang(data.id_pembeli, data.id_produk, data.id_batch)
-        console
-        if (found['found'] === true) {
+
+        const same = await CekKeranjang(data.id_pembeli, data.id_produk);
+
+        if (same["same"] === false) {
+            callback(null, { message: 'tidak bisa nambah produk umkm yang berbeda' })
+        } else if (found['found'] === true) {
             callback(null, { message: 'Barang sudah ada di keranjang' });
         } else {
             data.status = 'Standby'
@@ -375,6 +383,39 @@ async function deletekeranjang(id_keranjang) {
         }
 
         await keranjang.destroy();
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function CekKeranjang(id_pembeli, id_produk) {
+    try {
+        if (!id_produk) {
+            throw new Error('gagal menemukan produk');
+        }
+
+        const keranjang = await getkeranjangstandby(id_pembeli);
+
+        if (!keranjang) {
+            return { message: 'kosong' }
+        }
+        const lastKeranjang = keranjang[keranjang.length - 1];
+        if (!lastKeranjang) {
+            return { same: true }
+        }
+
+        const produk = await Produk.findByPk(id_produk);
+
+        if (!produk) {
+            return { same: true }
+        }
+
+        if (produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
+            return { same: true }
+        } else {
+            return { same: false }
+        }
+
     } catch (error) {
         throw error;
     }
@@ -2077,6 +2118,7 @@ module.exports = {
     addtoKeranjang,
     plusQTY,
     minQTY,
+    CekKeranjang,
     updatestatuskeranjang,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
