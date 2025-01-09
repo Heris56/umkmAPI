@@ -131,6 +131,32 @@ app.post("/keranjang", (req, res) => {
 //     });
 // });
 
+app.put('/keranjangplus/:id_keranjang', async (req, res) => {
+    try {
+        const id_keranjang = req.params.id_keranjang;
+        const updatedKeranjang = await dboperations.plusQTY(id_keranjang);
+        res.status(200).json({
+            message: 'Kuantitas berhasil ditambah',
+            data: updatedKeranjang
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.put('/keranjangmin/:id_keranjang', async (req, res) => {
+    try {
+        const id_keranjang = req.params.id_keranjang;
+        const updatedKeranjang = await dboperations.minQTY(id_keranjang);
+        res.status(200).json({
+            message: 'Kuantitas berhasil ditambah',
+            data: updatedKeranjang
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
 app.post("/addbatch/:id_pembeli/:id_batch", async (req, res) => {
     const { id_pembeli, id_batch } = req.params; // Mengambil id_pembeli dan id_batch dari URL
 
@@ -200,6 +226,8 @@ app.get("/keranjang/:id", async (req, res) => {
         res.status(500).json({ error: `${error.message}` })
     }
 });
+
+// end of keranjang
 
 app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
@@ -563,9 +591,9 @@ app.post("/checkPembeli", (req, res) => {
     });
 });
 
-app.post("/loginpembeli",  (req, res) => {
+app.post("/loginpembeli", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginPembeli( {email, password} , (error, result) => {
+    dboperations.loginPembeli({ email, password }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
@@ -639,9 +667,9 @@ app.delete("/kurir/:id", (req, res) => {
 });
 
 
-app.post("/loginkurir",  (req, res) => {
+app.post("/loginkurir", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginKurir( {email, password} , (error, result) => {
+    dboperations.loginKurir({ email, password }, (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
