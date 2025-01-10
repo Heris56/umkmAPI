@@ -114,10 +114,20 @@ app.post("/keranjang", (req, res) => {
             console.error(error);
             return res.status(400).send({ message: error.message || "Terjadi kesalahan" });
         }
-        res.json(result).status(200);
+        return res.json(result).status(200);
     });
 });
 
+app.get("/cekcart/:id_pembeli/:id_produk", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_produk = req.params.id_produk;
+    try {
+        const found = await dboperations.CekKeranjang(id_pembeli, id_produk);
+        res.status(200).json(found);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // app.put("/order/:id_pembeli", (req, res) => {
 //     const id_pembeli = req.params.id_pembeli
 //     dboperations.(id_pembeli, (error, result) => {
