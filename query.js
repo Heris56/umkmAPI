@@ -1510,7 +1510,7 @@ async function getpesananmasuk(id, callback) {
             `
             SELECT
     k.id_batch,
-    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
     STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
     CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
@@ -1546,7 +1546,7 @@ async function getpesananditerima(id, callback) {
             `
             SELECT
     k.id_batch,
-    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
     STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
     CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
@@ -1582,7 +1582,7 @@ async function getpesananditolak(id, callback) {
             `
             SELECT
     k.id_batch,
-    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
     STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
     CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
@@ -1618,7 +1618,7 @@ async function getpesananselesai(id, callback) {
             `
             SELECT
     k.id_batch,
-    STRING_AGG(ps.total_belanja, ', ') AS total_belanja, -- Menggunakan STRING_AGG untuk total_belanja
+    MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
     STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
     CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
