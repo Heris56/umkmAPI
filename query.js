@@ -17,6 +17,8 @@ const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
 require("dotenv").config();
+console.log("Connection String:", process.env.AZURE_STORAGE_CONNECTION_STRING);
+
 const AZURE_STORAGE_CONNECTION_STRING =
     process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(
@@ -1269,13 +1271,13 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             SUM(k.kuantitas * prod.Harga) AS total_sales,
             COUNT(DISTINCT pes.id_pesanan) AS total_orders
         FROM
-            pesanan pes
+            riwayat r
+        JOIN
+            pesanan pes ON r.id_pesanan = pes.id_pesanan
         JOIN
             keranjang k ON pes.id_keranjang = k.id_keranjang
         JOIN
             Produk prod ON k.id_produk = prod.id_produk
-        JOIN
-            riwayat r ON pes.id_pesanan = r.id_pesanan
         WHERE
             prod.ID_UMKM = :umkmId
             AND MONTH(r.tanggal) = :month
@@ -1305,13 +1307,13 @@ async function getMonthlyStatsByUMKM(umkmId) {
     SELECT 
         MONTH(r.tanggal) AS month,
         SUM(k.kuantitas * p.Harga) AS total_sales,
-        COUNT(DISTINCT r.id_riwayat) AS total_orders
+        COUNT(DISTINCT ps.id_pesanan) AS total_orders
     FROM 
         riwayat r
     JOIN 
-        pesanan ps ON r.id_pesanan = ps.id_pesanan  -- Correct join to pesanan
+        pesanan ps ON r.id_pesanan = ps.id_pesanan
     JOIN 
-        keranjang k ON ps.id_keranjang = k.id_keranjang  -- Join keranjang to pesanan
+        keranjang k ON ps.id_keranjang = k.id_keranjang
     JOIN 
         Produk p ON k.id_produk = p.id_produk
     WHERE 
@@ -1327,7 +1329,7 @@ async function getMonthlyStatsByUMKM(umkmId) {
             }
         );
 
-        return result; // Return the result instead of using a callback
+        return result;
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
         throw new Error("Error fetching monthly stats: " + error.message);
