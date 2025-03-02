@@ -17,8 +17,6 @@ const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
 require("dotenv").config();
-console.log("Connection String:", process.env.AZURE_STORAGE_CONNECTION_STRING);
-
 const AZURE_STORAGE_CONNECTION_STRING =
     process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(
