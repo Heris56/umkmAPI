@@ -1,14 +1,9 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('umkmku', 'asepgantenk', '!13Juli2002', {
-    host: 'umkmkuserver.database.windows.net',
-    dialect: 'mssql',
-    dialectOptions: {
-        encrypt: true,
-        enableArithAbort: true,
-        trustServerCertificate: false
-    },
-    port: 1433,
+const sequelize = new Sequelize('railway', 'root', 'BUaYYXhncuMAoUVNGHHDXNUpkleFazKg', {
+    host: 'shuttle.proxy.rlwy.net',
+    dialect: 'mysql',
+    port: 25067,
     logging: false, // Matikan log SQL untuk produksi
 });
 
