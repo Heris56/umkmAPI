@@ -914,18 +914,31 @@ async function sendMessageKurirKePembeli(id_kurir, id_pembeli, data, callback) {
 }
 
 // Mark a message as read
-async function markMessageAsRead(id, callback) {
-    try {
-        const message = await Message.findByPk(id);
-        if (!message) {
-            throw new Error(`Message with ID ${id} not found`);
-        }
-        message.is_read = true;
-        await message.save();
-        callback(null, message);
-    } catch (error) {
-        callback(error, null);
+async function markMessageAsRead(id_pembeli, callback) {
+  try {
+    const query = `
+            UPDATE Chat
+            SET is_read = 1
+            WHERE id_pembeli = :id_pembeli
+        `;
+
+    const [result] = await sequelize.query(query, {
+      replacements: { id_pembeli: id_pembeli },
+      type: sequelize.QueryTypes.UPDATE,
+    });
+
+    if (result === 0) {
+      throw new Error(
+        `Messages for Pembeli with ID ${id_pembeli} not found or already read`
+      );
     }
+
+    callback(null, {
+      message: `Messages for Pembeli with ID ${id_pembeli} marked as read`,
+    });
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
 // Delete a message

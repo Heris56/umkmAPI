@@ -516,21 +516,22 @@ app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
 });
 
 // Route to mark a message as read
-app.put("/message/read/:id", (req, res) => {
-    const { id } = req.params;
+app.put("/message/read/:id_pembeli", (req, res) => {
+  const { id_pembeli } = req.params;
 
-    if (!id) {
-        return res.status(400).send("Message ID is required");
+  if (!id_pembeli) {
+    return res.status(400).send("Pembeli ID is required");
+  }
+
+  dboperations.markMessageAsRead(id_pembeli, (error, result) => {
+    if (error) {
+      console.error("Error marking message as read:", error);
+      return res.status(500).send("Error marking message as read");
     }
-
-    dboperations.markMessageAsRead(id, (error, result) => {
-        if (error) {
-            console.error("Error marking message as read:", error);
-            return res.status(500).send("Error marking message as read");
-        }
-        res.status(200).json(result);
-    });
+    res.status(200).json(result);
+  });
 });
+
 
 // Route to delete a message
 app.delete("/message/:id", (req, res) => {
