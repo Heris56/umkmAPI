@@ -27,7 +27,7 @@ const Pesanan = sequelize.define('Pesanan', {
     },
 
 }, {
-    tableName: 'Pesanan',
+    tableName: 'pesanan',
     timestamps: false
 });
 

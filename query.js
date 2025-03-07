@@ -1369,7 +1369,7 @@ FROM
 JOIN 
     Produk p ON k.id_produk = p.id_produk
 JOIN 
-    Pesanan ps ON k.id_keranjang = ps.id_keranjang
+    pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
     p.id_umkm = :id
 GROUP BY 
@@ -1403,7 +1403,7 @@ FROM
 INNER JOIN 
     keranjang k ON ps.id_keranjang = k.id_keranjang
 INNER JOIN 
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 INNER JOIN 
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE 
@@ -1531,7 +1531,7 @@ async function getpesananmasuk(id, callback) {
     CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Masuk' AND k.id_produk IS NOT NULL
 GROUP BY
@@ -1567,7 +1567,7 @@ async function getpesananditerima(id, callback) {
     CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Diterima' AND k.id_produk IS NOT NULL
 GROUP BY
@@ -1603,7 +1603,7 @@ async function getpesananditolak(id, callback) {
     CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Ditolak' AND k.id_produk IS NOT NULL
 GROUP BY
@@ -1639,7 +1639,7 @@ async function getpesananselesai(id, callback) {
     CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Selesai' AND k.id_produk IS NOT NULL
 GROUP BY
@@ -1678,7 +1678,7 @@ async function getriwayatpesanan(id, callback) {
             FROM riwayat r
             INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
             INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN produk p ON k.id_produk = p.id_produk
+            INNER JOIN Produk p ON k.id_produk = p.id_produk
             INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
             WHERE pb.id_pembeli =:id AND k.id_produk IS NOT NULL
 			GROUP BY k.id_batch
@@ -1717,7 +1717,7 @@ FROM
 INNER JOIN
     keranjang k ON ps.id_keranjang = k.id_keranjang
 INNER JOIN
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 INNER JOIN
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE
@@ -2029,7 +2029,7 @@ async function getinboxpesanan(callback) {
          SELECT
     pesanan.id_pesanan,
     pembeli.nama_lengkap,
-    produk.Nama_Barang,
+    Produk.Nama_Barang,
     keranjang.kuantitas AS quantity,
     pesanan.status_pesanan
     FROM pesanan
