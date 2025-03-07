@@ -915,30 +915,30 @@ async function sendMessageKurirKePembeli(id_kurir, id_pembeli, data, callback) {
 
 // Mark a message as read
 async function markMessageAsRead(id_pembeli, callback) {
-  try {
-    const query = `
+    try {
+        const query = `
             UPDATE Chat
             SET is_read = 1
             WHERE id_pembeli = :id_pembeli
         `;
 
-    const [result] = await sequelize.query(query, {
-      replacements: { id_pembeli: id_pembeli },
-      type: sequelize.QueryTypes.UPDATE,
-    });
+        const [result] = await sequelize.query(query, {
+            replacements: { id_pembeli: id_pembeli },
+            type: sequelize.QueryTypes.UPDATE,
+        });
 
-    if (result === 0) {
-      throw new Error(
-        `Messages for Pembeli with ID ${id_pembeli} not found or already read`
-      );
+        if (result === 0) {
+            throw new Error(
+                `Messages for Pembeli with ID ${id_pembeli} not found or already read`
+            );
+        }
+
+        callback(null, {
+            message: `Messages for Pembeli with ID ${id_pembeli} marked as read`,
+        });
+    } catch (error) {
+        callback(error, null);
     }
-
-    callback(null, {
-      message: `Messages for Pembeli with ID ${id_pembeli} marked as read`,
-    });
-  } catch (error) {
-    callback(error, null);
-  }
 }
 
 // Delete a message
@@ -1361,7 +1361,7 @@ async function getdatadashboardproduklaris(id, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT TOP 1
+            SELECT 
     p.nama_barang, 
     SUM(k.kuantitas) AS total_kuantitas
 FROM 
@@ -1371,11 +1371,12 @@ JOIN
 JOIN 
     Pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
-    p.id_umkm = :id
+    p.id_umkm = ?
 GROUP BY 
     p.nama_barang
 ORDER BY 
-    total_kuantitas DESC;
+    total_kuantitas DESC
+LIMIT 1;
         `,
             {
                 replacements: { id: id },
