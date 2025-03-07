@@ -1365,7 +1365,7 @@ async function getdatadashboardproduklaris(id, callback) {
     p.nama_barang, 
     SUM(k.kuantitas) AS total_kuantitas
 FROM 
-    Keranjang k
+    keranjang k
 JOIN 
     Produk p ON k.id_produk = p.id_produk
 JOIN 
