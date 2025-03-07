@@ -1371,7 +1371,7 @@ JOIN
 JOIN 
     Pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
-    p.id_umkm = ?
+    p.id_umkm = :id
 GROUP BY 
     p.nama_barang
 ORDER BY 
