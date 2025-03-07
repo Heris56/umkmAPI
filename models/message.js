@@ -18,12 +18,11 @@ const Message = sequelize.define(
       allowNull: false,
     },
     sent_at: {
-      type: DataTypes.TIME,
+      type: DataTypes.DATE,  // Gunakan DATE, bukan TIME
       defaultValue: DataTypes.NOW,
       get() {
-        // Format time as HH:mm:ss before returning
         const value = this.getDataValue("sent_at");
-        return value ? value.toISOString().split("T")[1].split(".")[0] : null;
+        return value instanceof Date ? value.toISOString().split("T")[1].split(".")[0] : value;
       },
     },
     is_read: {
