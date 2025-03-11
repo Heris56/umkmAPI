@@ -254,6 +254,17 @@ app.get("/keranjang/:id", async (req, res) => {
 // end of keranjang
 
 // bookmark
+app.get("/bookmark/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
+
+        res.status(200).json(bookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
+
 app.get("/bookmark", async (req, res) => {
     try {
         const bookmark = await dboperations.ViewAllBookmark();
