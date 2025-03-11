@@ -10,6 +10,7 @@ const Riwayat = require("./models/riwayat");
 const Keranjang = require("./models/keranjang");
 const Kurir = require("./models/kurir");
 const Campaign = require("./models/campaign");
+const Bookmark = require("./models/bookmark");
 const { QueryTypes, where } = require("sequelize");
 const sequelize = require("./db");
 const { BlobServiceClient } = require("@azure/storage-blob");
@@ -146,6 +147,43 @@ async function getProdukByType(tipe_barang, callback) {
 }
 
 // end of // Produk - Haikal
+
+// Bookmark/wishlist - Haikal
+async function ViewAllBookmark() {
+    try {
+        bookmark = await Bookmark.findAll();
+        return bookmark;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
+async function addbookmark(id_pembeli, id_produk) {
+    try {
+        if (!id_pembeli) {
+            return { error: 'Tidak ditemukan id pembeli', status: 400 }
+        }
+        if (!id_produk) {
+            return { error: 'tidak ditemukan id produk', status: 400 };
+        }
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+        produk = await Produk.findOne({ where: { id_produk } });
+
+        if (!pembeli) {
+            return { error: 'pembeli tidak ditemukan', status: 404 }
+        }
+        if (!produk) {
+            return { error: 'produk tidak ditemukan', status: 404 }
+        }
+
+        const bookmark = await Bookmark.create({ id_pembeli, id_produk });
+        return { data: bookmark, status: 201 }
+    }
+    catch (error) {
+        throw error;
+    }
+}
+// end of Bookmark/wishlist - Haikal
 
 // bagian keranjang
 async function addbatch(id_pembeli, id_batch, data) {
@@ -2134,6 +2172,8 @@ module.exports = {
     minQTY,
     CekKeranjang,
     updatestatuskeranjang,
+    ViewAllBookmark,
+    addbookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
     registUMKM,
