@@ -158,6 +158,31 @@ async function ViewAllBookmark() {
     }
 }
 
+async function ViewBookmarkbyIDPembeli(id_pembeli) {
+    try {
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+        if (!pembeli) {
+            return { error: "Tidak menemukan Pembeli", status: 404 }
+        }
+
+        bookmark = await Bookmark.findAll({
+            where: { id_pembeli },
+            include: [{
+                model: Produk,
+                attributes: ['id_produk', 'nama_barang']
+            }]
+        })
+
+        if (bookmark.length === 0) {
+            return { message: "bookmark kosong", status: 200 }
+        }
+
+        return bookmark;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
 async function addbookmark(id_pembeli, id_produk) {
     try {
         if (!id_pembeli) {
@@ -625,9 +650,9 @@ async function getMessages(callback) {
 
 // Get messages by sender and receiver UMKM
 async function getMessagesByUMKM(id_umkm, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -643,24 +668,24 @@ async function getMessagesByUMKM(id_umkm, callback) {
                 ORDER BY
                 Chat.id_chat ASC;
         `,
-      {
-        replacements: { id_umkm: id_umkm },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_umkm: id_umkm },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -676,25 +701,25 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
             ORDER BY
                 Chat.id_chat ASC;
         `,
-      {
-        replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 // Get messages by sender and receiver Pembeli
 async function getMessagesByPembeli(id_pembeli, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -713,25 +738,25 @@ async function getMessagesByPembeli(id_pembeli, callback) {
                 
                 Chat.id_chat ASC;
             `,
-      // tambah Chat.receiver_type ASC klo mau enak liat postmannya
-      {
-        replacements: { id_pembeli: id_pembeli },
-        type: QueryTypes.SELECT,
-      }
-    );
+            // tambah Chat.receiver_type ASC klo mau enak liat postmannya
+            {
+                replacements: { id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
              SELECT
                  Chat.*,
                  pembeli.nama_lengkap,
@@ -747,26 +772,26 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
              ORDER BY
                  Chat.id_chat ASC;
              `,
-      {
-        replacements: { id_pembeli: id_pembeli, id_umkm: id_umkm },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_pembeli: id_pembeli, id_umkm: id_umkm },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 
 // Fungsi untuk mendapatkan pesan berdasarkan ID Pembeli dan ID Kurir
 async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
              SELECT
                  Chat.*,
                  pembeli.nama_lengkap,
@@ -782,25 +807,25 @@ async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
              ORDER BY
                  Chat.id_chat ASC;
              `,
-      {
-        replacements: { id_pembeli: id_pembeli, id_kurir: id_kurir },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_pembeli: id_pembeli, id_kurir: id_kurir },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 // Get messages by sender and receiver Kurir
 async function getMessagesByKurir(id_kurir, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
              SELECT
                  Chat.*,
                  pembeli.nama_lengkap,
@@ -816,24 +841,24 @@ async function getMessagesByKurir(id_kurir, callback) {
              ORDER BY
                  Chat.id_chat ASC;
              `,
-      {
-        replacements: { id_kurir: id_kurir },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_kurir: id_kurir },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
     try {
-      const result = await sequelize.query(
-        `
+        const result = await sequelize.query(
+            `
              SELECT
                  Chat.*,
                  pembeli.nama_lengkap,
@@ -849,16 +874,16 @@ async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
              ORDER BY
                  Chat.id_chat ASC;
              `,
-        {
-          replacements: { id_kurir: id_kurir, id_pembeli: id_pembeli },
-          type: QueryTypes.SELECT,
-        }
-      );
-      callback(null, result);
+            {
+                replacements: { id_kurir: id_kurir, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
+        callback(null, result);
     } catch (error) {
-      callback(error, null);
-      console.error("Error executing raw query:", error);
-      throw new Error("Query execution failed");
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
     }
 }
 
@@ -870,14 +895,14 @@ async function sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, callback) {
         //     throw new error('id tidak ditemukan');
         // }
         const newMessage = await Message.create({
-          where: { id_pembeli: id_pembeli },
-          message: data.message,
-          sent_at: data.sent_at,
-          is_read: data.is_read,
-          id_umkm: id_umkm,
-          id_pembeli: id_pembeli,
-          id_kurir: null,
-          receiver_type: "UMKM",
+            where: { id_pembeli: id_pembeli },
+            message: data.message,
+            sent_at: data.sent_at,
+            is_read: data.is_read,
+            id_umkm: id_umkm,
+            id_pembeli: id_pembeli,
+            id_kurir: null,
+            receiver_type: "UMKM",
         });
         callback(null, newMessage);
     } catch (error) {
@@ -2173,6 +2198,7 @@ module.exports = {
     CekKeranjang,
     updatestatuskeranjang,
     ViewAllBookmark,
+    ViewBookmarkbyIDPembeli,
     addbookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
