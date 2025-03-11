@@ -258,8 +258,11 @@ app.get("/bookmark/:id_pembeli", async (req, res) => {
     const id_pembeli = req.params.id_pembeli;
     try {
         const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
+        if (bookmark.error) {
+            return res.status(404).json(bookmark);
+        }
 
-        res.status(200).json(bookmark);
+        return res.status(200).json(bookmark);
     } catch (error) {
         res.status(500).json({ error: `${error.message}` })
     }
@@ -268,7 +271,7 @@ app.get("/bookmark/:id_pembeli", async (req, res) => {
 app.get("/bookmark", async (req, res) => {
     try {
         const bookmark = await dboperations.ViewAllBookmark();
-        res.status(200).json(bookmark);
+        return res.status(200).json(bookmark);
     } catch (error) {
         res.status(500).json({ error: `${error.message}` })
     }
@@ -288,6 +291,20 @@ app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
         res.status(500).json({ error: `${error.message}` })
     }
 });
+
+app.delete("/bookmark/:id_bookmark", async (req, res) => {
+    const id_bookmark = req.params.id_bookmark;
+    try {
+        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
+        if (deletedbookmark.error) {
+            return res.status(404).json(deletedbookmark);
+        }
+
+        return res.status(200).json(deletedbookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
 // end of bookmark
 
 app.delete("/produk/:id", (req, res) => {
