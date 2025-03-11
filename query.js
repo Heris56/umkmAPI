@@ -189,7 +189,7 @@ async function addbookmark(id_pembeli, id_produk) {
             return { error: 'Tidak ditemukan id pembeli', status: 400 }
         }
         if (!id_produk) {
-            return { error: 'tidak ditemukan id produk', status: 400 };
+            return { error: 'tidak ditemukan id produk', status: 400 }
         }
         pembeli = await Pembeli.findOne({ where: { id_pembeli } });
         produk = await Produk.findOne({ where: { id_produk } });
@@ -201,11 +201,30 @@ async function addbookmark(id_pembeli, id_produk) {
             return { error: 'produk tidak ditemukan', status: 404 }
         }
 
+        const findbookmark = await Bookmark.findOne({ where: { id_pembeli, id_produk } })
+        if (findbookmark) {
+            return { error: 'sudah ada produk di bookmark', status: 200 }
+        }
+
         const bookmark = await Bookmark.create({ id_pembeli, id_produk });
         return { data: bookmark, status: 201 }
     }
     catch (error) {
         throw error;
+    }
+}
+
+async function DeleteBookmark(id_bookmark) {
+    try {
+        const bookmark = await Bookmark.findByPk(id_bookmark);
+        if (!bookmark) {
+            return { error: "bookmark tidak ditemukan", status: 404 }
+        }
+
+        await bookmark.destroy();
+        return { message: "berhasil menghapus bookmark" }
+    } catch (error) {
+        return { error: error.message }
     }
 }
 // end of Bookmark/wishlist - Haikal
@@ -2200,6 +2219,7 @@ module.exports = {
     ViewAllBookmark,
     ViewBookmarkbyIDPembeli,
     addbookmark,
+    DeleteBookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
     registUMKM,
