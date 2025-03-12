@@ -10,6 +10,7 @@ const Riwayat = require("./models/riwayat");
 const Keranjang = require("./models/keranjang");
 const Kurir = require("./models/kurir");
 const Campaign = require("./models/campaign");
+const Bookmark = require("./models/bookmark");
 const { QueryTypes, where } = require("sequelize");
 const sequelize = require("./db");
 const { BlobServiceClient } = require("@azure/storage-blob");
@@ -146,6 +147,87 @@ async function getProdukByType(tipe_barang, callback) {
 }
 
 // end of // Produk - Haikal
+
+// Bookmark/wishlist - Haikal
+async function ViewAllBookmark() {
+    try {
+        bookmark = await Bookmark.findAll();
+        return bookmark;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
+async function ViewBookmarkbyIDPembeli(id_pembeli) {
+    try {
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+        if (!pembeli) {
+            return { error: "Tidak menemukan Pembeli", status: 404 }
+        }
+
+        bookmark = await Bookmark.findAll({
+            where: { id_pembeli },
+            include: [{
+                model: Produk,
+                attributes: ['id_produk', 'nama_barang']
+            }]
+        })
+
+        if (bookmark.length === 0) {
+            return { message: "bookmark kosong", status: 200 }
+        }
+
+        return bookmark;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
+async function addbookmark(id_pembeli, id_produk) {
+    try {
+        if (!id_pembeli) {
+            return { error: 'Tidak ditemukan id pembeli', status: 400 }
+        }
+        if (!id_produk) {
+            return { error: 'tidak ditemukan id produk', status: 400 }
+        }
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+        produk = await Produk.findOne({ where: { id_produk } });
+
+        if (!pembeli) {
+            return { error: 'pembeli tidak ditemukan', status: 404 }
+        }
+        if (!produk) {
+            return { error: 'produk tidak ditemukan', status: 404 }
+        }
+
+        const findbookmark = await Bookmark.findOne({ where: { id_pembeli, id_produk } })
+        if (findbookmark) {
+            return { error: 'sudah ada produk di bookmark', status: 200 }
+        }
+
+        const bookmark = await Bookmark.create({ id_pembeli, id_produk });
+        return { data: bookmark, status: 201 }
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+async function DeleteBookmark(id_bookmark) {
+    try {
+        const bookmark = await Bookmark.findByPk(id_bookmark);
+        if (!bookmark) {
+            return { error: "bookmark tidak ditemukan", status: 404 }
+        }
+
+        await bookmark.destroy();
+        return { message: "berhasil menghapus bookmark" }
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+// end of Bookmark/wishlist - Haikal
 
 // bagian keranjang
 async function addbatch(id_pembeli, id_batch, data) {
@@ -694,21 +776,21 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT
-                Chat.*,
-                pembeli.nama_lengkap,
-                umkm.username
-            FROM
-                Chat
-            LEFT JOIN
-                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-            LEFT JOIN
-                umkm ON Chat.id_umkm = umkm.id_umkm
-            WHERE
-                pembeli.id_pembeli = :id_pembeli AND umkm.id_umkm = :id_umkm
-            ORDER BY
-                Chat.id_chat ASC;
-            `,
+             SELECT
+                 Chat.*,
+                 pembeli.nama_lengkap,
+                 umkm.username
+             FROM
+                 Chat
+             LEFT JOIN
+                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+             LEFT JOIN
+                 umkm ON Chat.id_umkm = umkm.id_umkm
+             WHERE
+                 pembeli.id_pembeli = :id_pembeli AND umkm.id_umkm = :id_umkm
+             ORDER BY
+                 Chat.id_chat ASC;
+             `,
             {
                 replacements: { id_pembeli: id_pembeli, id_umkm: id_umkm },
                 type: QueryTypes.SELECT,
@@ -723,26 +805,27 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
     }
 }
 
+
 // Fungsi untuk mendapatkan pesan berdasarkan ID Pembeli dan ID Kurir
 async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT
-                Chat.*,
-                pembeli.nama_lengkap,
-                kurir.nama_kurir
-            FROM
-                Chat
-            LEFT JOIN
-                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-            LEFT JOIN
-                kurir ON Chat.id_kurir = kurir.id_kurir
-            WHERE
-                pembeli.id_pembeli = :id_pembeli AND kurir.id_kurir = :id_kurir
-            ORDER BY
-                Chat.id_chat ASC;
-            `,
+             SELECT
+                 Chat.*,
+                 pembeli.nama_lengkap,
+                 kurir.nama_kurir
+             FROM
+                 Chat
+             LEFT JOIN
+                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+             LEFT JOIN
+                 kurir ON Chat.id_kurir = kurir.id_kurir
+             WHERE
+                 pembeli.id_pembeli = :id_pembeli AND kurir.id_kurir = :id_kurir
+             ORDER BY
+                 Chat.id_chat ASC;
+             `,
             {
                 replacements: { id_pembeli: id_pembeli, id_kurir: id_kurir },
                 type: QueryTypes.SELECT,
@@ -762,21 +845,21 @@ async function getMessagesByKurir(id_kurir, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT
-                Chat.*,
-                pembeli.nama_lengkap,
-                kurir.nama_kurir
-            FROM
-                Chat
-            LEFT JOIN
-                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-            LEFT JOIN
-                kurir ON Chat.id_kurir = kurir.id_kurir
-            WHERE
-                kurir.id_kurir = :id_kurir
-            ORDER BY
-                Chat.id_chat ASC;
-            `,
+             SELECT
+                 Chat.*,
+                 pembeli.nama_lengkap,
+                 kurir.nama_kurir
+             FROM
+                 Chat
+             LEFT JOIN
+                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+             LEFT JOIN
+                 kurir ON Chat.id_kurir = kurir.id_kurir
+             WHERE
+                 kurir.id_kurir = :id_kurir
+             ORDER BY
+                 Chat.id_chat ASC;
+             `,
             {
                 replacements: { id_kurir: id_kurir },
                 type: QueryTypes.SELECT,
@@ -795,27 +878,26 @@ async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT
-                Chat.*,
-                pembeli.nama_lengkap,
-                kurir.nama_kurir
-            FROM
-                Chat
-            LEFT JOIN
-                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
-            LEFT JOIN
-                kurir ON Chat.id_kurir = kurir.id_kurir
-            WHERE
-                kurir.id_kurir = :id_kurir AND pembeli.id_pembeli = :id_pembeli
-            ORDER BY
-                Chat.id_chat ASC;
-            `,
+             SELECT
+                 Chat.*,
+                 pembeli.nama_lengkap,
+                 kurir.nama_kurir
+             FROM
+                 Chat
+             LEFT JOIN
+                 pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+             LEFT JOIN
+                 kurir ON Chat.id_kurir = kurir.id_kurir
+             WHERE
+                 kurir.id_kurir = :id_kurir AND pembeli.id_pembeli = :id_pembeli
+             ORDER BY
+                 Chat.id_chat ASC;
+             `,
             {
                 replacements: { id_kurir: id_kurir, id_pembeli: id_pembeli },
                 type: QueryTypes.SELECT,
             }
         );
-
         callback(null, result);
     } catch (error) {
         callback(error, null);
@@ -2125,6 +2207,10 @@ module.exports = {
     minQTY,
     CekKeranjang,
     updatestatuskeranjang,
+    ViewAllBookmark,
+    ViewBookmarkbyIDPembeli,
+    addbookmark,
+    DeleteBookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
     registUMKM,
