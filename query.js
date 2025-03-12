@@ -1367,11 +1367,11 @@ async function getdatadashboardproduklaris(id, callback) {
 FROM 
     keranjang k
 JOIN 
-    Produk p ON k.id_produk = p.id_produk
+    produk p ON k.id_produk = p.id_produk
 JOIN 
     pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
-    p.id_umkm = :id
+    p.id_umkm = ?
 GROUP BY 
     p.nama_barang
 ORDER BY 
@@ -1379,7 +1379,7 @@ ORDER BY
 LIMIT 1;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1396,22 +1396,22 @@ async function getdatadashboardpesananmasuk(id, callback) {
     try {
         const result = await sequelize.query(
             `
-            SELECT 
+            SELECT  
     COUNT(ps.id_pesanan) AS jumlah_pesanan
 FROM 
     pesanan ps
 INNER JOIN 
     keranjang k ON ps.id_keranjang = k.id_keranjang
 INNER JOIN 
-    Produk p ON k.id_produk = p.id_produk
+    produk p ON k.id_produk = p.id_produk
 INNER JOIN 
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE 
     ps.status_pesanan = 'Pesanan Masuk' 
-    AND p.id_umkm = :id;
+    AND p.id_umkm = ?;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1562,22 +1562,24 @@ async function getpesananditerima(id, callback) {
     k.id_batch,
     MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
-    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Mengganti STRING_AGG dengan GROUP_CONCAT
+    ps.status_pesanan,
+    pb.alamat AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
+INNER JOIN produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Diterima' AND k.id_produk IS NOT NULL
+WHERE p.id_umkm = ? 
+  AND ps.status_pesanan = 'Pesanan Diterima' 
+  AND k.id_produk IS NOT NULL
 GROUP BY
     k.id_batch,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
-    CAST(pb.alamat AS NVARCHAR(MAX))
+    ps.status_pesanan,
+    pb.alamat
 ORDER BY k.id_batch ASC;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1595,25 +1597,27 @@ async function getpesananditolak(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-    k.id_batch,
-    MAX(ps.total_belanja) AS total_belanja,
-    SUM(k.kuantitas) AS kuantitas,
-    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-FROM keranjang k
-INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Ditolak' AND k.id_produk IS NOT NULL
-GROUP BY
-    k.id_batch,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
-    CAST(pb.alamat AS NVARCHAR(MAX))
-ORDER BY k.id_batch ASC;
+        k.id_batch,
+        MAX(ps.total_belanja) AS total_belanja,
+        SUM(k.kuantitas) AS kuantitas,
+        GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggunakan GROUP_CONCAT
+        ps.status_pesanan,
+        pb.alamat AS alamat_pembeli
+    FROM keranjang k
+    INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+    INNER JOIN produk p ON k.id_produk = p.id_produk
+    INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+    WHERE p.id_umkm = ? 
+      AND ps.status_pesanan = 'Pesanan Ditolak' 
+      AND k.id_produk IS NOT NULL
+    GROUP BY
+        k.id_batch,
+        ps.status_pesanan,
+        pb.alamat
+    ORDER BY k.id_batch ASC;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1634,22 +1638,24 @@ async function getpesananselesai(id, callback) {
     k.id_batch,
     MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
-    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggunakan GROUP_CONCAT untuk menggantikan STRING_AGG
+    ps.status_pesanan,
+    pb.alamat AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
+INNER JOIN produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Selesai' AND k.id_produk IS NOT NULL
+WHERE p.id_umkm = ? 
+  AND ps.status_pesanan = 'Pesanan Selesai' 
+  AND k.id_produk IS NOT NULL
 GROUP BY
     k.id_batch,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
-    CAST(pb.alamat AS NVARCHAR(MAX))
+    ps.status_pesanan,
+    pb.alamat
 ORDER BY k.id_batch ASC;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1667,25 +1673,25 @@ async function getriwayatpesanan(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-            k.id_batch,
-			MAX(tanggal) as Tanggal_Pesanan,
-            STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)),',') AS nama_barang,
-            MAX(ps.total_belanja) AS total_harga,
-            MAX(ps.status_pesanan) AS status_pesanan,
-            MAX(CAST(pb.alamat AS NVARCHAR(MAX))) AS alamat_pembeli,
-            STRING_AGG(CAST(k.kuantitas AS NVARCHAR(MAX)),',') as kuantitas_barang,
-			STRING_AGG(CAST(p.image_url AS NVARCHAR(MAX)),',') AS image_url
-            FROM riwayat r
-            INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
-            INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN Produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-            WHERE pb.id_pembeli =:id AND k.id_produk IS NOT NULL
-			GROUP BY k.id_batch
-			ORDER BY k.id_batch;
+    k.id_batch,
+    MAX(r.tanggal) AS Tanggal_Pesanan,
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggunakan GROUP_CONCAT sebagai pengganti STRING_AGG
+    MAX(ps.total_belanja) AS total_harga,
+    MAX(ps.status_pesanan) AS status_pesanan,
+    MAX(pb.alamat) AS alamat_pembeli,
+    GROUP_CONCAT(k.kuantitas SEPARATOR ', ') AS kuantitas_barang,
+    GROUP_CONCAT(p.image_url SEPARATOR ', ') AS image_url
+FROM riwayat r
+INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
+INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE pb.id_pembeli = ? AND k.id_produk IS NOT NULL
+GROUP BY k.id_batch
+ORDER BY k.id_batch;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1704,32 +1710,25 @@ async function getallpesananaktifpembeli(id, callback) {
             `
             SELECT
     k.id_batch,
-    STRING_AGG(CAST(p.nama_barang AS NVARCHAR(MAX)), ', ') AS nama_barang, -- Menggabungkan nama barang
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggabungkan nama barang
     MAX(ps.status_pesanan) AS status_pesanan, -- Mengambil salah satu nilai status_pesanan
-    STRING_AGG(CAST(k.kuantitas AS NVARCHAR(MAX)), ', ') AS kuantitas_barang, -- Menjumlahkan kuantitas
-    MAX(ps.total_belanja) as total_belanja,
-    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli, -- Cast alamat ke NVARCHAR
+    GROUP_CONCAT(k.kuantitas SEPARATOR ', ') AS kuantitas_barang, -- Menggabungkan kuantitas dalam satu kolom
+    MAX(ps.total_belanja) AS total_belanja,
+    MAX(pb.alamat) AS alamat_pembeli, -- Mengambil alamat pembeli
     MAX(ps.id_keranjang) AS id_keranjang, -- Mengambil salah satu id_keranjang
     k.id_pembeli,
-    STRING_AGG(CAST(p.image_url AS NVARCHAR(MAX)),', ') AS image_url
-FROM
-    pesanan ps
-INNER JOIN
-    keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN
-    Produk p ON k.id_produk = p.id_produk
-INNER JOIN
-    pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE
-    pb.id_pembeli = :id
+    GROUP_CONCAT(p.image_url SEPARATOR ', ') AS image_url -- Menggabungkan URL gambar
+FROM pesanan ps
+INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE pb.id_pembeli = ? 
     AND ps.status_pesanan != 'Pesanan Selesai'
-GROUP BY
-    k.id_batch, k.id_pembeli, CAST(pb.alamat AS NVARCHAR(MAX))
-ORDER BY
-    k.id_batch;
+GROUP BY k.id_batch, k.id_pembeli, pb.alamat
+ORDER BY k.id_batch;
         `,
             {
-                replacements: { id: id },
+                replacements: [id],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1755,21 +1754,17 @@ async function getkeranjangbyidbatch(id_pembeli, id_batch, callback) {
     k.id_produk,
     k.id_batch,
     p.nama_barang,
-    p.Harga,
+    p.harga,
     p.image_url,
     pb.nama_lengkap AS nama_pembeli
-FROM
-    Keranjang k
-JOIN
-    Produk p ON k.id_produk = p.id_produk
-JOIN
-    Pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE
-    k.id_batch = :id_batch
-    AND k.id_pembeli = :id_pembeli;
+FROM keranjang k
+JOIN produk p ON k.id_produk = p.id_produk
+JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE k.id_batch = ? 
+    AND k.id_pembeli = ?;
         `,
             {
-                replacements: { id_batch: id_batch, id_pembeli: id_pembeli },
+                replacements: [id_batch, id_pembeli],
                 type: QueryTypes.SELECT,
             }
         );
@@ -1814,17 +1809,16 @@ async function addriwayat(data, callback) {
 async function updatestatuspesananmasuk(id_umkm, id_batch, callback) {
     try {
         const query = `
-            UPDATE ps
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Masuk'
-FROM Pesanan ps
-INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-WHERE k.id_batch = :id_batch
-  AND p.id_umkm = :id_umkm;
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
         `;
 
         const [result] = await sequelize.query(query, {
-            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            replacements: [id_batch, id_umkm],
             type: sequelize.QueryTypes.UPDATE,
         });
 
@@ -1842,17 +1836,16 @@ WHERE k.id_batch = :id_batch
 async function updatestatuspesananditerima(id_umkm, id_batch, callback) {
     try {
         const query = `
-            UPDATE ps
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Diterima'
-FROM Pesanan ps
-INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-WHERE k.id_batch = :id_batch
-  AND p.id_umkm = :id_umkm;
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
         `;
 
         const [result] = await sequelize.query(query, {
-            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            replacements: [id_batch, id_umkm],
             type: sequelize.QueryTypes.UPDATE,
         });
 
@@ -1870,17 +1863,16 @@ WHERE k.id_batch = :id_batch
 async function updatestatuspesananditolak(id_umkm, id_batch, callback) {
     try {
         const query = `
-            UPDATE ps
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Ditolak'
-FROM Pesanan ps
-INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-WHERE k.id_batch = :id_batch
-  AND p.id_umkm = :id_umkm;
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
         `;
 
         const [result] = await sequelize.query(query, {
-            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            replacements: [id_batch, id_umkm],
             type: sequelize.QueryTypes.UPDATE,
         });
 
@@ -1898,13 +1890,12 @@ WHERE k.id_batch = :id_batch
 async function updatestatuspesananselesai(id_umkm, id_batch, callback) {
     try {
         const query = `
-            UPDATE ps
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Selesai'
-FROM Pesanan ps
-INNER JOIN Keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-WHERE k.id_batch = :id_batch
-  AND p.id_umkm = :id_umkm;
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
         `;
 
         const [result] = await sequelize.query(query, {
