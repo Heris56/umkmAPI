@@ -1449,7 +1449,7 @@ async function getdatadashboardproduklaris(id, callback) {
 FROM 
     keranjang k
 JOIN 
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 JOIN 
     pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
@@ -1485,7 +1485,7 @@ FROM
 INNER JOIN 
     keranjang k ON ps.id_keranjang = k.id_keranjang
 INNER JOIN 
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 INNER JOIN 
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE 
