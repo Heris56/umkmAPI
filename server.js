@@ -14,61 +14,37 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://127.0.0.1:8000",
+    origin: ["https://umkmkuapi.com", "http://127.0.0.1:8000"],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
   },
 });
 
-const users = {};
 
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log("New user connected:", socket.id);
 
-  // When a user joins, save their user ID and socket ID
-  socket.on("userConnected", (userId) => {
-    users[userId] = socket.id;
-    console.log(`User ${userId} connected with socket ID ${socket.id}`);
-  });
-
-  // Handle sending messages
+  // Listen for new messages
   socket.on("sendMessage", async (data) => {
     try {
-      // Save message to database
+      // Save the message in the database
       const newMessage = await Message.create({
         message: data.message,
         sent_at: new Date(),
         is_read: false,
-        id_umkm: data.id_umkm || null,
-        id_pembeli: data.id_pembeli || null,
-        id_kurir: data.id_kurir || null,
-        receiver_type: data.receiver_type,
       });
 
-      // Find recipient socket ID
-      const recipientId = data.id_umkm || data.id_pembeli || data.id_kurir;
-      const recipientSocketId = users[recipientId];
-
-      if (recipientSocketId) {
-        // Send message only to the recipient
-        io.to(recipientSocketId).emit("newMessage", newMessage);
-      }
-
-      // Also notify the sender
-      socket.emit("messageSent", newMessage);
+      // Emit the new message to all connected clients
+      io.emit("newMessage", newMessage);
     } catch (error) {
       console.error("Error saving message:", error);
     }
   });
 
-  // Handle user disconnect
+  // Handle disconnection
   socket.on("disconnect", () => {
-    const userId = Object.keys(users).find((key) => users[key] === socket.id);
-    if (userId) {
-      delete users[userId];
-      console.log(`User ${userId} disconnected`);
-    }
+    console.log("User disconnected:", socket.id);
   });
 });
 
