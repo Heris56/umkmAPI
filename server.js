@@ -8,40 +8,30 @@ const multer = require("multer");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
+const Message = require("./models/message");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "http://127.0.0.1:8000",
-        methods: ["GET", "POST"],
-    },
+  cors: {
+    origin: "http://127.0.0.1:8000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
 });
 
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+  console.log("A user connected:", socket.id);
 
-    socket.on("sendMessage", async (data) => {
-        try {
-            const newMessage = await Message.create({
-                message: data.message,
-                sent_at: new Date(),
-                is_read: false,
-                id_umkm: data.id_umkm || null,
-                id_pembeli: data.id_pembeli || null,
-                id_kurir: data.id_kurir || null,
-                receiver_type: data.receiver_type,
-            });
+  socket.on("sendMessage", (data) => {
+    console.log("New Message:", data);
+    io.emit("receiveMessage", data); // Broadcast the message to all users
+  });
 
-            io.emit("newMessage", newMessage); // Kirim pesan ke semua client
-        } catch (error) {
-            console.error("Error saving message:", error);
-        }
-    });
-
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });
 
 
