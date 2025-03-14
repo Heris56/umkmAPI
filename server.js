@@ -21,30 +21,55 @@ const io = new Server(server, {
   },
 });
 
+const users = {};
+
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+  console.log(`User connected: ${socket.id}`);
 
-    socket.on("sendMessage", async (data) => {
-        try {
-            const newMessage = await Message.create({
-                message: data.message,
-                sent_at: new Date(),
-                is_read: false,
-                id_umkm: data.id_umkm || null,
-                id_pembeli: data.id_pembeli || null,
-                id_kurir: data.id_kurir || null,
-                receiver_type: data.receiver_type,
-            });
+  // When a user joins, save their user ID and socket ID
+  socket.on("userConnected", (userId) => {
+    users[userId] = socket.id;
+    console.log(`User ${userId} connected with socket ID ${socket.id}`);
+  });
 
-            io.emit("newMessage", newMessage); // Kirim pesan ke semua client
-        } catch (error) {
-            console.error("Error saving message:", error);
-        }
-    });
+  // Handle sending messages
+  socket.on("sendMessage", async (data) => {
+    try {
+      // Save message to database
+      const newMessage = await Message.create({
+        message: data.message,
+        sent_at: new Date(),
+        is_read: false,
+        id_umkm: data.id_umkm || null,
+        id_pembeli: data.id_pembeli || null,
+        id_kurir: data.id_kurir || null,
+        receiver_type: data.receiver_type,
+      });
 
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+      // Find recipient socket ID
+      const recipientId = data.id_umkm || data.id_pembeli || data.id_kurir;
+      const recipientSocketId = users[recipientId];
+
+      if (recipientSocketId) {
+        // Send message only to the recipient
+        io.to(recipientSocketId).emit("newMessage", newMessage);
+      }
+
+      // Also notify the sender
+      socket.emit("messageSent", newMessage);
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+
+  // Handle user disconnect
+  socket.on("disconnect", () => {
+    const userId = Object.keys(users).find((key) => users[key] === socket.id);
+    if (userId) {
+      delete users[userId];
+      console.log(`User ${userId} disconnected`);
+    }
+  });
 });
 
 
