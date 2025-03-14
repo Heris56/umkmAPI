@@ -22,16 +22,29 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+    console.log("User connected:", socket.id);
 
-  socket.on("sendMessage", (data) => {
-    console.log("New Message:", data);
-    io.emit("receiveMessage", data); // Broadcast the message to all users
-  });
+    socket.on("sendMessage", async (data) => {
+        try {
+            const newMessage = await Message.create({
+                message: data.message,
+                sent_at: new Date(),
+                is_read: false,
+                id_umkm: data.id_umkm || null,
+                id_pembeli: data.id_pembeli || null,
+                id_kurir: data.id_kurir || null,
+                receiver_type: data.receiver_type,
+            });
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
+            io.emit("newMessage", newMessage); // Kirim pesan ke semua client
+        } catch (error) {
+            console.error("Error saving message:", error);
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
 });
 
 
