@@ -28,7 +28,11 @@
     "mysql2": "^3.13.0",
     "nodemailer": "^6.9.16",
     "otp-generator": "^4.0.1",
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0",
     "sequelize": "^6.37.5",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7",
     "tedious": "^18.6.1"
   },
   "devDependencies": {
