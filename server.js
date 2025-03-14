@@ -44,9 +44,9 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
-});
+// server.listen(3000, () => {
+//   console.log("Server running on port 3000");
+// });
 
 // const corsOptions = {
 //     origin: 'http://127.0.0.1:8000/',
@@ -292,60 +292,6 @@ app.get("/keranjang/:id", async (req, res) => {
 });
 
 // end of keranjang
-
-// bookmark
-app.get("/bookmark/:id_pembeli", async (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    try {
-        const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
-        if (bookmark.error) {
-            return res.status(404).json(bookmark);
-        }
-
-        return res.status(200).json(bookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-})
-
-app.get("/bookmark", async (req, res) => {
-    try {
-        const bookmark = await dboperations.ViewAllBookmark();
-        return res.status(200).json(bookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-});
-
-app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    const id_produk = req.params.id_produk;
-    try {
-        const bookmark = await dboperations.addbookmark(id_pembeli, id_produk);
-        if (bookmark.error) {
-            return res.status(bookmark.status).json({ Message: bookmark.error });
-        }
-
-        res.status(201).json({ Message: "Berhasil menambahkan bookmark", data: bookmark.data })
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-});
-
-app.delete("/bookmark/:id_bookmark", async (req, res) => {
-    const id_bookmark = req.params.id_bookmark;
-    try {
-        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
-        if (deletedbookmark.error) {
-            return res.status(404).json(deletedbookmark);
-        }
-
-        return res.status(200).json(deletedbookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-})
-// end of bookmark
 
 app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
@@ -611,19 +557,19 @@ app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
 
 // Route to mark a message as read
 app.put("/message/read/:id_pembeli", (req, res) => {
-    const { id_pembeli } = req.params;
+  const { id_pembeli } = req.params;
 
-    if (!id_pembeli) {
-        return res.status(400).send("Pembeli ID is required");
+  if (!id_pembeli) {
+    return res.status(400).send("Pembeli ID is required");
+  }
+
+  dboperations.markMessageAsRead(id_pembeli, (error, result) => {
+    if (error) {
+      console.error("Error marking message as read:", error);
+      return res.status(500).send("Error marking message as read");
     }
-
-    dboperations.markMessageAsRead(id_pembeli, (error, result) => {
-        if (error) {
-            console.error("Error marking message as read:", error);
-            return res.status(500).send("Error marking message as read");
-        }
-        res.status(200).json(result);
-    });
+    res.status(200).json(result);
+  });
 });
 
 
@@ -1242,6 +1188,6 @@ app.delete("/campaign/:id", (req, res) => {
 
 // server.js
 
-// app.listen(port, () => {
-//     console.log(`server berjalan di ${port}`);
-// });
+app.listen(port, () => {
+    console.log(`server berjalan di ${port}`);
+});
