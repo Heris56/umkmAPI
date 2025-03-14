@@ -8,40 +8,30 @@ const multer = require("multer");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
+const Message = require("./models/message");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "http://127.0.0.1:8000",
-        methods: ["GET", "POST"],
-    },
+  cors: {
+    origin: "http://127.0.0.1:8000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
 });
 
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+  console.log("A user connected:", socket.id);
 
-    socket.on("sendMessage", async (data) => {
-        try {
-            const newMessage = await Message.create({
-                message: data.message,
-                sent_at: new Date(),
-                is_read: false,
-                id_umkm: data.id_umkm || null,
-                id_pembeli: data.id_pembeli || null,
-                id_kurir: data.id_kurir || null,
-                receiver_type: data.receiver_type,
-            });
+  socket.on("sendMessage", (data) => {
+    console.log("New Message:", data);
+    io.emit("receiveMessage", data); // Broadcast the message to all users
+  });
 
-            io.emit("newMessage", newMessage); // Kirim pesan ke semua client
-        } catch (error) {
-            console.error("Error saving message:", error);
-        }
-    });
-
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });
 
 
@@ -290,60 +280,6 @@ app.get("/keranjang/:id", async (req, res) => {
 });
 
 // end of keranjang
-
-// bookmark
-app.get("/bookmark/:id_pembeli", async (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    try {
-        const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
-        if (bookmark.error) {
-            return res.status(404).json(bookmark);
-        }
-
-        return res.status(200).json(bookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-})
-
-app.get("/bookmark", async (req, res) => {
-    try {
-        const bookmark = await dboperations.ViewAllBookmark();
-        return res.status(200).json(bookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-});
-
-app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    const id_produk = req.params.id_produk;
-    try {
-        const bookmark = await dboperations.addbookmark(id_pembeli, id_produk);
-        if (bookmark.error) {
-            return res.status(bookmark.status).json({ Message: bookmark.error });
-        }
-
-        res.status(201).json({ Message: "Berhasil menambahkan bookmark", data: bookmark.data })
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-});
-
-app.delete("/bookmark/:id_bookmark", async (req, res) => {
-    const id_bookmark = req.params.id_bookmark;
-    try {
-        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
-        if (deletedbookmark.error) {
-            return res.status(404).json(deletedbookmark);
-        }
-
-        return res.status(200).json(deletedbookmark);
-    } catch (error) {
-        res.status(500).json({ error: `${error.message}` })
-    }
-})
-// end of bookmark
 
 app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
@@ -609,19 +545,19 @@ app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
 
 // Route to mark a message as read
 app.put("/message/read/:id_pembeli", (req, res) => {
-    const { id_pembeli } = req.params;
+  const { id_pembeli } = req.params;
 
-    if (!id_pembeli) {
-        return res.status(400).send("Pembeli ID is required");
+  if (!id_pembeli) {
+    return res.status(400).send("Pembeli ID is required");
+  }
+
+  dboperations.markMessageAsRead(id_pembeli, (error, result) => {
+    if (error) {
+      console.error("Error marking message as read:", error);
+      return res.status(500).send("Error marking message as read");
     }
-
-    dboperations.markMessageAsRead(id_pembeli, (error, result) => {
-        if (error) {
-            console.error("Error marking message as read:", error);
-            return res.status(500).send("Error marking message as read");
-        }
-        res.status(200).json(result);
-    });
+    res.status(200).json(result);
+  });
 });
 
 
