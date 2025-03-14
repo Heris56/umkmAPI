@@ -6,8 +6,48 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
+const http = require("http");
+const {Server} = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://127.0.0.1:8000",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("sendMessage", async (data) => {
+    try {
+      const newMessage = await Message.create({
+        message: data.message,
+        sent_at: new Date(),
+        is_read: false,
+        id_umkm: data.id_umkm || null,
+        id_pembeli: data.id_pembeli || null,
+        id_kurir: data.id_kurir || null,
+        receiver_type: data.receiver_type,
+      });
+
+      io.emit("newMessage", newMessage); // Kirim pesan ke semua client
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
+
 // const corsOptions = {
 //     origin: 'http://127.0.0.1:8000/',
 //     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -1148,6 +1188,6 @@ app.delete("/campaign/:id", (req, res) => {
 
 // server.js
 
-app.listen(port, () => {
-    console.log(`server berjalan di ${port}`);
-});
+// app.listen(port, () => {
+//     console.log(`server berjalan di ${port}`);
+// });
