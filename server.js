@@ -540,6 +540,13 @@ app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
             console.error("Error insert message:", error);
             return res.status(500).send("Error inserting message.");
         }
+        io.to(`umkm_${id_umkm}`).emit("newMessage", {
+          id_umkm,
+          id_pembeli,
+          message: data.message,
+          receiver_type: "UMKM",
+          timestamp: new Date().toISOString(),
+        });
         res.status(200).json(result);
     });
 });
