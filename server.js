@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://umkmkuapi.com", "http://127.0.0.1:8000"],
+    origin: ["https://umkmkuapi.com", "http://127.0.0.1:8000", "*"],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -540,6 +540,14 @@ app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
             console.error("Error insert message:", error);
             return res.status(500).send("Error inserting message.");
         }
+
+        console.log("📢 Emitting newMessage event:", {
+          id_umkm,
+          id_pembeli,
+          message: data.message,
+          receiver_type: "UMKM",
+        });
+
         io.to(`umkm_${id_umkm}`).emit("newMessage", {
           id_umkm,
           id_pembeli,
