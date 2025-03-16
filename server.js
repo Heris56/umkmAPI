@@ -30,16 +30,32 @@ io.on("connection", (socket) => {
     try {
       // Save the message in the database
       const newMessage = await Message.create({
+        id_umkm: data.id_umkm,
+        id_pembeli: data.id_pembeli,
         message: data.message,
         sent_at: new Date(),
         is_read: false,
       });
 
       // Emit the new message to all connected clients
-      io.emit("newMessage", newMessage);
+      io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
     } catch (error) {
       console.error("Error saving message:", error);
     }
+  });
+
+  socket.on("receiveMessages", async ({ id_umkm, id_pembeli }, callback) => {
+    dboperations.getmessagesbyUMKMandPembeli(
+      id_umkm,
+      id_pembeli,
+      (error, result) => {
+        if (error) {
+          console.error("Error fetching messages:", error);
+          return callback({ error: "Failed to retrieve messages" });
+        }
+        callback(result);
+      }
+    );
   });
 
   // Handle disconnection
