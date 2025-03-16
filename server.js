@@ -442,6 +442,16 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
             return res.status(500).send("error fetch message");
         }
         res.json(result);
+
+        console.log(
+            `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
+        );
+        
+        io.emit("newMessage", {
+                id_umkm: id_umkm,
+                id_pembeli: id_pembeli,
+                messages: result // Send all retrieved messages
+        });
     });
 });
 
