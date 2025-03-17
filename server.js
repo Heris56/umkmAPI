@@ -501,17 +501,11 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
             `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
         );
 
-        io.to(id_umkm).emit("newMessage", {
-          id_umkm: id_umkm,
-          id_pembeli: id_pembeli,
-          messages: result,
+        io.emit("newMessage", {
+            id_umkm: id_umkm,
+            id_pembeli: id_pembeli,
+            messages: result // Send all retrieved messages
         });
-        io.to(id_pembeli).emit("newMessage", {
-          id_umkm: id_umkm,
-          id_pembeli: id_pembeli,
-          messages: result,
-        });
-
     });
 });
 
