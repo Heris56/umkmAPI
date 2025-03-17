@@ -13,55 +13,55 @@ const Message = require("./models/message");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: ["https://umkmkuapi.com", "http://127.0.0.1:8000", "*"],
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
-    credentials: true,
-  },
+    cors: {
+        origin: ["https://umkmkuapi.com", "http://127.0.0.1:8000", "*"],
+        methods: ["GET", "POST"],
+        allowedHeaders: ["Content-Type"],
+        credentials: true,
+    },
 });
 
 
 io.on("connection", (socket) => {
-  console.log("New user connected:", socket.id);
+    console.log("New user connected:", socket.id);
 
-  // Listen for new messages
-  socket.on("sendMessage", async (data) => {
-    try {
-      // Save the message in the database
-      const newMessage = await Message.create({
-        id_umkm: data.id_umkm,
-        id_pembeli: data.id_pembeli,
-        message: data.message,
-        sent_at: new Date(),
-        is_read: false,
-      });
+    // Listen for new messages
+    socket.on("sendMessage", async (data) => {
+        try {
+            // Save the message in the database
+            const newMessage = await Message.create({
+                id_umkm: data.id_umkm,
+                id_pembeli: data.id_pembeli,
+                message: data.message,
+                sent_at: new Date(),
+                is_read: false,
+            });
 
-      // Emit the new message to all connected clients
-      io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
-  });
-
-  socket.on("receiveMessages", async ({ id_umkm, id_pembeli }, callback) => {
-    dboperations.getmessagesbyUMKMandPembeli(
-      id_umkm,
-      id_pembeli,
-      (error, result) => {
-        if (error) {
-          console.error("Error fetching messages:", error);
-          return callback({ error: "Failed to retrieve messages" });
+            // Emit the new message to all connected clients
+            io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
+        } catch (error) {
+            console.error("Error saving message:", error);
         }
-        callback(result);
-      }
-    );
-  });
+    });
 
-  // Handle disconnection
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+    socket.on("receiveMessages", async ({ id_umkm, id_pembeli }, callback) => {
+        dboperations.getmessagesbyUMKMandPembeli(
+            id_umkm,
+            id_pembeli,
+            (error, result) => {
+                if (error) {
+                    console.error("Error fetching messages:", error);
+                    return callback({ error: "Failed to retrieve messages" });
+                }
+                callback(result);
+            }
+        );
+    });
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
 });
 
 
@@ -163,6 +163,60 @@ app.get("/produkbytipe/tipe", async (req, res) => {
         res.json(result);
     });
 });
+
+// bookmark
+app.get("/bookmark/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
+        if (bookmark.error) {
+            return res.status(404).json(bookmark);
+        }
+
+        return res.status(200).json(bookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
+
+app.get("/bookmark", async (req, res) => {
+    try {
+        const bookmark = await dboperations.ViewAllBookmark();
+        return res.status(200).json(bookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+});
+
+app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_produk = req.params.id_produk;
+    try {
+        const bookmark = await dboperations.addbookmark(id_pembeli, id_produk);
+        if (bookmark.error) {
+            return res.status(bookmark.status).json({ Message: bookmark.error });
+        }
+
+        res.status(201).json({ Message: "Berhasil menambahkan bookmark", data: bookmark.data })
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+});
+
+app.delete("/bookmark/:id_bookmark", async (req, res) => {
+    const id_bookmark = req.params.id_bookmark;
+    try {
+        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
+        if (deletedbookmark.error) {
+            return res.status(404).json(deletedbookmark);
+        }
+
+        return res.status(200).json(deletedbookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
+// end of bookmark
 
 // keranjang
 app.post("/keranjang", (req, res) => {
@@ -446,11 +500,11 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
         console.log(
             `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
         );
-        
+
         io.emit("newMessage", {
-                id_umkm: id_umkm,
-                id_pembeli: id_pembeli,
-                messages: result // Send all retrieved messages
+            id_umkm: id_umkm,
+            id_pembeli: id_pembeli,
+            messages: result // Send all retrieved messages
         });
     });
 });
@@ -552,18 +606,18 @@ app.post("/sendchat/pembelikeumkm/:id_pembeli/:id_umkm", (req, res) => {
         }
 
         console.log("📢 Emitting newMessage event:", {
-          id_umkm,
-          id_pembeli,
-          message: data.message,
-          receiver_type: "UMKM",
+            id_umkm,
+            id_pembeli,
+            message: data.message,
+            receiver_type: "UMKM",
         });
 
         io.to(`umkm_${id_umkm}`).emit("newMessage", {
-          id_umkm,
-          id_pembeli,
-          message: data.message,
-          receiver_type: "UMKM",
-          timestamp: new Date().toISOString(),
+            id_umkm,
+            id_pembeli,
+            message: data.message,
+            receiver_type: "UMKM",
+            timestamp: new Date().toISOString(),
         });
         res.status(200).json(result);
     });
@@ -600,19 +654,19 @@ app.post("/sendchat/kurirkepembeli/:id_kurir/:id_pembeli", (req, res) => {
 
 // Route to mark a message as read
 app.put("/message/read/:id_pembeli", (req, res) => {
-  const { id_pembeli } = req.params;
+    const { id_pembeli } = req.params;
 
-  if (!id_pembeli) {
-    return res.status(400).send("Pembeli ID is required");
-  }
-
-  dboperations.markMessageAsRead(id_pembeli, (error, result) => {
-    if (error) {
-      console.error("Error marking message as read:", error);
-      return res.status(500).send("Error marking message as read");
+    if (!id_pembeli) {
+        return res.status(400).send("Pembeli ID is required");
     }
-    res.status(200).json(result);
-  });
+
+    dboperations.markMessageAsRead(id_pembeli, (error, result) => {
+        if (error) {
+            console.error("Error marking message as read:", error);
+            return res.status(500).send("Error marking message as read");
+        }
+        res.status(200).json(result);
+    });
 });
 
 
