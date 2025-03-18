@@ -33,7 +33,6 @@ io.on("connection", (socket) => {
             id_umkm: data.id_umkm,
             id_pembeli: data.id_pembeli,
             message: data.message,
-            sent_at: new Date(),
             is_read: false,
             receiver_type: data.receiver_type,
           });
@@ -55,7 +54,6 @@ io.on("connection", (socket) => {
           id_umkm: data.id_umkm,
           id_pembeli: data.id_pembeli,
           message: data.message,
-          sent_at: new Date(),
           is_read: false,
           receiver_type: data.receiver_type,
         });
