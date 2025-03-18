@@ -39,7 +39,6 @@ io.on("connection", (socket) => {
 
             // Emit the new message to all connected clients
             io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
-            socket.emit("newMessage", newMessage);
         } catch (error) {
             console.error("Error saving message:", error);
         }
