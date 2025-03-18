@@ -485,7 +485,7 @@ app.get("/message/msgUMKM/:id_umkm", (req, res) => {
     });
 });
 
-app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
+app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
   const id_umkm = req.params.id_umkm;
   const id_pembeli = req.params.id_pembeli;
 
@@ -504,6 +504,9 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
 
       res.json(result);
 
+      // Extract the last message
+      const lastMessage = result[result.length - 1];
+
       console.log(
         `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
       );
@@ -511,12 +514,14 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
       io.emit("newMessage", {
         id_umkm: id_umkm,
         id_pembeli: id_pembeli,
-        message: result,
-        sent_at: result,
+        message: lastMessage.message, // Send only the last message content
+        sent_at: lastMessage.sent_at, // Send the last message timestamp
+        sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
       });
     }
   );
 });
+
 
 
 app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
