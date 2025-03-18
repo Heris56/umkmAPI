@@ -23,66 +23,43 @@ const io = new Server(server, {
 
 
 io.on("connection", (socket) => {
-    console.log("New user connected:", socket.id);
+  console.log("New user connected:", socket.id);
 
-    // Listen for new messages
-    socket.on("sendMessage", async (data) => {
-        try {
-            // Save the message in the database
-            const newMessage = await Message.create({
-                id_umkm: data.id_umkm,
-                id_pembeli: data.id_pembeli,
-                message: data.message,
-                sent_at: new Date(),
-                is_read: false,
-            });
+  socket.on("sendMessage", async (data) => {
+    try {
+      socket.join(data.id_umkm);
+      socket.join(data.id_pembeli);
 
-            // Emit the new message to all connected clients
-            io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
-        } catch (error) {
-            console.error("Error saving message:", error);
-        }
-    });
+      const newMessage = await Message.create({
+        id_umkm: data.id_umkm,
+        id_pembeli: data.id_pembeli,
+        message: data.message,
+        sent_at: new Date(),
+        is_read: false,
+      });
 
-    socket.on("receiveMessages", async ({ id_umkm, id_pembeli }, callback) => {
-        dboperations.getmessagesbyUMKMandPembeli(
-            id_umkm,
-            id_pembeli,
-            (error, result) => {
-                if (error) {
-                    console.error("Error fetching messages:", error);
-                    return callback({ error: "Failed to retrieve messages" });
-                }
-                callback(result);
-            }
-        );
-    });
+      io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
 
-    socket.on("receiveMessage", async (data) => {
-      try {
-        // Save the received message in the database
-        const receivedMessage = await Message.create({
-          id_umkm: data.id_umkm,
-          id_pembeli: data.id_pembeli,
-          message: data.message,
-          sent_at: new Date(),
-          is_read: false,
-        });
+  socket.on("receiveMessages", async ({ id_umkm, id_pembeli }, callback) => {
+    try {
+      const messages = await dboperations.getmessagesbyUMKMandPembeli(
+        id_umkm,
+        id_pembeli
+      );
+      callback(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      callback({ error: "Failed to retrieve messages" });
+    }
+  });
 
-        // Emit the message back to the sender and receiver
-        io.to(data.id_umkm)
-          .to(data.id_pembeli)
-          .emit("newMessage", receivedMessage);
-      } catch (error) {
-        console.error("Error receiving message:", error);
-      }
-    });
-
-
-    // Handle disconnection
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
 });
 
 
