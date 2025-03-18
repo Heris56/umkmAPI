@@ -38,34 +38,31 @@ io.on("connection", (socket) => {
           });
 
           // Emit the new message to all connected clients
-          io.to(data.id_umkm)
-            .to(data.id_pembeli)
-            .emit("newMessage", newMessage);
           io.emit("newMessage", newMessage); // Broadcast to all clients
         } catch (error) {
             console.error("Error saving message:", error);
         }
     });
 
-    socket.on("receiveMessage", async (data) => {
-      try {
-        // Save the received message in the database
-        const receivedMessage = await Message.create({
-          id_umkm: data.id_umkm,
-          id_pembeli: data.id_pembeli,
-          message: data.message,
-          is_read: false,
-          receiver_type: data.receiver_type,
-        });
+    // socket.on("receiveMessage", async (data) => {
+    //   try {
+    //     // Save the received message in the database
+    //     const receivedMessage = await Message.create({
+    //       id_umkm: data.id_umkm,
+    //       id_pembeli: data.id_pembeli,
+    //       message: data.message,
+    //       is_read: false,
+    //       receiver_type: data.receiver_type,
+    //     });
 
-        // Emit the message back to the sender and receiver
-        io.to(data.id_umkm)
-          .to(data.id_pembeli)
-          .emit("newMessage", receivedMessage);
-      } catch (error) {
-        console.error("Error receiving message:", error);
-      }
-    });
+    //     // Emit the message back to the sender and receiver
+    //     io.to(data.id_umkm)
+    //       .to(data.id_pembeli)
+    //       .emit("newMessage", receivedMessage);
+    //   } catch (error) {
+    //     console.error("Error receiving message:", error);
+    //   }
+    // });
 
 
     // Handle disconnection
