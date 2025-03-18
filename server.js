@@ -514,8 +514,8 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
       io.emit("newMessage", {
         id_umkm: id_umkm,
         id_pembeli: id_pembeli,
-        message: lastMessage.message, // Send only the last message content
-        sent_at: lastMessage.sent_at, // Send the last message timestamp
+        message: lastMessage.message,
+        sent_at: lastMessage.sent_at,
         sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
       });
     }
@@ -536,32 +536,62 @@ app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
     });
 });
 
-app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    const id_umkm = req.params.id_umkm;
+app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
+  const { id_pembeli, id_umkm } = req.params;
 
+  dboperations.getMessagesByPembeliAndUMKM(
+    id_pembeli,
+    id_umkm,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return res.status(500).json({ error: "Error fetching messages" });
+      }
 
-    dboperations.getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, (error, result) => {
-        if (error) {
-            console.error("error get message:", error);
-            return res.status(500).send("error fetch message");
-        }
-        res.json(result);
-    });
+      res.json(result);
+
+      if (result.length > 0) {
+        const lastMessage = result[result.length - 1];
+
+        io.emit("newMessage", {
+          id_pembeli,
+          id_umkm,
+          message: lastMessage.message,
+          sent_at: lastMessage.sent_at,
+          sender: lastMessage.username || lastMessage.nama_lengkap,
+        });
+      }
+    }
+  );
 });
 
-app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", (req, res) => {
-    const id_pembeli = req.params.id_pembeli;
-    const id_kurir = req.params.id_kurir;
+app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
+  const { id_pembeli, id_kurir } = req.params;
 
+  dboperations.getMessagesByPembeliAndKurir(
+    id_pembeli,
+    id_kurir,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return res.status(500).json({ error: "Error fetching messages" });
+      }
 
-    dboperations.getMessagesByPembeliAndKurir(id_pembeli, id_kurir, (error, result) => {
-        if (error) {
-            console.error("error get message:", error);
-            return res.status(500).send("error fetch message");
-        }
-        res.json(result);
-    });
+      res.json(result);
+
+      if (result.length > 0) {
+        const lastMessage = result[result.length - 1];
+
+        io.emit("newMessage", {
+          id_pembeli,
+          id_kurir,
+          message: lastMessage.message,
+          sent_at: lastMessage.sent_at,
+          sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
+        });
+      }
+    }
+  );
 });
 
 
@@ -577,18 +607,33 @@ app.get("/message/msgKurir/:id_kurir", (req, res) => {
     });
 });
 
-app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", (req, res) => {
-    const id_kurir = req.params.id_kurir;
-    const id_pembeli = req.params.id_pembeli;
+app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
+  const { id_kurir, id_pembeli } = req.params;
 
+  dboperations.getMessagesByKurirAndPembeli(
+    id_kurir,
+    id_pembeli,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return res.status(500).json({ error: "Error fetching messages" });
+      }
 
-    dboperations.getMessagesByKurirAndPembeli(id_kurir, id_pembeli, (error, result) => {
-        if (error) {
-            console.error("error get message:", error);
-            return res.status(500).send("error fetch message");
-        }
-        res.json(result);
-    });
+      res.json(result);
+
+      if (result.length > 0) {
+        const lastMessage = result[result.length - 1];
+
+        io.emit("newMessage", {
+          id_kurir,
+          id_pembeli,
+          message: lastMessage.message,
+          sent_at: lastMessage.sent_at,
+          sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
+        });
+      }
+    }
+  );
 });
 
 
