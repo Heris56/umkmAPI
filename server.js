@@ -502,9 +502,11 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
         );
 
         io.emit("newMessage", {
-            id_umkm: id_umkm,
-            id_pembeli: id_pembeli,
-            messages: result // Send all retrieved messages
+          id_umkm: id_umkm,
+          id_pembeli: id_pembeli,
+          message: result[result.length - 1]?.message || "", // Send only the last message
+          sent_at:
+            result[result.length - 1]?.sent_at || new Date().toISOString(),
         });
     });
 });
