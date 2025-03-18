@@ -44,52 +44,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("getMessages", async (data, callback) => {
-      try {
-        const id_umkm = data.id_umkm;
-        const id_pembeli = data.id_pembeli;
-
-        dboperations.getmessagesbyUMKMandPembeli(
-          id_umkm,
-          id_pembeli,
-          (error, result) => {
-            if (error) {
-              console.error("Error fetching messages:", error);
-              if (callback) callback({ error: "Error fetching messages" });
-              return;
-            }
-
-            if (!Array.isArray(result) || result.length === 0) {
-              if (callback) callback([]); // Send an empty array if no messages exist
-              return;
-            }
-
-            // Send messages back to the client
-            if (callback) callback(result);
-
-            // Extract the last message
-            const lastMessage = result[result.length - 1];
-
-            console.log(
-              `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
-            );
-
-            io.emit("newMessage", {
-              id_umkm: id_umkm,
-              id_pembeli: id_pembeli,
-              message: lastMessage.message,
-              sent_at: lastMessage.sent_at,
-              sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
-            });
-          }
-        );
-      } catch (error) {
-        console.error("Unexpected error:", error);
-        if (callback) callback({ error: "Unexpected error" });
-      }
-    });
-
-
     // socket.on("receiveMessage", async (data) => {
     //   try {
     //     // Save the received message in the database
