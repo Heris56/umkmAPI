@@ -486,30 +486,38 @@ app.get("/message/msgUMKM/:id_umkm", (req, res) => {
 });
 
 app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", (req, res) => {
-    const id_umkm = req.params.id_umkm;
-    const id_pembeli = req.params.id_pembeli;
+  const id_umkm = req.params.id_umkm;
+  const id_pembeli = req.params.id_pembeli;
 
+  dboperations.getmessagesbyUMKMandPembeli(
+    id_umkm,
+    id_pembeli,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return res.status(500).json({ error: "Error fetching messages" });
+      }
 
-    dboperations.getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, (error, result) => {
-        if (error) {
-            console.error("error get message:", error);
-            return res.status(500).send("error fetch message");
-        }
-        res.json(result);
+      if (!Array.isArray(result) || result.length === 0) {
+        return res.json([]); // Return an empty array if no messages exist
+      }
 
-        console.log(
-            `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
-        );
+      res.json(result);
 
-        io.emit("newMessage", {
-          id_umkm: id_umkm,
-          id_pembeli: id_pembeli,
-          message: result[result.length - 1]?.message || "", // Send only the last message
-          sent_at:
-            result[result.length - 1]?.sent_at || new Date().toISOString(),
-        });
-    });
+      console.log(
+        `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
+      );
+
+      io.emit("newMessage", {
+        id_umkm: id_umkm,
+        id_pembeli: id_pembeli,
+        message: result,
+        sent_at: result,
+      });
+    }
+  );
 });
+
 
 app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
