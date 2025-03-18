@@ -28,18 +28,20 @@ io.on("connection", (socket) => {
     // Listen for new messages
     socket.on("sendMessage", async (data) => {
         try {
-            // Save the message in the database
-            const newMessage = await Message.create({
-                id_umkm: data.id_umkm,
-                id_pembeli: data.id_pembeli,
-                message: data.message,
-                sent_at: new Date(),
-                is_read: false,
-            });
+          // Save the message in the database
+          const newMessage = await Message.create({
+            id_umkm: data.id_umkm,
+            id_pembeli: data.id_pembeli,
+            message: data.message,
+            sent_at: new Date(),
+            is_read: false,
+          });
 
-            // Emit the new message to all connected clients
-            io.to(data.id_umkm).to(data.id_pembeli).emit("newMessage", newMessage);
-            socket.emit("newMessage", newMessage);
+          // Emit the new message only to the sender and receiver
+          socket.to(data.id_umkm).emit("newMessage", newMessage);
+          socket.to(data.id_pembeli).emit("newMessage", newMessage);
+
+          socket.emit("newMessage", newMessage);
         } catch (error) {
             console.error("Error saving message:", error);
         }
