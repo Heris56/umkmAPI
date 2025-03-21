@@ -734,6 +734,40 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
     }
 }
 
+async function getLatestMessageByUMKMandPembeli(id_umkm, id_pembeli, callback) {
+  try {
+    const result = await sequelize.query(
+      `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli
+            ORDER BY
+                Chat.id_chat DESC
+            LIMIT 1;
+        `,
+      {
+        replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    callback(null, result.length > 0 ? result[0] : null);
+  } catch (error) {
+    callback(error, null);
+    console.error("Error executing raw query:", error);
+    throw new Error("Query execution failed");
+  }
+}
+
 // Get messages by sender and receiver Pembeli
 async function getMessagesByPembeli(id_pembeli, callback) {
     try {
@@ -2224,6 +2258,7 @@ module.exports = {
     getMessagesByPembeli,
     getMessagesByPembeliAndUMKM,
     getmessagesbyUMKMandPembeli,
+    getLatestMessageByUMKMandPembeli,
     getMessagesByPembeliAndKurir,
     getMessagesByKurirAndPembeli,
     getMessagesByKurir,

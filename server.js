@@ -529,7 +529,27 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
   );
 });
 
+app.get("/getLatestMsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
+  const id_umkm = req.params.id_umkm;
+  const id_pembeli = req.params.id_pembeli;
 
+  dboperations.getLatestMessageByUMKMandPembeli(
+    id_umkm,
+    id_pembeli,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching latest message:", error);
+        return res.status(500).json({ error: "Error fetching latest message" });
+      }
+
+      if (!result) {
+        return res.json({ message: "No messages found" });
+      }
+
+      res.json(result);
+    }
+  );
+});
 
 app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
