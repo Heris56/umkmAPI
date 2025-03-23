@@ -169,7 +169,7 @@ async function ViewBookmarkbyIDPembeli(id_pembeli) {
             where: { id_pembeli },
             include: [{
                 model: Produk,
-                attributes: ['id_produk', 'nama_barang']
+                attributes: ['nama_barang', 'harga', 'image_url']
             }]
         })
 
