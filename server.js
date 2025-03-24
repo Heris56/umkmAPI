@@ -222,10 +222,11 @@ app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
     }
 });
 
-app.delete("/bookmark/:id_bookmark", async (req, res) => {
-    const id_bookmark = req.params.id_bookmark;
+app.delete("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_produk = req.params.id_produk;
     try {
-        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
+        const deletedbookmark = await dboperations.DeleteBookmark(id_pembeli, id_produk);
         if (deletedbookmark.error) {
             return res.status(404).json(deletedbookmark);
         }

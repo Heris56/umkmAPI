@@ -237,9 +237,9 @@ async function addbookmark(id_pembeli, id_produk) {
     }
 }
 
-async function DeleteBookmark(id_bookmark) {
+async function DeleteBookmark(id_pembeli, id_produk) {
     try {
-        const bookmark = await Bookmark.findByPk(id_bookmark);
+        const bookmark = await Bookmark.findOne({ where: { id_pembeli, id_produk } });
         if (!bookmark) {
             return { error: "bookmark tidak ditemukan", status: 404 }
         }
