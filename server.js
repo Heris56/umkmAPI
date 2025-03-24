@@ -448,6 +448,18 @@ app.get("/ulasans", (req, res) => {
     });
 });
 
+app.post("/ulasans", (req, res) => {
+    const { id_pembeli, id_produk, username, ulasanText, rating } = req.body;
+
+    dboperations.addulasans(id_pembeli, id_produk, username, ulasanText, rating, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.get("/ulasans/:id_produk", (req, res) => {
     const id_produk = req.params.id_produk;
 

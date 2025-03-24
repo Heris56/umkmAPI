@@ -2291,6 +2291,7 @@ module.exports = {
     registUMKM,
     loginUMKM,
     getulasans,
+    addulasans,
     getulasansByProdukId,
     getulasansByIdUMKM,
     getOverallRating,
