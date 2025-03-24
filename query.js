@@ -183,6 +183,29 @@ async function ViewBookmarkbyIDPembeli(id_pembeli) {
     }
 }
 
+async function BookmarkedbyPembeli(id_produk, id_pembeli) {
+    try {
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+
+        if (!pembeli) {
+            return { error: "tidak menemukan pembeli", status: 404 }
+        }
+
+        produk = await Produk.findByPk(id_produk);
+
+        if (!produk) {
+            return { error: "Produk Tidak ditemukan", status: 404 }
+        }
+
+        bookmarked = await Bookmark.findOne({ where: { id_produk, id_pembeli } })
+
+        return { bookmarked: !!bookmarked, status: 200 }
+    }
+    catch (error) {
+        return { error: error.message }
+    }
+}
+
 async function addbookmark(id_pembeli, id_produk) {
     try {
         if (!id_pembeli) {
@@ -735,9 +758,9 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
 }
 
 async function getLatestMessageByUMKMandPembeli(id_umkm, id_pembeli, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -754,18 +777,18 @@ async function getLatestMessageByUMKMandPembeli(id_umkm, id_pembeli, callback) {
                 Chat.id_chat DESC
             LIMIT 1;
         `,
-      {
-        replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result.length > 0 ? result[0] : null);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result.length > 0 ? result[0] : null);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 // Get messages by sender and receiver Pembeli
@@ -2244,6 +2267,7 @@ module.exports = {
     ViewAllBookmark,
     ViewBookmarkbyIDPembeli,
     addbookmark,
+    BookmarkedbyPembeli,
     DeleteBookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,

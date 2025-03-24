@@ -28,17 +28,17 @@ io.on("connection", (socket) => {
     // Listen for new messages
     socket.on("sendMessage", async (data) => {
         try {
-          // Save the message in the database
-          const newMessage = await Message.create({
-            id_umkm: data.id_umkm,
-            id_pembeli: data.id_pembeli,
-            message: data.message,
-            is_read: false,
-            receiver_type: data.receiver_type,
-          });
+            // Save the message in the database
+            const newMessage = await Message.create({
+                id_umkm: data.id_umkm,
+                id_pembeli: data.id_pembeli,
+                message: data.message,
+                is_read: false,
+                receiver_type: data.receiver_type,
+            });
 
-          // Emit the new message to all connected clients
-          io.emit("newMessage", newMessage); // Broadcast to all clients
+            // Emit the new message to all connected clients
+            io.emit("newMessage", newMessage); // Broadcast to all clients
         } catch (error) {
             console.error("Error saving message:", error);
         }
@@ -192,6 +192,18 @@ app.get("/bookmark", async (req, res) => {
         return res.status(200).json(bookmark);
     } catch (error) {
         res.status(500).json({ error: `${error.message}` })
+    }
+});
+
+app.get("/bookmark/check/:id_produk/:id_pembeli", async (req, res) => {
+    const id_produk = req.params.id_produk;
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const bookmarked = await dboperations.BookmarkedbyPembeli(id_produk, id_pembeli);
+        return res.status(bookmarked.status).json(bookmarked);
+    }
+    catch (error) {
+        res.status(500).json({ error: `${error.message}` });
     }
 });
 
@@ -493,62 +505,62 @@ app.get("/message/msgUMKM/:id_umkm", (req, res) => {
 });
 
 app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
-  const id_umkm = req.params.id_umkm;
-  const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
 
-  dboperations.getmessagesbyUMKMandPembeli(
-    id_umkm,
-    id_pembeli,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching messages:", error);
-        return res.status(500).json({ error: "Error fetching messages" });
-      }
+    dboperations.getmessagesbyUMKMandPembeli(
+        id_umkm,
+        id_pembeli,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching messages:", error);
+                return res.status(500).json({ error: "Error fetching messages" });
+            }
 
-      if (!Array.isArray(result) || result.length === 0) {
-        return res.json([]); // Return an empty array if no messages exist
-      }
+            if (!Array.isArray(result) || result.length === 0) {
+                return res.json([]); // Return an empty array if no messages exist
+            }
 
-      res.json(result);
+            res.json(result);
 
-      // Extract the last message
-      const lastMessage = result[result.length - 1];
+            // Extract the last message
+            const lastMessage = result[result.length - 1];
 
-      console.log(
-        `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
-      );
+            console.log(
+                `Emitting newMessage event for UMKM ID: ${id_umkm}, Pembeli ID: ${id_pembeli}`
+            );
 
-      io.emit("newMessage", {
-        id_umkm: id_umkm,
-        id_pembeli: id_pembeli,
-        message: lastMessage.message,
-        sent_at: lastMessage.sent_at,
-        sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
-      });
-    }
-  );
+            io.emit("newMessage", {
+                id_umkm: id_umkm,
+                id_pembeli: id_pembeli,
+                message: lastMessage.message,
+                sent_at: lastMessage.sent_at,
+                sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
+            });
+        }
+    );
 });
 
 app.get("/getLatestMsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
-  const id_umkm = req.params.id_umkm;
-  const id_pembeli = req.params.id_pembeli;
+    const id_umkm = req.params.id_umkm;
+    const id_pembeli = req.params.id_pembeli;
 
-  dboperations.getLatestMessageByUMKMandPembeli(
-    id_umkm,
-    id_pembeli,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching latest message:", error);
-        return res.status(500).json({ error: "Error fetching latest message" });
-      }
+    dboperations.getLatestMessageByUMKMandPembeli(
+        id_umkm,
+        id_pembeli,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching latest message:", error);
+                return res.status(500).json({ error: "Error fetching latest message" });
+            }
 
-      if (!result) {
-        return res.json({ message: "No messages found" });
-      }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-      res.json(result);
-    }
-  );
+            res.json(result);
+        }
+    );
 });
 
 app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
@@ -564,61 +576,61 @@ app.get("/message/msgPembeli/:id_pembeli", (req, res) => {
 });
 
 app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
-  const { id_pembeli, id_umkm } = req.params;
+    const { id_pembeli, id_umkm } = req.params;
 
-  dboperations.getMessagesByPembeliAndUMKM(
-    id_pembeli,
-    id_umkm,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching messages:", error);
-        return res.status(500).json({ error: "Error fetching messages" });
-      }
+    dboperations.getMessagesByPembeliAndUMKM(
+        id_pembeli,
+        id_umkm,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching messages:", error);
+                return res.status(500).json({ error: "Error fetching messages" });
+            }
 
-      res.json(result);
+            res.json(result);
 
-      if (result.length > 0) {
-        const lastMessage = result[result.length - 1];
+            if (result.length > 0) {
+                const lastMessage = result[result.length - 1];
 
-        io.emit("newMessage", {
-          id_pembeli,
-          id_umkm,
-          message: lastMessage.message,
-          sent_at: lastMessage.sent_at,
-          sender: lastMessage.username || lastMessage.nama_lengkap,
-        });
-      }
-    }
-  );
+                io.emit("newMessage", {
+                    id_pembeli,
+                    id_umkm,
+                    message: lastMessage.message,
+                    sent_at: lastMessage.sent_at,
+                    sender: lastMessage.username || lastMessage.nama_lengkap,
+                });
+            }
+        }
+    );
 });
 
 app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
-  const { id_pembeli, id_kurir } = req.params;
+    const { id_pembeli, id_kurir } = req.params;
 
-  dboperations.getMessagesByPembeliAndKurir(
-    id_pembeli,
-    id_kurir,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching messages:", error);
-        return res.status(500).json({ error: "Error fetching messages" });
-      }
+    dboperations.getMessagesByPembeliAndKurir(
+        id_pembeli,
+        id_kurir,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching messages:", error);
+                return res.status(500).json({ error: "Error fetching messages" });
+            }
 
-      res.json(result);
+            res.json(result);
 
-      if (result.length > 0) {
-        const lastMessage = result[result.length - 1];
+            if (result.length > 0) {
+                const lastMessage = result[result.length - 1];
 
-        io.emit("newMessage", {
-          id_pembeli,
-          id_kurir,
-          message: lastMessage.message,
-          sent_at: lastMessage.sent_at,
-          sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
-        });
-      }
-    }
-  );
+                io.emit("newMessage", {
+                    id_pembeli,
+                    id_kurir,
+                    message: lastMessage.message,
+                    sent_at: lastMessage.sent_at,
+                    sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
+                });
+            }
+        }
+    );
 });
 
 
@@ -635,32 +647,32 @@ app.get("/message/msgKurir/:id_kurir", (req, res) => {
 });
 
 app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
-  const { id_kurir, id_pembeli } = req.params;
+    const { id_kurir, id_pembeli } = req.params;
 
-  dboperations.getMessagesByKurirAndPembeli(
-    id_kurir,
-    id_pembeli,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching messages:", error);
-        return res.status(500).json({ error: "Error fetching messages" });
-      }
+    dboperations.getMessagesByKurirAndPembeli(
+        id_kurir,
+        id_pembeli,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching messages:", error);
+                return res.status(500).json({ error: "Error fetching messages" });
+            }
 
-      res.json(result);
+            res.json(result);
 
-      if (result.length > 0) {
-        const lastMessage = result[result.length - 1];
+            if (result.length > 0) {
+                const lastMessage = result[result.length - 1];
 
-        io.emit("newMessage", {
-          id_kurir,
-          id_pembeli,
-          message: lastMessage.message,
-          sent_at: lastMessage.sent_at,
-          sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
-        });
-      }
-    }
-  );
+                io.emit("newMessage", {
+                    id_kurir,
+                    id_pembeli,
+                    message: lastMessage.message,
+                    sent_at: lastMessage.sent_at,
+                    sender: lastMessage.nama_kurir || lastMessage.nama_lengkap,
+                });
+            }
+        }
+    );
 });
 
 
