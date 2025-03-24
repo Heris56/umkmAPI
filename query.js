@@ -169,7 +169,7 @@ async function ViewBookmarkbyIDPembeli(id_pembeli) {
             where: { id_pembeli },
             include: [{
                 model: Produk,
-                attributes: ['id_produk', 'nama_barang']
+                attributes: ['nama_barang', 'harga', 'image_url']
             }]
         })
 
@@ -179,6 +179,29 @@ async function ViewBookmarkbyIDPembeli(id_pembeli) {
 
         return bookmark;
     } catch (error) {
+        return { error: error.message }
+    }
+}
+
+async function BookmarkedbyPembeli(id_produk, id_pembeli) {
+    try {
+        pembeli = await Pembeli.findOne({ where: { id_pembeli } });
+
+        if (!pembeli) {
+            return { error: "tidak menemukan pembeli", status: 404 }
+        }
+
+        produk = await Produk.findByPk(id_produk);
+
+        if (!produk) {
+            return { error: "Produk Tidak ditemukan", status: 404 }
+        }
+
+        bookmarked = await Bookmark.findOne({ where: { id_produk, id_pembeli } })
+
+        return { bookmarked: !!bookmarked, status: 200 }
+    }
+    catch (error) {
         return { error: error.message }
     }
 }
@@ -727,6 +750,40 @@ async function getmessagesbyUMKMandPembeli(id_umkm, id_pembeli, callback) {
         );
 
         callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
+async function getLatestMessageByUMKMandPembeli(id_umkm, id_pembeli, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                umkm.id_umkm = :id_umkm AND pembeli.id_pembeli = :id_pembeli
+            ORDER BY
+                Chat.id_chat DESC
+            LIMIT 1;
+        `,
+            {
+                replacements: { id_umkm: id_umkm, id_pembeli: id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result.length > 0 ? result[0] : null);
     } catch (error) {
         callback(error, null);
         console.error("Error executing raw query:", error);
@@ -2210,6 +2267,7 @@ module.exports = {
     ViewAllBookmark,
     ViewBookmarkbyIDPembeli,
     addbookmark,
+    BookmarkedbyPembeli,
     DeleteBookmark,
     getuserUMKMbyID,
     getuserUMKM: getalluserUMKM,
@@ -2224,6 +2282,7 @@ module.exports = {
     getMessagesByPembeli,
     getMessagesByPembeliAndUMKM,
     getmessagesbyUMKMandPembeli,
+    getLatestMessageByUMKMandPembeli,
     getMessagesByPembeliAndKurir,
     getMessagesByKurirAndPembeli,
     getMessagesByKurir,
