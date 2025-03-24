@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
     res.json({ message: "hello world" });
 });
 
-app.get("/produk/:id", (req, res) => {
+app.get("/Produk/:id", (req, res) => {
     const id = req.params.id;
     dboperations.getprodukbyID(id, (error, result) => {
         if (error) {
@@ -41,11 +41,11 @@ app.get("/produk/:id", (req, res) => {
     });
 });
 
-app.get("/produk", (req, res) => {
+app.get("/Produk", (req, res) => {
     dboperations.getproduk((error, result) => {
         if (error) {
-            console.error("error get produk:", error);
-            return res.status(500).send("error fetch produk");
+            console.error("error get Produk:", error);
+            return res.status(500).send("error fetch Produk");
         }
         res.json(result);
     });
@@ -62,12 +62,12 @@ app.get("/produkumkm/:id", async (req, res) => {
     });
 });
 
-app.post("/produk", (req, res) => {
+app.post("/Produk", (req, res) => {
     const data = req.body;
     dboperations.addproduk(data, (error, result) => {
         if (error) {
-            console.error("error insert produk:", error);
-            return res.status(500).send("error nambah produk");
+            console.error("error insert Produk:", error);
+            return res.status(500).send("error nambah Produk");
         }
         res.status(200).json(result);
     });
@@ -78,8 +78,8 @@ app.put("/updateproduk/:id", (req, res) => {
     const data = req.body;
     dboperations.updateProduk(id, data, (error, result) => {
         if (error) {
-            console.error("error update produk:", error);
-            return res.status(500).send("gagal meng-update produk");
+            console.error("error update Produk:", error);
+            return res.status(500).send("gagal meng-update Produk");
         }
         res.status(200).json(result);
     });
@@ -99,8 +99,8 @@ app.get("/produkbytipe/tipe", async (req, res) => {
     // Call the updated function with the parameter
     dboperations.getProdukByType(tipe_barang, (error, result) => {
         if (error) {
-            console.error("Error getting produk:", error);
-            return res.status(500).send("Error fetching produk");
+            console.error("Error getting Produk:", error);
+            return res.status(500).send("Error fetching Produk");
         }
         res.json(result);
     });
@@ -307,7 +307,7 @@ app.delete("/bookmark/:id_bookmark", async (req, res) => {
 })
 // end of bookmark
 
-app.delete("/produk/:id", (req, res) => {
+app.delete("/Produk/:id", (req, res) => {
     const id = req.params.id;
 
     dboperations.deleteproduk(id, (error, result) => {

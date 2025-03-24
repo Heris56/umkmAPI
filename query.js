@@ -1,6 +1,6 @@
 // query.js
 const connection = require("./db");
-const Produk = require("./models/produk");
+const Produk = require("./models/Produk");
 const UMKM = require("./models/umkm");
 const Ulasan = require("./models/ulasan");
 const Message = require("./models/message");
@@ -27,7 +27,7 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 // Produk - Haikal
 async function getproduk(callback) {
     try {
-        const result = await Produk.findAll(); // Ambil data dari tabel produk
+        const result = await Produk.findAll(); // Ambil data dari tabel Produk
         callback(null, result); // return hasil
     } catch (error) {
         callback(error, null); // Kirim error jika terjadi masalah
@@ -40,12 +40,12 @@ async function getprodukbyID(id, callback) {
             throw new error("id tidak boleh kosong");
         }
 
-        const produk = await Produk.findByPk(id);
+        const Produk = await Produk.findByPk(id);
 
-        if (!produk) {
+        if (!Produk) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
-        callback(null, produk);
+        callback(null, Produk);
     } catch (error) {
         callback(error, null);
     }
@@ -79,13 +79,13 @@ async function updateProduk(id, data, callback) {
             throw new Error("id tidak boleh kosong");
         }
 
-        const produk = await Produk.findByPk(id);
+        const Produk = await Produk.findByPk(id);
 
-        if (!produk) {
-            throw new Error("produk tidak ditemukan");
+        if (!Produk) {
+            throw new Error("Produk tidak ditemukan");
         }
 
-        const updatedProduk = await produk.update(data);
+        const updatedProduk = await Produk.update(data);
 
         callback(null, updatedProduk);
     } catch (error) {
@@ -99,14 +99,14 @@ async function deleteproduk(id, callback) {
             throw new error("id tidak boleh kosong");
         }
 
-        const produk = await Produk.findByPk(id);
+        const Produk = await Produk.findByPk(id);
 
-        if (!produk) {
+        if (!Produk) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
 
-        await produk.destroy();
-        callback(null, { Message: `produk dengan id ${id} berhasil dihapus` });
+        await Produk.destroy();
+        callback(null, { Message: `Produk dengan id ${id} berhasil dihapus` });
     } catch (error) {
         callback(error, null);
     }
@@ -189,21 +189,21 @@ async function addbookmark(id_pembeli, id_produk) {
             return { error: 'Tidak ditemukan id pembeli', status: 400 }
         }
         if (!id_produk) {
-            return { error: 'tidak ditemukan id produk', status: 400 }
+            return { error: 'tidak ditemukan id Produk', status: 400 }
         }
         pembeli = await Pembeli.findOne({ where: { id_pembeli } });
-        produk = await Produk.findOne({ where: { id_produk } });
+        Produk = await Produk.findOne({ where: { id_produk } });
 
         if (!pembeli) {
             return { error: 'pembeli tidak ditemukan', status: 404 }
         }
-        if (!produk) {
-            return { error: 'produk tidak ditemukan', status: 404 }
+        if (!Produk) {
+            return { error: 'Produk tidak ditemukan', status: 404 }
         }
 
         const findbookmark = await Bookmark.findOne({ where: { id_pembeli, id_produk } })
         if (findbookmark) {
-            return { error: 'sudah ada produk di bookmark', status: 200 }
+            return { error: 'sudah ada Produk di bookmark', status: 200 }
         }
 
         const bookmark = await Bookmark.create({ id_pembeli, id_produk });
@@ -309,13 +309,13 @@ async function searchproductonKeranjang(id_pembeli, id_produk, id_batch) {
             }
         )
 
-        const produk = Produk.findByPk(id_produk);
+        const Produk = Produk.findByPk(id_produk);
 
 
         if (produkkeranjang) {
             return { found: true, data: produkkeranjang }
         } else {
-            return { found: false, message: 'tidak menemukan produk di keranjang' }
+            return { found: false, message: 'tidak menemukan Produk di keranjang' }
         }
 
     } catch (error) {
@@ -363,7 +363,7 @@ async function addtoKeranjang(data, callback) {
         const same = await CekKeranjang(data.id_pembeli, data.id_produk);
 
         if (same["same"] === false) {
-            callback(null, { message: 'tidak bisa nambah produk umkm yang berbeda' })
+            callback(null, { message: 'tidak bisa nambah Produk umkm yang berbeda' })
         } else if (found['found'] === true) {
             callback(null, { message: 'Barang sudah ada di keranjang' });
         } else {
@@ -409,9 +409,9 @@ async function plusQTY(id_keranjang) {
             throw new Error('keranjang tidak ditemukan')
         }
 
-        var produk = await Produk.findByPk(keranjang.id_produk);
+        var Produk = await Produk.findByPk(keranjang.id_produk);
 
-        if (keranjang.kuantitas < produk.stok) {
+        if (keranjang.kuantitas < Produk.stok) {
             keranjang.kuantitas += 1;
 
             await keranjang.save();
@@ -473,7 +473,7 @@ async function deletekeranjang(id_keranjang) {
 async function CekKeranjang(id_pembeli, id_produk) {
     try {
         if (!id_produk) {
-            throw new Error('gagal menemukan produk');
+            throw new Error('gagal menemukan Produk');
         }
 
         const keranjang = await getkeranjangstandby(id_pembeli);
@@ -486,13 +486,13 @@ async function CekKeranjang(id_pembeli, id_produk) {
             return { same: true }
         }
 
-        const produk = await Produk.findByPk(id_produk);
+        const Produk = await Produk.findByPk(id_produk);
 
-        if (!produk) {
+        if (!Produk) {
             return { same: true }
         }
 
-        if (produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
+        if (Produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
             return { same: true }
         } else {
             return { same: false }
@@ -1449,7 +1449,7 @@ async function getdatadashboardproduklaris(id, callback) {
 FROM 
     keranjang k
 JOIN 
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 JOIN 
     pesanan ps ON k.id_keranjang = ps.id_keranjang
 WHERE 
@@ -1485,7 +1485,7 @@ FROM
 INNER JOIN 
     keranjang k ON ps.id_keranjang = k.id_keranjang
 INNER JOIN 
-    produk p ON k.id_produk = p.id_produk
+    Produk p ON k.id_produk = p.id_produk
 INNER JOIN 
     pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE 
@@ -1649,7 +1649,7 @@ async function getpesananditerima(id, callback) {
     pb.alamat AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = ? 
   AND ps.status_pesanan = 'Pesanan Diterima' 
@@ -1687,7 +1687,7 @@ async function getpesananditolak(id, callback) {
         pb.alamat AS alamat_pembeli
     FROM keranjang k
     INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-    INNER JOIN produk p ON k.id_produk = p.id_produk
+    INNER JOIN Produk p ON k.id_produk = p.id_produk
     INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
     WHERE p.id_umkm = ? 
       AND ps.status_pesanan = 'Pesanan Ditolak' 
@@ -1725,7 +1725,7 @@ async function getpesananselesai(id, callback) {
     pb.alamat AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = ? 
   AND ps.status_pesanan = 'Pesanan Selesai' 
@@ -1766,7 +1766,7 @@ async function getriwayatpesanan(id, callback) {
 FROM riwayat r
 INNER JOIN pesanan ps ON r.id_pesanan = ps.id_pesanan
 INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE pb.id_pembeli = ? AND k.id_produk IS NOT NULL
 GROUP BY k.id_batch
@@ -1802,7 +1802,7 @@ async function getallpesananaktifpembeli(id, callback) {
     GROUP_CONCAT(p.image_url SEPARATOR ', ') AS image_url -- Menggabungkan URL gambar
 FROM pesanan ps
 INNER JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-INNER JOIN produk p ON k.id_produk = p.id_produk
+INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE pb.id_pembeli = ? 
     AND ps.status_pesanan != 'Pesanan Selesai'
@@ -1840,7 +1840,7 @@ async function getkeranjangbyidbatch(id_pembeli, id_batch, callback) {
     p.image_url,
     pb.nama_lengkap AS nama_pembeli
 FROM keranjang k
-JOIN produk p ON k.id_produk = p.id_produk
+JOIN Produk p ON k.id_produk = p.id_produk
 JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE k.id_batch = ? 
     AND k.id_pembeli = ?;
@@ -1893,7 +1893,7 @@ async function updatestatuspesananmasuk(id_umkm, id_batch, callback) {
         const query = `
             UPDATE pesanan ps
 JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-JOIN produk p ON k.id_produk = p.id_produk
+JOIN Produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Masuk'
 WHERE k.id_batch = ? 
   AND p.id_umkm = ?;
@@ -1920,7 +1920,7 @@ async function updatestatuspesananditerima(id_umkm, id_batch, callback) {
         const query = `
             UPDATE pesanan ps
 JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-JOIN produk p ON k.id_produk = p.id_produk
+JOIN Produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Diterima'
 WHERE k.id_batch = ? 
   AND p.id_umkm = ?;
@@ -1947,7 +1947,7 @@ async function updatestatuspesananditolak(id_umkm, id_batch, callback) {
         const query = `
             UPDATE pesanan ps
 JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-JOIN produk p ON k.id_produk = p.id_produk
+JOIN Produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Ditolak'
 WHERE k.id_batch = ? 
   AND p.id_umkm = ?;
@@ -1974,7 +1974,7 @@ async function updatestatuspesananselesai(id_umkm, id_batch, callback) {
         const query = `
             UPDATE pesanan ps
 JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
-JOIN produk p ON k.id_produk = p.id_produk
+JOIN Produk p ON k.id_produk = p.id_produk
 SET ps.status_pesanan = 'Pesanan Selesai'
 WHERE k.id_batch = ? 
   AND p.id_umkm = ?;
@@ -2108,7 +2108,7 @@ async function getinboxpesanan(callback) {
     FROM pesanan
     JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
     JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
-    JOIN produk ON keranjang.id_produk = produk.id_produk;
+    JOIN Produk ON keranjang.id_produk = Produk.id_produk;
 
 
         `,
