@@ -610,20 +610,19 @@ async function getulasans(callback) {
     }
 }
 
-async function addulasans(id_pembeli, id_produk, username, ulasanText, rating) {
+async function addulasans(data, callback) {
     try {
         const newUlasan = await Ulasan.create({
-            id_pembeli,
-            id_produk,
-            username,
-            ulasan: ulasanText,
-            rating
+            id_pembeli: data.id_pembeli,
+            id_produk: data.id_produk,
+            username: data.username,
+            ulasan: data.ulasan,
+            rating: data.rating
         });
 
-        console.log('Ulasan added successfully:', newUlasan.toJSON());
-        return newUlasan;
+        callback(null, newUlasan);
     } catch (error) {
-        console.error('Error adding ulasan:', error);
+        callback(error, null);
     }
 }
 
@@ -2291,6 +2290,7 @@ module.exports = {
     registUMKM,
     loginUMKM,
     getulasans,
+    addulasans,
     getulasansByProdukId,
     getulasansByIdUMKM,
     getOverallRating,

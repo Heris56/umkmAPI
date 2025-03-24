@@ -9,6 +9,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const Message = require("./models/message");
+const Ulasan = require("./models/ulasan");
 
 const app = express();
 const server = http.createServer(app);
@@ -446,6 +447,25 @@ app.get("/ulasans", (req, res) => {
         }
         res.status(200).json(result);
     });
+});
+
+app.post("/ulasans", async (req, res) => {
+    try {
+        const { id_pembeli, id_produk, username, ulasan, rating } = req.body;
+
+        const newUlasan = await Ulasan.create ({
+            id_pembeli,
+            id_produk,
+            username,
+            ulasan,
+            rating
+        });
+
+        res.status(200).json(newUlasan);
+    } catch (error) {
+        console.error("Error adding ulasan:", error);
+        res.status(500).send("Error adding ulasan");
+    }
 });
 
 app.get("/ulasans/:id_produk", (req, res) => {
