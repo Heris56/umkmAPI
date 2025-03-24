@@ -610,6 +610,23 @@ async function getulasans(callback) {
     }
 }
 
+async function addulasans(id_pembeli, id_produk, username, ulasanText, rating) {
+    try {
+        const newUlasan = await Ulasan.create({
+            id_pembeli,
+            id_produk,
+            username,
+            ulasan: ulasanText,
+            rating
+        });
+
+        console.log('Ulasan added successfully:', newUlasan.toJSON());
+        return newUlasan;
+    } catch (error) {
+        console.error('Error adding ulasan:', error);
+    }
+}
+
 async function getulasansByProdukId(id_produk, callback) {
     try {
         const result = await Ulasan.findAll({
