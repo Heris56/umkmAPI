@@ -878,6 +878,41 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
     }
 }
 
+async function getLatestMessageByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
+  try {
+    const result = await sequelize.query(
+      `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                umkm.username
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                umkm ON Chat.id_umkm = umkm.id_umkm
+            WHERE
+                pembeli.id_pembeli = :id_pembeli AND umkm.id_umkm = :id_umkm
+            ORDER BY
+                Chat.id_chat DESC
+            LIMIT 1;
+            `,
+      {
+        replacements: { id_pembeli, id_umkm },
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    callback(null, result.length > 0 ? result[0] : null);
+  } catch (error) {
+    callback(error, null);
+    console.error("Error executing raw query:", error);
+    throw new Error("Query execution failed");
+  }
+}
+
+
 
 // Fungsi untuk mendapatkan pesan berdasarkan ID Pembeli dan ID Kurir
 async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
@@ -912,6 +947,41 @@ async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
         throw new Error("Query execution failed");
     }
 }
+
+async function getLatestMessageByPembeliAndKurir(id_pembeli, id_kurir, callback) {
+  try {
+    const result = await sequelize.query(
+      `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                kurir.nama_kurir
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                pembeli.id_pembeli = :id_pembeli AND kurir.id_kurir = :id_kurir
+            ORDER BY
+                Chat.id_chat DESC
+            LIMIT 1;
+            `,
+      {
+        replacements: { id_pembeli, id_kurir },
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    callback(null, result.length > 0 ? result[0] : null);
+  } catch (error) {
+    callback(error, null);
+    console.error("Error executing raw query:", error);
+    throw new Error("Query execution failed");
+  }
+}
+
 
 // Get messages by sender and receiver Kurir
 async function getMessagesByKurir(id_kurir, callback) {
@@ -978,6 +1048,41 @@ async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
         throw new Error("Query execution failed");
     }
 }
+
+async function getLatestMessageByKurirAndPembeli(id_kurir, id_pembeli, callback) {
+  try {
+    const result = await sequelize.query(
+      `
+            SELECT
+                Chat.*,
+                pembeli.nama_lengkap,
+                kurir.nama_kurir
+            FROM
+                Chat
+            LEFT JOIN
+                pembeli ON Chat.id_pembeli = pembeli.id_pembeli
+            LEFT JOIN
+                kurir ON Chat.id_kurir = kurir.id_kurir
+            WHERE
+                kurir.id_kurir = :id_kurir AND pembeli.id_pembeli = :id_pembeli
+            ORDER BY
+                Chat.id_chat DESC
+            LIMIT 1;
+            `,
+      {
+        replacements: { id_kurir, id_pembeli },
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    callback(null, result.length > 0 ? result[0] : null);
+  } catch (error) {
+    callback(error, null);
+    console.error("Error executing raw query:", error);
+    throw new Error("Query execution failed");
+  }
+}
+
 
 // Send a message
 async function sendMessagePembeliKeUMKM(id_pembeli, id_umkm, data, callback) {
@@ -2300,6 +2405,9 @@ module.exports = {
     getMessagesByPembeliAndUMKM,
     getmessagesbyUMKMandPembeli,
     getLatestMessageByUMKMandPembeli,
+    getLatestMessageByPembeliAndUMKM,
+    getLatestMessageByPembeliAndKurir,
+    getLatestMessageByKurirAndPembeli,
     getMessagesByPembeliAndKurir,
     getMessagesByKurirAndPembeli,
     getMessagesByKurir,
