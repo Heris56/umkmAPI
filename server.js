@@ -10,6 +10,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const Message = require("./models/message");
 const Ulasan = require("./models/ulasan");
+const { error } = require("console");
 
 const app = express();
 const server = http.createServer(app);
@@ -239,6 +240,25 @@ app.delete("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
 })
 // end of bookmark
 
+// Start of Search
+
+app.get("/search", async (req, res) => {
+    try {
+        const searchquery = req.query.search || "";
+        const result = await dboperations.SearchProduct(searchquery);
+
+        if (result.error) {
+            return res.status(500).json({ error: result.error });
+        }
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// End of search
+
 // keranjang
 app.post("/keranjang", (req, res) => {
     const data = req.body;
@@ -453,7 +473,7 @@ app.post("/ulasans", async (req, res) => {
     try {
         const { id_pembeli, id_produk, username, ulasan, rating } = req.body;
 
-        const newUlasan = await Ulasan.create ({
+        const newUlasan = await Ulasan.create({
             id_pembeli,
             id_produk,
             username,
