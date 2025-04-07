@@ -11,7 +11,7 @@ const Keranjang = require("./models/keranjang");
 const Kurir = require("./models/kurir");
 const Campaign = require("./models/campaign");
 const Bookmark = require("./models/bookmark");
-const { QueryTypes, where } = require("sequelize");
+const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const path = require("path");
@@ -251,6 +251,26 @@ async function DeleteBookmark(id_pembeli, id_produk) {
     }
 }
 // end of Bookmark/wishlist - Haikal
+
+// Start of Search - Haikal
+
+async function SearchProduct(input) {
+    try {
+        const barang = await Produk.findAll({
+            where: {
+                nama_barang: {
+                    [Op.like]: `%${input}%`
+                }
+            }
+        })
+
+        return barang;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
+// End of search - Haikal
 
 // bagian keranjang
 async function addbatch(id_pembeli, id_batch, data) {
@@ -2385,6 +2405,7 @@ module.exports = {
     minQTY,
     CekKeranjang,
     updatestatuskeranjang,
+    SearchProduct,
     ViewAllBookmark,
     ViewBookmarkbyIDPembeli,
     addbookmark,
