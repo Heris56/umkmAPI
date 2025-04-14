@@ -9,6 +9,8 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const Message = require("./models/message");
+const Ulasan = require("./models/ulasan");
+const { error } = require("console");
 
 const app = express();
 const server = http.createServer(app);
@@ -222,10 +224,11 @@ app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
     }
 });
 
-app.delete("/bookmark/:id_bookmark", async (req, res) => {
-    const id_bookmark = req.params.id_bookmark;
+app.delete("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_produk = req.params.id_produk;
     try {
-        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
+        const deletedbookmark = await dboperations.DeleteBookmark(id_pembeli, id_produk);
         if (deletedbookmark.error) {
             return res.status(404).json(deletedbookmark);
         }
@@ -236,6 +239,25 @@ app.delete("/bookmark/:id_bookmark", async (req, res) => {
     }
 })
 // end of bookmark
+
+// Start of Search
+
+app.get("/search", async (req, res) => {
+    try {
+        const searchquery = req.query.search || "";
+        const result = await dboperations.SearchProduct(searchquery);
+
+        if (result.error) {
+            return res.status(500).json({ error: result.error });
+        }
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// End of search
 
 // keranjang
 app.post("/keranjang", (req, res) => {
@@ -501,6 +523,25 @@ app.get("/ulasans", (req, res) => {
     });
 });
 
+app.post("/ulasans", async (req, res) => {
+    try {
+        const { id_pembeli, id_produk, username, ulasan, rating } = req.body;
+
+        const newUlasan = await Ulasan.create({
+            id_pembeli,
+            id_produk,
+            username,
+            ulasan,
+            rating
+        });
+
+        res.status(200).json(newUlasan);
+    } catch (error) {
+        console.error("Error adding ulasan:", error);
+        res.status(500).send("Error adding ulasan");
+    }
+});
+
 app.get("/ulasans/:id_produk", (req, res) => {
     const id_produk = req.params.id_produk;
 
@@ -572,12 +613,11 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
             }
 
             if (!Array.isArray(result) || result.length === 0) {
-                return res.json([]); // Return an empty array if no messages exist
+                return res.json([]); 
             }
 
             res.json(result);
 
-            // Extract the last message
             const lastMessage = result[result.length - 1];
 
             console.log(
@@ -589,7 +629,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
                 id_pembeli: id_pembeli,
                 message: lastMessage.message,
                 sent_at: lastMessage.sent_at,
-                sender: lastMessage.username || lastMessage.nama_lengkap, // Include sender info (UMKM or Pembeli)
+                sender: lastMessage.username || lastMessage.nama_lengkap, 
             });
         }
     );
@@ -658,6 +698,27 @@ app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
     );
 });
 
+app.get("/getLatestMsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
+  const { id_pembeli, id_umkm } = req.params;
+
+  dboperations.getLatestMessageByPembeliAndUMKM(
+    id_pembeli,
+    id_umkm,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching latest message:", error);
+        return res.status(500).json({ error: "Error fetching latest message" });
+      }
+
+      if (!result) {
+        return res.json({ message: "No messages found" });
+      }
+
+      res.json(result);
+    }
+  );
+});
+
 app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
     const { id_pembeli, id_kurir } = req.params;
 
@@ -685,6 +746,27 @@ app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
             }
         }
     );
+});
+
+app.get("/getLatestMsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
+  const { id_pembeli, id_kurir } = req.params;
+
+  dboperations.getLatestMessageByPembeliAndKurir(
+    id_pembeli,
+    id_kurir,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching latest message:", error);
+        return res.status(500).json({ error: "Error fetching latest message" });
+      }
+
+      if (!result) {
+        return res.json({ message: "No messages found" });
+      }
+
+      res.json(result);
+    }
+  );
 });
 
 
@@ -729,6 +811,26 @@ app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
     );
 });
 
+app.get("/getLatestMsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
+  const { id_kurir, id_pembeli } = req.params;
+
+  dboperations.getLatestMessageByKurirAndPembeli(
+    id_kurir,
+    id_pembeli,
+    (error, result) => {
+      if (error) {
+        console.error("Error fetching latest message:", error);
+        return res.status(500).json({ error: "Error fetching latest message" });
+      }
+
+      if (!result) {
+        return res.json({ message: "No messages found" });
+      }
+
+      res.json(result);
+    }
+  );
+});
 
 
 app.post("/sendchat/umkmkepembeli/:id_umkm/:id_pembeli", (req, res) => {
