@@ -1061,6 +1061,30 @@ app.get("/riwayat", async (req, res) => {
 });
 
 //Server Dapa
+app.get("/getdaftarkurir/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.getdaftarkurir(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
+app.get("/getumkmkurir/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.getumkmkurir(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getpesananmasuk/:id", (req, res) => {
     const id = req.params.id;
 
@@ -1234,6 +1258,42 @@ app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirTerdaftar/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirTerdaftar(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir diterima:", error);
+            return res.status(500).send("error status kurir diterima");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirDitolak/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirDitolak(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir ditolak:", error);
+            return res.status(500).send("error status kurir ditolak");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirBelumTerdaftar/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirBelumTerdaftar(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir belum terdaftar:", error);
+            return res.status(500).send("error status kurir belum terdaftar");
         }
         res.status(200).json(result);
     });

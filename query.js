@@ -2149,6 +2149,120 @@ async function uploadFileToBlob(
     }
 }
 
+async function getdaftarkurir(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT * FROM kurir where status = 'Belum terdaftar' AND id_umkm = ?;
+        `,
+            {
+                replacements: [id_umkm],
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
+async function getumkmkurir(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT * FROM kurir where status = 'Terdaftar' AND id_umkm = ?;
+        `,
+            {
+                replacements: [id_umkm],
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
+async function updateStatusKurirTerdaftar(id_kurir, callback) {
+    try {
+        const query = `
+            UPDATE kurir kr
+SET kr.status = 'Terdaftar'
+WHERE kr.id_kurir = ? ;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_kurir],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
+async function updateStatusKurirBelumTerdaftar(id_kurir, callback) {
+    try {
+        const query = `
+            UPDATE kurir kr
+SET kr.status = 'Belum terdaftar'
+WHERE kr.id_kurir = ? ;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_kurir],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
+async function updateStatusKurirDitolak(id_kurir, callback) {
+    try {
+        const query = `
+            UPDATE kurir kr
+SET kr.status = 'Ditolak'
+WHERE kr.id_kurir = ? ;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_kurir],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error mengupdate status kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
+    }
+}
+
+
 // End Query Dapa
 
 //start query inbox pesanan
@@ -2243,7 +2357,6 @@ async function deleteCampaign(id, callback) {
         callback(error, null);
     }
 }
-
 //end query inbox pesanan
 
 module.exports = {
@@ -2341,5 +2454,10 @@ module.exports = {
     getallpesananaktifpembeli,
     getkeranjangbyidbatch,
     checkPembeliByEmail,
-    changePasswordPembeli
+    changePasswordPembeli,
+    getdaftarkurir,
+    updateStatusKurirTerdaftar,
+    updateStatusKurirBelumTerdaftar,
+    updateStatusKurirDitolak,
+    getumkmkurir,
 };
