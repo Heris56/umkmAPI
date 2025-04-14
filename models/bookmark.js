@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
-const Produk = require('./produk');
+const Produk = require('./Produk');
 const Pembeli = require('./pembeli');
 
 const Bookmark = sequelize.define('Bookmark', {

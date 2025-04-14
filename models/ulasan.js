@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db'); // Import instance Sequelize
-const Produk = require('./produk');
+const Produk = require('./Produk');
 const Pembeli = require('./pembeli');
 
 const Ulasan = sequelize.define('Ulasan', {
