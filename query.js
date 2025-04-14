@@ -1,6 +1,6 @@
 // query.js
 const connection = require("./db");
-const Produk = require("./models/produk");
+const Produk = require("./models/Produk");
 const UMKM = require("./models/umkm");
 const Ulasan = require("./models/ulasan");
 const Message = require("./models/message");
