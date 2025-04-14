@@ -1,6 +1,6 @@
 // query.js
 const connection = require("./db");
-const Produk = require("./models/Produk");
+const Produk = require("./models/produk");
 const UMKM = require("./models/umkm");
 const Ulasan = require("./models/ulasan");
 const Message = require("./models/message");
@@ -899,9 +899,9 @@ async function getMessagesByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
 }
 
 async function getLatestMessageByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -918,18 +918,18 @@ async function getLatestMessageByPembeliAndUMKM(id_pembeli, id_umkm, callback) {
                 Chat.id_chat DESC
             LIMIT 1;
             `,
-      {
-        replacements: { id_pembeli, id_umkm },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_pembeli, id_umkm },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result.length > 0 ? result[0] : null);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result.length > 0 ? result[0] : null);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 
@@ -969,9 +969,9 @@ async function getMessagesByPembeliAndKurir(id_pembeli, id_kurir, callback) {
 }
 
 async function getLatestMessageByPembeliAndKurir(id_pembeli, id_kurir, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -988,18 +988,18 @@ async function getLatestMessageByPembeliAndKurir(id_pembeli, id_kurir, callback)
                 Chat.id_chat DESC
             LIMIT 1;
             `,
-      {
-        replacements: { id_pembeli, id_kurir },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_pembeli, id_kurir },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result.length > 0 ? result[0] : null);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result.length > 0 ? result[0] : null);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 
@@ -1070,9 +1070,9 @@ async function getMessagesByKurirAndPembeli(id_kurir, id_pembeli, callback) {
 }
 
 async function getLatestMessageByKurirAndPembeli(id_kurir, id_pembeli, callback) {
-  try {
-    const result = await sequelize.query(
-      `
+    try {
+        const result = await sequelize.query(
+            `
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
@@ -1089,18 +1089,18 @@ async function getLatestMessageByKurirAndPembeli(id_kurir, id_pembeli, callback)
                 Chat.id_chat DESC
             LIMIT 1;
             `,
-      {
-        replacements: { id_kurir, id_pembeli },
-        type: QueryTypes.SELECT,
-      }
-    );
+            {
+                replacements: { id_kurir, id_pembeli },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-    callback(null, result.length > 0 ? result[0] : null);
-  } catch (error) {
-    callback(error, null);
-    console.error("Error executing raw query:", error);
-    throw new Error("Query execution failed");
-  }
+        callback(null, result.length > 0 ? result[0] : null);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
 }
 
 
