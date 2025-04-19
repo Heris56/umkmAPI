@@ -127,7 +127,7 @@ app.post('/uploadfile', upload.single('file'), async (req, res) => {
     }
 });
 
-app.get("/produk/:id", (req, res) => {
+app.get("/Produk/:id", (req, res) => {
     const id = req.params.id;
     dboperations.getprodukbyID(id, (error, result) => {
         if (error) {
@@ -137,11 +137,11 @@ app.get("/produk/:id", (req, res) => {
     });
 });
 
-app.get("/produk", (req, res) => {
+app.get("/Produk", (req, res) => {
     dboperations.getproduk((error, result) => {
         if (error) {
-            console.error("error get produk:", error);
-            return res.status(500).send("error fetch produk");
+            console.error("error get Produk:", error);
+            return res.status(500).send("error fetch Produk");
         }
         res.json(result);
     });
@@ -158,12 +158,12 @@ app.get("/produkumkm/:id", async (req, res) => {
     });
 });
 
-app.post("/produk", (req, res) => {
+app.post("/Produk", (req, res) => {
     const data = req.body;
     dboperations.addproduk(data, (error, result) => {
         if (error) {
-            console.error("error insert produk:", error);
-            return res.status(500).send("error nambah produk");
+            console.error("error insert Produk:", error);
+            return res.status(500).send("error nambah Produk");
         }
         res.status(200).json(result);
     });
@@ -174,8 +174,8 @@ app.put("/updateproduk/:id", (req, res) => {
     const data = req.body;
     dboperations.updateProduk(id, data, (error, result) => {
         if (error) {
-            console.error("error update produk:", error);
-            return res.status(500).send("gagal meng-update produk");
+            console.error("error update Produk:", error);
+            return res.status(500).send("gagal meng-update Produk");
         }
         res.status(200).json(result);
     });
@@ -195,8 +195,8 @@ app.get("/produkbytipe/tipe", async (req, res) => {
     // Call the updated function with the parameter
     dboperations.getProdukByType(tipe_barang, (error, result) => {
         if (error) {
-            console.error("Error getting produk:", error);
-            return res.status(500).send("Error fetching produk");
+            console.error("Error getting Produk:", error);
+            return res.status(500).send("Error fetching Produk");
         }
         res.json(result);
     });
@@ -435,6 +435,60 @@ app.get("/keranjang/:id", async (req, res) => {
 
 // end of keranjang
 
+// bookmark
+app.get("/bookmark/:id_pembeli", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    try {
+        const bookmark = await dboperations.ViewBookmarkbyIDPembeli(id_pembeli)
+        if (bookmark.error) {
+            return res.status(404).json(bookmark);
+        }
+
+        return res.status(200).json(bookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
+
+app.get("/bookmark", async (req, res) => {
+    try {
+        const bookmark = await dboperations.ViewAllBookmark();
+        return res.status(200).json(bookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+});
+
+app.post("/bookmark/:id_pembeli/:id_produk", async (req, res) => {
+    const id_pembeli = req.params.id_pembeli;
+    const id_produk = req.params.id_produk;
+    try {
+        const bookmark = await dboperations.addbookmark(id_pembeli, id_produk);
+        if (bookmark.error) {
+            return res.status(bookmark.status).json({ Message: bookmark.error });
+        }
+
+        res.status(201).json({ Message: "Berhasil menambahkan bookmark", data: bookmark.data })
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+});
+
+app.delete("/bookmark/:id_bookmark", async (req, res) => {
+    const id_bookmark = req.params.id_bookmark;
+    try {
+        const deletedbookmark = await dboperations.DeleteBookmark(id_bookmark);
+        if (deletedbookmark.error) {
+            return res.status(404).json(deletedbookmark);
+        }
+
+        return res.status(200).json(deletedbookmark);
+    } catch (error) {
+        res.status(500).json({ error: `${error.message}` })
+    }
+})
+// end of bookmark
+
 app.delete("/produk/:id", (req, res) => {
     const id = req.params.id;
 
@@ -589,6 +643,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
 
             if (!Array.isArray(result) || result.length === 0) {
                 return res.json([]);
+                return res.json([]);
             }
 
             res.json(result);
@@ -604,6 +659,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
                 id_pembeli: id_pembeli,
                 message: lastMessage.message,
                 sent_at: lastMessage.sent_at,
+                sender: lastMessage.username || lastMessage.nama_lengkap,
                 sender: lastMessage.username || lastMessage.nama_lengkap,
             });
         }
@@ -684,11 +740,25 @@ app.get("/getLatestMsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
+            dboperations.getLatestMessageByPembeliAndUMKM(
+                id_pembeli,
+                id_umkm,
+                (error, result) => {
+                    if (error) {
+                        console.error("Error fetching latest message:", error);
+                        return res.status(500).json({ error: "Error fetching latest message" });
+                    }
 
-            if (!result) {
-                return res.json({ message: "No messages found" });
-            }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
 
+                    res.json(result);
+                }
+            );
             res.json(result);
         }
     );
@@ -734,11 +804,25 @@ app.get("/getLatestMsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
+            dboperations.getLatestMessageByPembeliAndKurir(
+                id_pembeli,
+                id_kurir,
+                (error, result) => {
+                    if (error) {
+                        console.error("Error fetching latest message:", error);
+                        return res.status(500).json({ error: "Error fetching latest message" });
+                    }
 
-            if (!result) {
-                return res.json({ message: "No messages found" });
-            }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
 
+                    res.json(result);
+                }
+            );
             res.json(result);
         }
     );
@@ -797,11 +881,25 @@ app.get("/getLatestMsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
+            dboperations.getLatestMessageByKurirAndPembeli(
+                id_kurir,
+                id_pembeli,
+                (error, result) => {
+                    if (error) {
+                        console.error("Error fetching latest message:", error);
+                        return res.status(500).json({ error: "Error fetching latest message" });
+                    }
 
-            if (!result) {
-                return res.json({ message: "No messages found" });
-            }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
+                    if (!result) {
+                        return res.json({ message: "No messages found" });
+                    }
 
+                    res.json(result);
+                }
+            );
             res.json(result);
         }
     );
@@ -1138,6 +1236,30 @@ app.get("/riwayat", async (req, res) => {
 });
 
 //Server Dapa
+app.get("/getdaftarkurir/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.getdaftarkurir(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
+app.get("/getumkmkurir/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.getumkmkurir(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getpesananmasuk/:id", (req, res) => {
     const id = req.params.id;
 
@@ -1311,6 +1433,42 @@ app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirTerdaftar/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirTerdaftar(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir diterima:", error);
+            return res.status(500).send("error status kurir diterima");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirDitolak/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirDitolak(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir ditolak:", error);
+            return res.status(500).send("error status kurir ditolak");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirBelumTerdaftar/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirBelumTerdaftar(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir belum terdaftar:", error);
+            return res.status(500).send("error status kurir belum terdaftar");
         }
         res.status(200).json(result);
     });
