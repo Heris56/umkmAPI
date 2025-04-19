@@ -1,6 +1,8 @@
 // server.js
 const express = require("express");
 const dboperations = require("./query");
+const { v4: uuidv4 } = require('uuid');
+const R2upload = require("./R2Services")
 const Kurir = require("./models/kurir");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -96,6 +98,33 @@ const upload = multer({ storage });
 
 app.get("/", (req, res) => {
     res.json({ message: "hello world" });
+});
+
+app.post('/uploadfile', upload.single('file'), async (req, res) => {
+    try {
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ message: "Tidak ada file yang diupload" });
+        }
+
+        console.log('MIME Type:', file.mimetype);
+
+        const fileExtension = path.extname(file.originalname);
+        const oriName = file.originalname;
+        const uniqueFileName = `${uuidv4()}-${oriName}`
+
+        const bucketName = process.env.R2_BUCKETNAME;
+        const fileContent = file.buffer;
+        const mimetype = file.mimetype;
+
+        await R2upload.uploadfile(bucketName, uniqueFileName, fileContent, mimetype);
+
+        res.status(200).json({ message: "File Berhasil di Upload", fileName: uniqueFileName });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        res.status(500).json({ message: 'Gagal upload file' });
+    }
 });
 
 app.get("/produk/:id", (req, res) => {
@@ -559,7 +588,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
             }
 
             if (!Array.isArray(result) || result.length === 0) {
-                return res.json([]); 
+                return res.json([]);
             }
 
             res.json(result);
@@ -575,7 +604,7 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
                 id_pembeli: id_pembeli,
                 message: lastMessage.message,
                 sent_at: lastMessage.sent_at,
-                sender: lastMessage.username || lastMessage.nama_lengkap, 
+                sender: lastMessage.username || lastMessage.nama_lengkap,
             });
         }
     );
@@ -645,24 +674,24 @@ app.get("/getmsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
 });
 
 app.get("/getLatestMsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
-  const { id_pembeli, id_umkm } = req.params;
+    const { id_pembeli, id_umkm } = req.params;
 
-  dboperations.getLatestMessageByPembeliAndUMKM(
-    id_pembeli,
-    id_umkm,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching latest message:", error);
-        return res.status(500).json({ error: "Error fetching latest message" });
-      }
+    dboperations.getLatestMessageByPembeliAndUMKM(
+        id_pembeli,
+        id_umkm,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching latest message:", error);
+                return res.status(500).json({ error: "Error fetching latest message" });
+            }
 
-      if (!result) {
-        return res.json({ message: "No messages found" });
-      }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-      res.json(result);
-    }
-  );
+            res.json(result);
+        }
+    );
 });
 
 app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
@@ -695,24 +724,24 @@ app.get("/getmsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
 });
 
 app.get("/getLatestMsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
-  const { id_pembeli, id_kurir } = req.params;
+    const { id_pembeli, id_kurir } = req.params;
 
-  dboperations.getLatestMessageByPembeliAndKurir(
-    id_pembeli,
-    id_kurir,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching latest message:", error);
-        return res.status(500).json({ error: "Error fetching latest message" });
-      }
+    dboperations.getLatestMessageByPembeliAndKurir(
+        id_pembeli,
+        id_kurir,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching latest message:", error);
+                return res.status(500).json({ error: "Error fetching latest message" });
+            }
 
-      if (!result) {
-        return res.json({ message: "No messages found" });
-      }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-      res.json(result);
-    }
-  );
+            res.json(result);
+        }
+    );
 });
 
 
@@ -758,24 +787,24 @@ app.get("/getmsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
 });
 
 app.get("/getLatestMsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
-  const { id_kurir, id_pembeli } = req.params;
+    const { id_kurir, id_pembeli } = req.params;
 
-  dboperations.getLatestMessageByKurirAndPembeli(
-    id_kurir,
-    id_pembeli,
-    (error, result) => {
-      if (error) {
-        console.error("Error fetching latest message:", error);
-        return res.status(500).json({ error: "Error fetching latest message" });
-      }
+    dboperations.getLatestMessageByKurirAndPembeli(
+        id_kurir,
+        id_pembeli,
+        (error, result) => {
+            if (error) {
+                console.error("Error fetching latest message:", error);
+                return res.status(500).json({ error: "Error fetching latest message" });
+            }
 
-      if (!result) {
-        return res.json({ message: "No messages found" });
-      }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-      res.json(result);
-    }
-  );
+            res.json(result);
+        }
+    );
 });
 
 
