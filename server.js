@@ -643,7 +643,6 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
 
             if (!Array.isArray(result) || result.length === 0) {
                 return res.json([]);
-                return res.json([]);
             }
 
             res.json(result);
@@ -659,7 +658,6 @@ app.get("/getmsgUMKMPembeli/:id_umkm/:id_pembeli", async (req, res) => {
                 id_pembeli: id_pembeli,
                 message: lastMessage.message,
                 sent_at: lastMessage.sent_at,
-                sender: lastMessage.username || lastMessage.nama_lengkap,
                 sender: lastMessage.username || lastMessage.nama_lengkap,
             });
         }
@@ -740,25 +738,11 @@ app.get("/getLatestMsgPembeliUMKM/:id_pembeli/:id_umkm", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
-            dboperations.getLatestMessageByPembeliAndUMKM(
-                id_pembeli,
-                id_umkm,
-                (error, result) => {
-                    if (error) {
-                        console.error("Error fetching latest message:", error);
-                        return res.status(500).json({ error: "Error fetching latest message" });
-                    }
 
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-                    res.json(result);
-                }
-            );
             res.json(result);
         }
     );
@@ -804,25 +788,11 @@ app.get("/getLatestMsgPembeliKurir/:id_pembeli/:id_kurir", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
-            dboperations.getLatestMessageByPembeliAndKurir(
-                id_pembeli,
-                id_kurir,
-                (error, result) => {
-                    if (error) {
-                        console.error("Error fetching latest message:", error);
-                        return res.status(500).json({ error: "Error fetching latest message" });
-                    }
 
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-                    res.json(result);
-                }
-            );
             res.json(result);
         }
     );
@@ -881,25 +851,11 @@ app.get("/getLatestMsgKurirPembeli/:id_kurir/:id_pembeli", async (req, res) => {
                 console.error("Error fetching latest message:", error);
                 return res.status(500).json({ error: "Error fetching latest message" });
             }
-            dboperations.getLatestMessageByKurirAndPembeli(
-                id_kurir,
-                id_pembeli,
-                (error, result) => {
-                    if (error) {
-                        console.error("Error fetching latest message:", error);
-                        return res.status(500).json({ error: "Error fetching latest message" });
-                    }
 
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
-                    if (!result) {
-                        return res.json({ message: "No messages found" });
-                    }
+            if (!result) {
+                return res.json({ message: "No messages found" });
+            }
 
-                    res.json(result);
-                }
-            );
             res.json(result);
         }
     );
