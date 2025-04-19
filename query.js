@@ -13,16 +13,10 @@ const Campaign = require("./models/campaign");
 const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
-const { BlobServiceClient } = require("@azure/storage-blob");
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
 require("dotenv").config();
-const AZURE_STORAGE_CONNECTION_STRING =
-    process.env.AZURE_STORAGE_CONNECTION_STRING;
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-    AZURE_STORAGE_CONNECTION_STRING
-);
 
 // Produk - Haikal
 async function getproduk(callback) {
