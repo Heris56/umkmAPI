@@ -1154,31 +1154,73 @@ app.post("/checkkurir", (req, res) => {
     });
 });
 
-
-app.get("/monthly-stats/:umkmId", async (req, res) => {
+app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
-    try {
-        const stats = await dboperations.getMonthlyStatsByUMKM(umkmId);
-        res.json(stats);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    const { month, year } = req.query;
+    
+    // Validate inputs
+    if (!month || !year || isNaN(month) || isNaN(year)) {
+        return res.status(400).json({ 
+            error: 'Invalid parameters',
+            message: 'Month and year must be valid numbers'
+        });
     }
-});
-
-app.get("/daily-stats/:umkmId", async (req, res) => {
-    const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
 
     try {
         const dailyStats = await dboperations.getDailyStatsByUMKM(
-            umkmId,
-            month,
-            year
-        ); // Use the imported function
+            parseInt(umkmId), 
+            parseInt(month), 
+            parseInt(year)
+        );
+        
         res.json(dailyStats);
     } catch (error) {
-        console.error("Error fetching daily stats:", error);
-        res.status(500).send("Internal Server Error");
+        console.error('Error fetching daily stats:', error);
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            details: error.message 
+        });
+    }
+});
+
+app.get('/monthly-stats/:umkmId', async (req, res) => {
+    const { umkmId } = req.params;
+    const { year } = req.query;
+    
+    // Validate input
+    const selectedYear = parseInt(year) || new Date().getFullYear();
+    if (isNaN(selectedYear)) {
+        return res.status(400).json({ 
+            error: 'Invalid parameter',
+            message: 'Year must be a valid number'
+        });
+    }
+
+    try {
+        const monthlyStats = await dboperations.getMonthlyStatsByUMKM(
+            parseInt(umkmId), 
+            selectedYear
+        );
+        
+        // Ensure all months are represented (fill empty months)
+        const completeStats = Array.from({ length: 12 }, (_, i) => {
+            const monthData = monthlyStats.find(m => m.month === i+1);
+            return monthData || {
+                month: i+1,
+                year: selectedYear,
+                total_sales: 0,
+                total_orders: 0,
+                products: []
+            };
+        });
+        
+        res.json(completeStats);
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            details: error.message 
+        });
     }
 });
 
@@ -1192,6 +1234,19 @@ app.get("/riwayat", async (req, res) => {
 });
 
 //Server Dapa
+
+app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.gethistorykurirumkm(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getdaftarkurir/:id_umkm", (req, res) => {
     const id = req.params.id_umkm;
 
@@ -1354,6 +1409,7 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
         res.json(result);
     });
 });
+
 app.get("/getkeranjangbyidbatch/:id_pembeli/:id_batch", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
     const id_batch = req.params.id_batch;
@@ -1389,6 +1445,18 @@ app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirDipecat/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirDipecat(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir diterima:", error);
+            return res.status(500).send("error status kurir diterima");
         }
         res.status(200).json(result);
     });

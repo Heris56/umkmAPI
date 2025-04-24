@@ -1546,78 +1546,109 @@ async function checkKurir(email, callback) {
     }
 }
 
+async function getMonthlyStatsByUMKM(umkmId, year) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT 
+                MONTH(r.tanggal) AS month,
+                YEAR(r.tanggal) AS year,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders,
+                GROUP_CONCAT(
+                    DISTINCT JSON_OBJECT(
+                        'id_produk', p.id_produk,
+                        'Nama_Barang', p.Nama_Barang,
+                        'Harga', p.Harga,
+                        'quantity', k.kuantitas,
+                        'total_sales', p.Harga * k.kuantitas
+                    )
+                ) AS products
+            FROM 
+                riwayat r
+            JOIN 
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN 
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE 
+                p.ID_UMKM = :umkmId
+                AND YEAR(r.tanggal) = :year
+            GROUP BY 
+                MONTH(r.tanggal),
+                YEAR(r.tanggal)
+            ORDER BY 
+                year, month;
+            `,
+            {
+                replacements: { umkmId, year },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        return result.map(item => ({
+            month: parseInt(item.month),
+            year: parseInt(item.year),
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0),
+            products: item.products ? JSON.parse(`[${item.products}]`) : []
+        }));
+    } catch (error) {
+        console.error("Error fetching monthly stats:", error);
+        throw error;
+    }
+}
 
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
             `
-        SELECT
-            r.tanggal AS tanggal,
-            SUM(k.kuantitas * prod.Harga) AS total_sales,
-            COUNT(DISTINCT pes.id_pesanan) AS total_orders
-        FROM
-            riwayat r
-        JOIN
-            pesanan pes ON r.id_pesanan = pes.id_pesanan
-        JOIN
-            keranjang k ON pes.id_keranjang = k.id_keranjang
-        JOIN
-            Produk prod ON k.id_produk = prod.id_produk
-        WHERE
-            prod.ID_UMKM = :umkmId
-            AND MONTH(r.tanggal) = :month
-            AND YEAR(r.tanggal) = :year
-        GROUP BY
-            r.tanggal
-        ORDER BY
-            r.tanggal;
-        `,
+            SELECT
+                r.tanggal AS tanggal,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders,
+                GROUP_CONCAT(
+                    DISTINCT JSON_OBJECT(
+                        'id_produk', p.id_produk,
+                        'Nama_Barang', p.Nama_Barang,
+                        'Harga', p.Harga,
+                        'quantity', k.kuantitas,
+                        'total_sales', p.Harga * k.kuantitas
+                    )
+                ) AS products
+            FROM
+                riwayat r
+            JOIN
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE
+                p.ID_UMKM = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY
+                r.tanggal
+            ORDER BY
+                r.tanggal;
+            `,
             {
                 replacements: { umkmId, month, year },
                 type: QueryTypes.SELECT,
             }
         );
 
-        return result;
+        return result.map(item => ({
+            tanggal: item.tanggal,
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0),
+            products: item.products ? JSON.parse(`[${item.products}]`) : []
+        }));
     } catch (error) {
         console.error("Error fetching daily stats:", error);
-        throw new Error("Error fetching daily stats: " + error.message);
-    }
-}
-
-async function getMonthlyStatsByUMKM(umkmId) {
-    try {
-        const result = await sequelize.query(
-            `
-    SELECT 
-        MONTH(r.tanggal) AS month,
-        SUM(k.kuantitas * p.Harga) AS total_sales,
-        COUNT(DISTINCT ps.id_pesanan) AS total_orders
-    FROM 
-        riwayat r
-    JOIN 
-        pesanan ps ON r.id_pesanan = ps.id_pesanan
-    JOIN 
-        keranjang k ON ps.id_keranjang = k.id_keranjang
-    JOIN 
-        Produk p ON k.id_produk = p.id_produk
-    WHERE 
-        p.ID_UMKM = :umkmId
-    GROUP BY 
-        MONTH(r.tanggal)
-    ORDER BY 
-        month;
-        `,
-            {
-                replacements: { umkmId },
-                type: QueryTypes.SELECT,
-            }
-        );
-
-        return result;
-    } catch (error) {
-        console.error("Error fetching monthly stats:", error);
-        throw new Error("Error fetching monthly stats: " + error.message);
+        throw error;
     }
 }
 
@@ -2322,6 +2353,28 @@ async function getumkmkurir(id_umkm, callback) {
     }
 }
 
+async function gethistorykurirumkm(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT k.nama_kurir, k.email, k.nomor_telepon
+FROM history_kurir hk
+JOIN kurir k ON hk.id_kurir = k.id_kurir
+WHERE hk.id_umkm = ?;
+        `,
+            {
+                replacements: [id_umkm],
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
 async function updateStatusKurirTerdaftar(id_kurir, callback) {
     try {
         const query = `
@@ -2377,6 +2430,31 @@ async function updateStatusKurirDitolak(id_kurir, callback) {
         const query = `
             UPDATE kurir kr
 SET kr.status = 'Ditolak'
+WHERE kr.id_kurir = ? ;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_kurir],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error mengupdate status kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
+    }
+}
+
+async function updateStatusKurirDipecat(id_kurir, callback) {
+    try {
+        const query = `
+            UPDATE kurir kr
+SET kr.status = 'Dipecat'
 WHERE kr.id_kurir = ? ;
         `;
 
@@ -2558,8 +2636,8 @@ module.exports = {
     addKurir,
     updateKurir,
     deleteKurir,
-    getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
+    getDailyStatsByUMKM,
     getRiwayat,
     getProdukByType,
     addpesanan,
@@ -2599,5 +2677,7 @@ module.exports = {
     updateStatusKurirTerdaftar,
     updateStatusKurirBelumTerdaftar,
     updateStatusKurirDitolak,
+    updateStatusKurirDipecat,
     getumkmkurir,
+    gethistorykurirumkm,
 };
