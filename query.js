@@ -79,7 +79,7 @@ async function updateProduk(id, data, callback) {
             throw new Error("Produk tidak ditemukan");
         }
 
-        const updatedProduk = await Produk.update(data);
+        const updatedProduk = await produk.update(data);
 
         callback(null, updatedProduk);
     } catch (error) {
