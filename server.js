@@ -1154,33 +1154,72 @@ app.post("/checkkurir", (req, res) => {
     });
 });
 
-
 app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
+    const { month, year } = req.query;
+    
+    // Validate inputs
+    if (!month || !year || isNaN(month) || isNaN(year)) {
+        return res.status(400).json({ 
+            error: 'Invalid parameters',
+            message: 'Month and year must be valid numbers'
+        });
+    }
+
     try {
-        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year);
+        const dailyStats = await dboperations.getDailyStatsByUMKM(
+            parseInt(umkmId), 
+            parseInt(month), 
+            parseInt(year)
+        );
+        
         res.json(dailyStats);
     } catch (error) {
         console.error('Error fetching daily stats:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            details: error.message 
+        });
     }
 });
 
-//yearlystats
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     const { year } = req.query;
     
+    // Validate input
+    const selectedYear = parseInt(year) || new Date().getFullYear();
+    if (isNaN(selectedYear)) {
+        return res.status(400).json({ 
+            error: 'Invalid parameter',
+            message: 'Year must be a valid number'
+        });
+    }
+
     try {
-        const selectedYear = year || new Date().getFullYear();
-        const monthlyStats = await dboperations.getMonthlyStatsByUMKM(umkmId, selectedYear);
-        res.json(monthlyStats);
+        const monthlyStats = await dboperations.getMonthlyStatsByUMKM(
+            parseInt(umkmId), 
+            selectedYear
+        );
+        
+        // Ensure all months are represented (fill empty months)
+        const completeStats = Array.from({ length: 12 }, (_, i) => {
+            const monthData = monthlyStats.find(m => m.month === i+1);
+            return monthData || {
+                month: i+1,
+                year: selectedYear,
+                total_sales: 0,
+                total_orders: 0,
+                products: []
+            };
+        });
+        
+        res.json(completeStats);
     } catch (error) {
         console.error('Error fetching monthly stats:', error);
         res.status(500).json({ 
             error: 'Internal Server Error',
-            message: error.message 
+            details: error.message 
         });
     }
 });

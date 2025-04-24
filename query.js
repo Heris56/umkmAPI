@@ -1546,49 +1546,6 @@ async function checkKurir(email, callback) {
     }
 }
 
-
-async function getDailyStatsByUMKM(umkmId, month, year) {
-    try {
-        const result = await sequelize.query(
-            `
-            SELECT
-                r.tanggal AS tanggal,
-                SUM(p.Harga * k.kuantitas) AS total_sales,
-                COUNT(DISTINCT pes.id_pesanan) AS total_orders
-            FROM
-                riwayat r
-            JOIN
-                pesanan pes ON r.id_pesanan = pes.id_pesanan
-            JOIN
-                keranjang k ON pes.id_keranjang = k.id_keranjang
-            JOIN
-                Produk p ON k.id_produk = p.id_produk
-            WHERE
-                p.ID_UMKM = :umkmId
-                AND MONTH(r.tanggal) = :month
-                AND YEAR(r.tanggal) = :year
-            GROUP BY
-                r.tanggal
-            ORDER BY
-                r.tanggal;
-            `,
-            {
-                replacements: { umkmId, month, year },
-                type: QueryTypes.SELECT,
-            }
-        );
-
-        return result.map(item => ({
-            tanggal: item.tanggal,
-            total_sales: parseFloat(item.total_sales || 0),
-            total_orders: parseInt(item.total_orders || 0)
-        }));
-    } catch (error) {
-        console.error("Error fetching daily stats:", error);
-        throw new Error("Error fetching daily stats: " + error.message);
-    }
-}
-
 async function getMonthlyStatsByUMKM(umkmId, year) {
     try {
         const result = await sequelize.query(
@@ -1597,7 +1554,16 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
                 MONTH(r.tanggal) AS month,
                 YEAR(r.tanggal) AS year,
                 SUM(p.Harga * k.kuantitas) AS total_sales,
-                COUNT(DISTINCT pes.id_pesanan) AS total_orders
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders,
+                GROUP_CONCAT(
+                    DISTINCT JSON_OBJECT(
+                        'id_produk', p.id_produk,
+                        'Nama_Barang', p.Nama_Barang,
+                        'Harga', p.Harga,
+                        'quantity', k.kuantitas,
+                        'total_sales', p.Harga * k.kuantitas
+                    )
+                ) AS products
             FROM 
                 riwayat r
             JOIN 
@@ -1625,11 +1591,64 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
             month: parseInt(item.month),
             year: parseInt(item.year),
             total_sales: parseFloat(item.total_sales || 0),
-            total_orders: parseInt(item.total_orders || 0)
+            total_orders: parseInt(item.total_orders || 0),
+            products: item.products ? JSON.parse(`[${item.products}]`) : []
         }));
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
-        throw new Error("Error fetching monthly stats: " + error.message);
+        throw error;
+    }
+}
+
+async function getDailyStatsByUMKM(umkmId, month, year) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                r.tanggal AS tanggal,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders,
+                GROUP_CONCAT(
+                    DISTINCT JSON_OBJECT(
+                        'id_produk', p.id_produk,
+                        'Nama_Barang', p.Nama_Barang,
+                        'Harga', p.Harga,
+                        'quantity', k.kuantitas,
+                        'total_sales', p.Harga * k.kuantitas
+                    )
+                ) AS products
+            FROM
+                riwayat r
+            JOIN
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE
+                p.ID_UMKM = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY
+                r.tanggal
+            ORDER BY
+                r.tanggal;
+            `,
+            {
+                replacements: { umkmId, month, year },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        return result.map(item => ({
+            tanggal: item.tanggal,
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0),
+            products: item.products ? JSON.parse(`[${item.products}]`) : []
+        }));
+    } catch (error) {
+        console.error("Error fetching daily stats:", error);
+        throw error;
     }
 }
 
