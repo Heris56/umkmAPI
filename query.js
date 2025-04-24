@@ -209,12 +209,12 @@ async function addbookmark(id_pembeli, id_produk) {
             return { error: 'tidak ditemukan id Produk', status: 400 }
         }
         pembeli = await Pembeli.findOne({ where: { id_pembeli } });
-        Produk = await Produk.findOne({ where: { id_produk } });
+        produk = await Produk.findOne({ where: { id_produk } });
 
         if (!pembeli) {
             return { error: 'pembeli tidak ditemukan', status: 404 }
         }
-        if (!Produk) {
+        if (!produk) {
             return { error: 'Produk tidak ditemukan', status: 404 }
         }
 
