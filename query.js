@@ -99,7 +99,7 @@ async function deleteproduk(id, callback) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
 
-        await Produk.destroy();
+        await produk.destroy();
         callback(null, { Message: `Produk dengan id ${id} berhasil dihapus` });
     } catch (error) {
         callback(error, null);
