@@ -34,12 +34,12 @@ async function getprodukbyID(id, callback) {
             throw new error("id tidak boleh kosong");
         }
 
-        const Produk = await Produk.findByPk(id);
+        const produk = await Produk.findByPk(id);
 
-        if (!Produk) {
+        if (!produk) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
-        callback(null, Produk);
+        callback(null, produk);
     } catch (error) {
         callback(error, null);
     }
@@ -73,9 +73,9 @@ async function updateProduk(id, data, callback) {
             throw new Error("id tidak boleh kosong");
         }
 
-        const Produk = await Produk.findByPk(id);
+        const produk = await Produk.findByPk(id);
 
-        if (!Produk) {
+        if (!produk) {
             throw new Error("Produk tidak ditemukan");
         }
 
@@ -93,9 +93,9 @@ async function deleteproduk(id, callback) {
             throw new error("id tidak boleh kosong");
         }
 
-        const Produk = await Produk.findByPk(id);
+        const produk = await Produk.findByPk(id);
 
-        if (!Produk) {
+        if (!produk) {
             throw new Error(`Produk dengan ID ${id} tidak ditemukan`);
         }
 
