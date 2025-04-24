@@ -1192,6 +1192,19 @@ app.get("/riwayat", async (req, res) => {
 });
 
 //Server Dapa
+
+app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
+    const id = req.params.id_umkm;
+
+    dboperations.gethistorykurirumkm(id, (error, result) => {
+        if (error) {
+            console.error("error get data kurir:", error);
+            return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getdaftarkurir/:id_umkm", (req, res) => {
     const id = req.params.id_umkm;
 
@@ -1354,6 +1367,7 @@ app.get("/getdatadashboardcampaignpalingbaru/:id", (req, res) => {
         res.json(result);
     });
 });
+
 app.get("/getkeranjangbyidbatch/:id_pembeli/:id_batch", (req, res) => {
     const id_pembeli = req.params.id_pembeli;
     const id_batch = req.params.id_batch;
@@ -1389,6 +1403,18 @@ app.post("/addpesanan/:id_keranjang/:total_belanja/:id_pembeli", (req, res) => {
         if (error) {
             console.error("error insert pesanan:", error);
             return res.status(500).send("error nambah pesanan");
+        }
+        res.status(200).json(result);
+    });
+});
+
+app.put("/updateStatusKurirDipecat/:id_kurir", (req, res) => {
+    const id_kurir = req.params.id_kurir;
+
+    dboperations.updateStatusKurirDipecat(id_kurir, (error, result) => {
+        if (error) {
+            console.error("error update status kurir diterima:", error);
+            return res.status(500).send("error status kurir diterima");
         }
         res.status(200).json(result);
     });

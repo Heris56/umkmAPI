@@ -2322,6 +2322,28 @@ async function getumkmkurir(id_umkm, callback) {
     }
 }
 
+async function gethistorykurirumkm(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT k.nama_kurir, k.email, k.nomor_telepon
+FROM history_kurir hk
+JOIN kurir k ON hk.id_kurir = k.id_kurir
+WHERE hk.id_umkm = ?;
+        `,
+            {
+                replacements: [id_umkm],
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error Mengambil Data Kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
+    }
+}
+
 async function updateStatusKurirTerdaftar(id_kurir, callback) {
     try {
         const query = `
@@ -2377,6 +2399,31 @@ async function updateStatusKurirDitolak(id_kurir, callback) {
         const query = `
             UPDATE kurir kr
 SET kr.status = 'Ditolak'
+WHERE kr.id_kurir = ? ;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_kurir],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        console.error("Error mengupdate status kurir", error);
+        return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
+    }
+}
+
+async function updateStatusKurirDipecat(id_kurir, callback) {
+    try {
+        const query = `
+            UPDATE kurir kr
+SET kr.status = 'Dipecat'
 WHERE kr.id_kurir = ? ;
         `;
 
@@ -2599,5 +2646,7 @@ module.exports = {
     updateStatusKurirTerdaftar,
     updateStatusKurirBelumTerdaftar,
     updateStatusKurirDitolak,
+    updateStatusKurirDipecat,
     getumkmkurir,
+    gethistorykurirumkm,
 };
