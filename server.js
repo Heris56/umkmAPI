@@ -1155,30 +1155,33 @@ app.post("/checkkurir", (req, res) => {
 });
 
 
-app.get("/monthly-stats/:umkmId", async (req, res) => {
+app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
+    const { month, year } = req.query; // Get month and year from query parameters
     try {
-        const stats = await dboperations.getMonthlyStatsByUMKM(umkmId);
-        res.json(stats);
+        const dailyStats = await dboperations.getDailyStatsByUMKM(umkmId, month, year);
+        res.json(dailyStats);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching daily stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-app.get("/daily-stats/:umkmId", async (req, res) => {
+//yearlystats
+app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
-    const { month, year } = req.query; // Get month and year from query parameters
-
+    const { year } = req.query;
+    
     try {
-        const dailyStats = await dboperations.getDailyStatsByUMKM(
-            umkmId,
-            month,
-            year
-        ); // Use the imported function
-        res.json(dailyStats);
+        const selectedYear = year || new Date().getFullYear();
+        const monthlyStats = await dboperations.getMonthlyStatsByUMKM(umkmId, selectedYear);
+        res.json(monthlyStats);
     } catch (error) {
-        console.error("Error fetching daily stats:", error);
-        res.status(500).send("Internal Server Error");
+        console.error('Error fetching monthly stats:', error);
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            message: error.message 
+        });
     }
 });
 
