@@ -1551,36 +1551,32 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
             `
-        SELECT
-            r.tanggal AS tanggal,
-            SUM(k.total) AS total_sales,
-            COUNT(DISTINCT pes.id_pesanan) AS total_orders
-        FROM
-            riwayat r
-        JOIN
-            pesanan pes ON r.id_pesanan = pes.id_pesanan
-        JOIN
-            keranjang k ON pes.id_keranjang = k.id_keranjang
-        JOIN
-            Produk p ON k.id_produk = p.id_produk
-        WHERE
-            p.ID_UMKM = :umkmId
-            AND MONTH(r.tanggal) = :month
-            AND YEAR(r.tanggal) = :year
-        GROUP BY
-            r.tanggal
-        ORDER BY
-            r.tanggal;
-        `,
+            SELECT
+                r.tanggal AS tanggal,
+                SUM(k.total) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders
+            FROM
+                riwayat r
+            JOIN
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE
+                p.ID_UMKM = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY
+                r.tanggal
+            ORDER BY
+                r.tanggal;
+            `,
             {
                 replacements: { umkmId, month, year },
                 type: QueryTypes.SELECT,
             }
         );
-
-        if (!result || result.length === 0) {
-            return [];
-        }
 
         return result.map(item => ({
             tanggal: item.tanggal,
@@ -1594,26 +1590,21 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
 }
 
 async function getMonthlyStatsByUMKM(umkmId, year) {
-    // Validate inputs
-    if (!umkmId || !year || isNaN(year) || year.toString().length !== 4) {
-        throw new Error('Invalid parameters: umkmId and valid year are required');
-    }
-
     try {
         const result = await sequelize.query(
             `
             SELECT 
                 MONTH(r.tanggal) AS month,
                 YEAR(r.tanggal) AS year,
-                COALESCE(SUM(k.total), 0) AS total_sales,
-                COALESCE(COUNT(DISTINCT pes.id_pesanan), 0) AS total_orders
+                SUM(k.total) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders
             FROM 
                 riwayat r
-            INNER JOIN 
+            JOIN 
                 pesanan pes ON r.id_pesanan = pes.id_pesanan
-            INNER JOIN 
+            JOIN 
                 keranjang k ON pes.id_keranjang = k.id_keranjang
-            INNER JOIN
+            JOIN
                 Produk p ON k.id_produk = p.id_produk
             WHERE 
                 p.ID_UMKM = :umkmId
@@ -1630,25 +1621,15 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
             }
         );
 
-        // If no results, return an array with all months with zero values
-        if (!result || result.length === 0) {
-            return Array.from({ length: 12 }, (_, i) => ({
-                month: i + 1,
-                year: parseInt(year),
-                total_sales: 0,
-                total_orders: 0
-            }));
-        }
-
         return result.map(item => ({
             month: parseInt(item.month),
             year: parseInt(item.year),
-            total_sales: parseFloat(item.total_sales),
-            total_orders: parseInt(item.total_orders)
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0)
         }));
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
-        throw new Error(`Failed to retrieve monthly stats for UMKM ${umkmId}: ${error.message}`);
+        throw new Error("Error fetching monthly stats: " + error.message);
     }
 }
 
