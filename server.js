@@ -127,7 +127,7 @@ app.post('/uploadfile', upload.single('file'), async (req, res) => {
     }
 });
 
-app.get("/Produk/:id", (req, res) => {
+app.get("/produk/:id", (req, res) => {
     const id = req.params.id;
     dboperations.getprodukbyID(id, (error, result) => {
         if (error) {
@@ -137,7 +137,7 @@ app.get("/Produk/:id", (req, res) => {
     });
 });
 
-app.get("/Produk", (req, res) => {
+app.get("/produk", (req, res) => {
     dboperations.getproduk((error, result) => {
         if (error) {
             console.error("error get Produk:", error);
@@ -1157,10 +1157,10 @@ app.post("/checkkurir", (req, res) => {
 app.get('/daily-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     const { month, year } = req.query;
-    
+
     // Validate inputs
     if (!month || !year || isNaN(month) || isNaN(year)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             error: 'Invalid parameters',
             message: 'Month and year must be valid numbers'
         });
@@ -1168,17 +1168,17 @@ app.get('/daily-stats/:umkmId', async (req, res) => {
 
     try {
         const dailyStats = await dboperations.getDailyStatsByUMKM(
-            parseInt(umkmId), 
-            parseInt(month), 
+            parseInt(umkmId),
+            parseInt(month),
             parseInt(year)
         );
-        
+
         res.json(dailyStats);
     } catch (error) {
         console.error('Error fetching daily stats:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal Server Error',
-            details: error.message 
+            details: error.message
         });
     }
 });
@@ -1186,11 +1186,11 @@ app.get('/daily-stats/:umkmId', async (req, res) => {
 app.get('/monthly-stats/:umkmId', async (req, res) => {
     const { umkmId } = req.params;
     const { year } = req.query;
-    
+
     // Validate input
     const selectedYear = parseInt(year) || new Date().getFullYear();
     if (isNaN(selectedYear)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             error: 'Invalid parameter',
             message: 'Year must be a valid number'
         });
@@ -1198,28 +1198,28 @@ app.get('/monthly-stats/:umkmId', async (req, res) => {
 
     try {
         const monthlyStats = await dboperations.getMonthlyStatsByUMKM(
-            parseInt(umkmId), 
+            parseInt(umkmId),
             selectedYear
         );
-        
+
         // Ensure all months are represented (fill empty months)
         const completeStats = Array.from({ length: 12 }, (_, i) => {
-            const monthData = monthlyStats.find(m => m.month === i+1);
+            const monthData = monthlyStats.find(m => m.month === i + 1);
             return monthData || {
-                month: i+1,
+                month: i + 1,
                 year: selectedYear,
                 total_sales: 0,
                 total_orders: 0,
                 products: []
             };
         });
-        
+
         res.json(completeStats);
     } catch (error) {
         console.error('Error fetching monthly stats:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal Server Error',
-            details: error.message 
+            details: error.message
         });
     }
 });
