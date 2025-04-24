@@ -346,7 +346,7 @@ async function searchproductonKeranjang(id_pembeli, id_produk, id_batch) {
             }
         )
 
-        const Produk = Produk.findByPk(id_produk);
+        const produk = Produk.findByPk(id_produk);
 
 
         if (produkkeranjang) {
@@ -446,9 +446,9 @@ async function plusQTY(id_keranjang) {
             throw new Error('keranjang tidak ditemukan')
         }
 
-        var Produk = await Produk.findByPk(keranjang.id_produk);
+        var produk = await Produk.findByPk(keranjang.id_produk);
 
-        if (keranjang.kuantitas < Produk.stok) {
+        if (keranjang.kuantitas < produk.stok) {
             keranjang.kuantitas += 1;
 
             await keranjang.save();
@@ -523,13 +523,13 @@ async function CekKeranjang(id_pembeli, id_produk) {
             return { same: true }
         }
 
-        const Produk = await Produk.findByPk(id_produk);
+        const produk = await Produk.findByPk(id_produk);
 
-        if (!Produk) {
+        if (!produk) {
             return { same: true }
         }
 
-        if (Produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
+        if (produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
             return { same: true }
         } else {
             return { same: false }
