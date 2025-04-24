@@ -1551,70 +1551,82 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
             `
-        SELECT
-            r.tanggal AS tanggal,
-            SUM(k.kuantitas * prod.Harga) AS total_sales,
-            COUNT(DISTINCT pes.id_pesanan) AS total_orders
-        FROM
-            riwayat r
-        JOIN
-            pesanan pes ON r.id_pesanan = pes.id_pesanan
-        JOIN
-            keranjang k ON pes.id_keranjang = k.id_keranjang
-        JOIN
-            Produk prod ON k.id_produk = prod.id_produk
-        WHERE
-            prod.ID_UMKM = :umkmId
-            AND MONTH(r.tanggal) = :month
-            AND YEAR(r.tanggal) = :year
-        GROUP BY
-            r.tanggal
-        ORDER BY
-            r.tanggal;
-        `,
+            SELECT
+                r.tanggal AS tanggal,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders
+            FROM
+                riwayat r
+            JOIN
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE
+                p.ID_UMKM = :umkmId
+                AND MONTH(r.tanggal) = :month
+                AND YEAR(r.tanggal) = :year
+            GROUP BY
+                r.tanggal
+            ORDER BY
+                r.tanggal;
+            `,
             {
                 replacements: { umkmId, month, year },
                 type: QueryTypes.SELECT,
             }
         );
 
-        return result;
+        return result.map(item => ({
+            tanggal: item.tanggal,
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0)
+        }));
     } catch (error) {
         console.error("Error fetching daily stats:", error);
         throw new Error("Error fetching daily stats: " + error.message);
     }
 }
 
-async function getMonthlyStatsByUMKM(umkmId) {
+async function getMonthlyStatsByUMKM(umkmId, year) {
     try {
         const result = await sequelize.query(
             `
-    SELECT 
-        MONTH(r.tanggal) AS month,
-        SUM(k.kuantitas * p.Harga) AS total_sales,
-        COUNT(DISTINCT ps.id_pesanan) AS total_orders
-    FROM 
-        riwayat r
-    JOIN 
-        pesanan ps ON r.id_pesanan = ps.id_pesanan
-    JOIN 
-        keranjang k ON ps.id_keranjang = k.id_keranjang
-    JOIN 
-        Produk p ON k.id_produk = p.id_produk
-    WHERE 
-        p.ID_UMKM = :umkmId
-    GROUP BY 
-        MONTH(r.tanggal)
-    ORDER BY 
-        month;
-        `,
+            SELECT 
+                MONTH(r.tanggal) AS month,
+                YEAR(r.tanggal) AS year,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
+                COUNT(DISTINCT pes.id_pesanan) AS total_orders
+            FROM 
+                riwayat r
+            JOIN 
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            JOIN 
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE 
+                p.ID_UMKM = :umkmId
+                AND YEAR(r.tanggal) = :year
+            GROUP BY 
+                MONTH(r.tanggal),
+                YEAR(r.tanggal)
+            ORDER BY 
+                year, month;
+            `,
             {
-                replacements: { umkmId },
+                replacements: { umkmId, year },
                 type: QueryTypes.SELECT,
             }
         );
 
-        return result;
+        return result.map(item => ({
+            month: parseInt(item.month),
+            year: parseInt(item.year),
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0)
+        }));
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
         throw new Error("Error fetching monthly stats: " + error.message);
@@ -2605,8 +2617,8 @@ module.exports = {
     addKurir,
     updateKurir,
     deleteKurir,
-    getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
+    getDailyStatsByUMKM,
     getRiwayat,
     getProdukByType,
     addpesanan,
