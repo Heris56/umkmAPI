@@ -131,9 +131,9 @@ app.get("/Produk/:id", (req, res) => {
     const id = req.params.id;
     dboperations.getprodukbyID(id, (error, result) => {
         if (error) {
-            res.status(500).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json(result);
+        return res.json(result);
     });
 });
 
@@ -143,7 +143,7 @@ app.get("/Produk", (req, res) => {
             console.error("error get Produk:", error);
             return res.status(500).send("error fetch Produk");
         }
-        res.json(result);
+        return res.json(result);
     });
 });
 
