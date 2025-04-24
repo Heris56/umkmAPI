@@ -1553,7 +1553,7 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             `
         SELECT
             r.tanggal AS tanggal,
-            SUM(k.kuantitas * prod.Harga) AS total_sales,
+            SUM(k.total) AS total_sales,
             COUNT(DISTINCT pes.id_pesanan) AS total_orders
         FROM
             riwayat r
@@ -1562,9 +1562,9 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
         JOIN
             keranjang k ON pes.id_keranjang = k.id_keranjang
         JOIN
-            Produk prod ON k.id_produk = prod.id_produk
+            Produk p ON k.id_produk = p.id_produk
         WHERE
-            prod.ID_UMKM = :umkmId
+            p.ID_UMKM = :umkmId
             AND MONTH(r.tanggal) = :month
             AND YEAR(r.tanggal) = :year
         GROUP BY
@@ -1578,46 +1578,77 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             }
         );
 
-        return result;
+        if (!result || result.length === 0) {
+            return [];
+        }
+
+        return result.map(item => ({
+            tanggal: item.tanggal,
+            total_sales: parseFloat(item.total_sales || 0),
+            total_orders: parseInt(item.total_orders || 0)
+        }));
     } catch (error) {
         console.error("Error fetching daily stats:", error);
         throw new Error("Error fetching daily stats: " + error.message);
     }
 }
 
-async function getMonthlyStatsByUMKM(umkmId) {
+async function getMonthlyStatsByUMKM(umkmId, year) {
+    // Validate inputs
+    if (!umkmId || !year || isNaN(year) || year.toString().length !== 4) {
+        throw new Error('Invalid parameters: umkmId and valid year are required');
+    }
+
     try {
         const result = await sequelize.query(
             `
-    SELECT 
-        MONTH(r.tanggal) AS month,
-        SUM(k.kuantitas * p.Harga) AS total_sales,
-        COUNT(DISTINCT ps.id_pesanan) AS total_orders
-    FROM 
-        riwayat r
-    JOIN 
-        pesanan ps ON r.id_pesanan = ps.id_pesanan
-    JOIN 
-        keranjang k ON ps.id_keranjang = k.id_keranjang
-    JOIN 
-        Produk p ON k.id_produk = p.id_produk
-    WHERE 
-        p.ID_UMKM = :umkmId
-    GROUP BY 
-        MONTH(r.tanggal)
-    ORDER BY 
-        month;
-        `,
+            SELECT 
+                MONTH(r.tanggal) AS month,
+                YEAR(r.tanggal) AS year,
+                COALESCE(SUM(k.total), 0) AS total_sales,
+                COALESCE(COUNT(DISTINCT pes.id_pesanan), 0) AS total_orders
+            FROM 
+                riwayat r
+            INNER JOIN 
+                pesanan pes ON r.id_pesanan = pes.id_pesanan
+            INNER JOIN 
+                keranjang k ON pes.id_keranjang = k.id_keranjang
+            INNER JOIN
+                Produk p ON k.id_produk = p.id_produk
+            WHERE 
+                p.ID_UMKM = :umkmId
+                AND YEAR(r.tanggal) = :year
+            GROUP BY 
+                MONTH(r.tanggal),
+                YEAR(r.tanggal)
+            ORDER BY 
+                year, month;
+            `,
             {
-                replacements: { umkmId },
+                replacements: { umkmId, year },
                 type: QueryTypes.SELECT,
             }
         );
 
-        return result;
+        // If no results, return an array with all months with zero values
+        if (!result || result.length === 0) {
+            return Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                year: parseInt(year),
+                total_sales: 0,
+                total_orders: 0
+            }));
+        }
+
+        return result.map(item => ({
+            month: parseInt(item.month),
+            year: parseInt(item.year),
+            total_sales: parseFloat(item.total_sales),
+            total_orders: parseInt(item.total_orders)
+        }));
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
-        throw new Error("Error fetching monthly stats: " + error.message);
+        throw new Error(`Failed to retrieve monthly stats for UMKM ${umkmId}: ${error.message}`);
     }
 }
 
@@ -2558,8 +2589,8 @@ module.exports = {
     addKurir,
     updateKurir,
     deleteKurir,
-    getDailyStatsByUMKM,
     getMonthlyStatsByUMKM,
+    getDailyStatsByUMKM,
     getRiwayat,
     getProdukByType,
     addpesanan,
