@@ -1553,7 +1553,7 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             `
             SELECT
                 r.tanggal AS tanggal,
-                SUM(k.total) AS total_sales,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders
             FROM
                 riwayat r
@@ -1596,7 +1596,7 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
             SELECT 
                 MONTH(r.tanggal) AS month,
                 YEAR(r.tanggal) AS year,
-                SUM(k.total) AS total_sales,
+                SUM(p.Harga * k.kuantitas) AS total_sales,
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders
             FROM 
                 riwayat r
