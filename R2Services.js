@@ -1,6 +1,12 @@
 const { S3Client, PutObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
 require("dotenv").config();
 
+const https = require('https');
+
+const agent = new https.Agent({
+    secureProtocol: 'TLS_method', // pastikan menggunakan TLS terbaru
+})
+
 const r2 = new S3Client({
     region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -9,7 +15,8 @@ const r2 = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
     forcePathStyle: true,
-    sslEnabled: false, // Menonaktifkan verifikasi SSL - sementara or selamanya
+    sslEnabled: true, // Menonaktifkan verifikasi SSL - sementara or selamanya
+    requestHandler: new NodeHttpHandler({ httpsAgent: agent })
 });
 
 const uploadfile = async (bucketName, fileName, fileContent, mimetype) => {
