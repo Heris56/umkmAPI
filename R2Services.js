@@ -1,6 +1,6 @@
 const { S3Client, PutObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
 require("dotenv").config();
-
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 const https = require('https');
 
 const agent = new https.Agent({
