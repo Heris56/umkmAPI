@@ -4,7 +4,9 @@ const { NodeHttpHandler } = require("@smithy/node-http-handler");
 const https = require('https');
 
 const agent = new https.Agent({
-    secureProtocol: 'TLS_method', // pastikan menggunakan TLS terbaru
+    minVersion: "TLSv1.2", // atau coba "TLSv1.3" kalau masih gagal
+    ciphers: "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256",
+    honorCipherOrder: true
 })
 
 const r2 = new S3Client({
