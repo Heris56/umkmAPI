@@ -829,7 +829,8 @@ async function getMessagesByPembeli(id_pembeli, callback) {
             SELECT
                 Chat.*,
                 pembeli.nama_lengkap,
-                umkm.username
+                umkm.username,
+                kurir.nama_kurir
             FROM
                 Chat
             LEFT JOIN
