@@ -209,12 +209,12 @@ async function addbookmark(id_pembeli, id_produk) {
             return { error: 'tidak ditemukan id Produk', status: 400 }
         }
         pembeli = await Pembeli.findOne({ where: { id_pembeli } });
-        Produk = await Produk.findOne({ where: { id_produk } });
+        produk = await Produk.findOne({ where: { id_produk } });
 
         if (!pembeli) {
             return { error: 'pembeli tidak ditemukan', status: 404 }
         }
-        if (!Produk) {
+        if (!produk) {
             return { error: 'Produk tidak ditemukan', status: 404 }
         }
 
@@ -346,7 +346,7 @@ async function searchproductonKeranjang(id_pembeli, id_produk, id_batch) {
             }
         )
 
-        const Produk = Produk.findByPk(id_produk);
+        const produk = Produk.findByPk(id_produk);
 
 
         if (produkkeranjang) {
@@ -446,9 +446,9 @@ async function plusQTY(id_keranjang) {
             throw new Error('keranjang tidak ditemukan')
         }
 
-        var Produk = await Produk.findByPk(keranjang.id_produk);
+        var produk = await Produk.findByPk(keranjang.id_produk);
 
-        if (keranjang.kuantitas < Produk.stok) {
+        if (keranjang.kuantitas < produk.stok) {
             keranjang.kuantitas += 1;
 
             await keranjang.save();
@@ -523,13 +523,13 @@ async function CekKeranjang(id_pembeli, id_produk) {
             return { same: true }
         }
 
-        const Produk = await Produk.findByPk(id_produk);
+        const produk = await Produk.findByPk(id_produk);
 
-        if (!Produk) {
+        if (!produk) {
             return { same: true }
         }
 
-        if (Produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
+        if (produk["id_umkm"] === lastKeranjang["Produk"]["id_umkm"]) {
             return { same: true }
         } else {
             return { same: false }
@@ -2281,41 +2281,6 @@ async function getprofileumkm(id, callback) {
     }
 }
 
-async function getBlobUrl(containerName, blobName) {
-    const containerClient = blobServiceClient.getContainerClient(containerName);
-    const blobClient = containerClient.getBlobClient(blobName);
-    return blobClient.url;
-}
-
-async function uploadFileToBlob(
-    containerName,
-    fileBuffer,
-    blobName,
-    contentType
-) {
-    try {
-        // Pastikan container ada
-        const containerClient = blobServiceClient.getContainerClient(containerName);
-        await containerClient.createIfNotExists();
-        console.log(`Container "${containerName}" sudah tersedia.`);
-
-        // Buat blob client
-        const blobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Unggah file dari buffer
-        await blobClient.uploadData(fileBuffer, {
-            blobHTTPHeaders: { blobContentType: contentType },
-        });
-        console.log(`File berhasil diunggah ke "${blobName}".`);
-
-        // Kembalikan URL blob
-        return blobClient.url;
-    } catch (error) {
-        console.error("Terjadi kesalahan saat mengunggah file:", error.message);
-        throw error;
-    }
-}
-
 async function getdaftarkurir(id_umkm, callback) {
     try {
         const result = await sequelize.query(
@@ -2653,12 +2618,10 @@ module.exports = {
     updatedataumkm,
     getprofileumkm,
     getinboxpesanan,
-    getBlobUrl,
     getCampaign,
     createCampaign,
     updateCampaign,
     deleteCampaign,
-    uploadFileToBlob,
     getdatadashboardproduklaris,
     getdatadashboardpesananmasuk,
     getdatadashboardprodukpalingbaru,

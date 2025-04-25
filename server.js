@@ -120,7 +120,7 @@ app.post('/uploadfile', upload.single('file'), async (req, res) => {
 
         await R2upload.uploadfile(bucketName, uniqueFileName, fileContent, mimetype);
 
-        res.status(200).json({ message: "File Berhasil di Upload", fileName: uniqueFileName });
+        res.status(200).json({ message: "File Berhasil di Upload", fileName: uniqueFileName, url: `https://umkmkuapi.com/${uniqueFileName}` });
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).json({ message: 'Gagal upload file' });
@@ -1584,48 +1584,6 @@ app.put("/updatestatuskeranjang/:id", (req, res) => {
     }
 });
 
-app.get("/getbloburl/", async (req, res) => {
-    try {
-        const containerName = "storeimg";
-        const blobName = "ayamgeprek.jpg";
-
-        const result = await dboperations.getBlobUrl(containerName, blobName); // Tunggu hasil fungsi asynchronous
-        res.json({ url: result }); // Kirim URL sebagai JSON
-    } catch (error) {
-        console.error("Error fetching blob URL:", error);
-        res.status(500).send("Error fetching blob URL");
-    }
-});
-
-app.post("/upload", upload.single("file"), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: "File tidak ditemukan!" });
-        }
-
-        const containerName = "storeimg";
-        const blobName = `${Date.now()}-${req.file.originalname}`;
-        const contentType = req.file.mimetype;
-
-        // Panggil fungsi untuk upload file ke Azure Blob Storage
-        const blobUrl = await dboperations.uploadFileToBlob(
-            containerName,
-            req.file.buffer,
-            blobName,
-            contentType
-        );
-
-        res.status(200).json({
-            message: "File berhasil diunggah!",
-            blobUrl,
-        });
-    } catch (error) {
-        console.error("Kesalahan saat mengunggah file:", error.message);
-        res
-            .status(500)
-            .json({ message: "Terjadi kesalahan saat mengunggah file." });
-    }
-});
 
 // End Server Dapa
 
