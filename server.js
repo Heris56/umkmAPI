@@ -120,7 +120,7 @@ app.post('/uploadfile', upload.single('file'), async (req, res) => {
 
         await R2upload.uploadfile(bucketName, uniqueFileName, fileContent, mimetype);
 
-        res.status(200).json({ message: "File Berhasil di Upload", fileName: uniqueFileName });
+        res.status(200).json({ message: "File Berhasil di Upload", fileName: uniqueFileName, url: `https://umkmkuapi.com/${uniqueFileName}` });
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).json({ message: 'Gagal upload file' });
