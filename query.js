@@ -2280,41 +2280,6 @@ async function getprofileumkm(id, callback) {
     }
 }
 
-async function getBlobUrl(containerName, blobName) {
-    const containerClient = blobServiceClient.getContainerClient(containerName);
-    const blobClient = containerClient.getBlobClient(blobName);
-    return blobClient.url;
-}
-
-async function uploadFileToBlob(
-    containerName,
-    fileBuffer,
-    blobName,
-    contentType
-) {
-    try {
-        // Pastikan container ada
-        const containerClient = blobServiceClient.getContainerClient(containerName);
-        await containerClient.createIfNotExists();
-        console.log(`Container "${containerName}" sudah tersedia.`);
-
-        // Buat blob client
-        const blobClient = containerClient.getBlockBlobClient(blobName);
-
-        // Unggah file dari buffer
-        await blobClient.uploadData(fileBuffer, {
-            blobHTTPHeaders: { blobContentType: contentType },
-        });
-        console.log(`File berhasil diunggah ke "${blobName}".`);
-
-        // Kembalikan URL blob
-        return blobClient.url;
-    } catch (error) {
-        console.error("Terjadi kesalahan saat mengunggah file:", error.message);
-        throw error;
-    }
-}
-
 async function getdaftarkurir(id_umkm, callback) {
     try {
         const result = await sequelize.query(
@@ -2652,12 +2617,10 @@ module.exports = {
     updatedataumkm,
     getprofileumkm,
     getinboxpesanan,
-    getBlobUrl,
     getCampaign,
     createCampaign,
     updateCampaign,
     deleteCampaign,
-    uploadFileToBlob,
     getdatadashboardproduklaris,
     getdatadashboardpesananmasuk,
     getdatadashboardprodukpalingbaru,
