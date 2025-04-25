@@ -9,6 +9,7 @@ const r2 = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
     forcePathStyle: true,
+    sslEnabled: false, // Menonaktifkan verifikasi SSL - sementara or selamanya
 });
 
 const uploadfile = async (bucketName, fileName, fileContent, mimetype) => {
