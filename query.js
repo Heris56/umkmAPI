@@ -1831,51 +1831,15 @@ async function getpesananmasuk(id, callback) {
     k.id_batch,
     MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
-    STRING_AGG(CAST(p.Nama_Barang AS NVARCHAR(MAX)), ', ') AS nama_barang,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)) AS status_pesanan,
-    CAST(pb.alamat AS NVARCHAR(MAX)) AS alamat_pembeli
-FROM keranjang k
-INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-INNER JOIN Produk p ON k.id_produk = p.id_produk
-INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE p.id_umkm = :id AND ps.status_pesanan = 'Pesanan Masuk' AND k.id_produk IS NOT NULL
-GROUP BY
-    k.id_batch,
-    CAST(ps.status_pesanan AS NVARCHAR(MAX)),
-    CAST(pb.alamat AS NVARCHAR(MAX))
-ORDER BY k.id_batch ASC;
-        `,
-            {
-                replacements: { id: id },
-                type: QueryTypes.SELECT,
-            }
-        );
-
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-        console.error("Error executing raw query:", error);
-        throw new Error("Query execution failed");
-    }
-}
-
-async function getpesananditerima(id, callback) {
-    try {
-        const result = await sequelize.query(
-            `
-            SELECT
-    k.id_batch,
-    MAX(ps.total_belanja) AS total_belanja,
-    SUM(k.kuantitas) AS kuantitas,
-    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Mengganti STRING_AGG dengan GROUP_CONCAT
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Gunakan GROUP_CONCAT untuk menggabungkan nama barang
     ps.status_pesanan,
     pb.alamat AS alamat_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
 INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-WHERE p.id_umkm = ? 
-  AND ps.status_pesanan = 'Pesanan Diterima' 
+WHERE p.id_umkm = ?
+  AND ps.status_pesanan = 'Pesanan Diterima'
   AND k.id_produk IS NOT NULL
 GROUP BY
     k.id_batch,
@@ -1897,29 +1861,67 @@ ORDER BY k.id_batch ASC;
     }
 }
 
+async function getpesananditerima(id, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                k.id_batch,
+                MAX(ps.total_belanja) AS total_belanja,
+                SUM(k.kuantitas) AS kuantitas,
+                GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
+                ps.status_pesanan,
+                pb.alamat AS alamat_pembeli
+            FROM keranjang k
+            INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+            INNER JOIN Produk p ON k.id_produk = p.id_produk
+            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+            WHERE p.id_umkm = ?
+              AND ps.status_pesanan = 'Pesanan Diterima'
+              AND k.id_Produk IS NOT NULL
+            GROUP BY
+                k.id_batch,
+                ps.status_pesanan,
+                pb.alamat
+            ORDER BY k.id_batch ASC;
+            `,
+            {
+                replacements: [id],
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+        console.error("Error executing raw query:", error);
+        throw new Error("Query execution failed");
+    }
+}
+
 async function getpesananditolak(id, callback) {
     try {
         const result = await sequelize.query(
             `
             SELECT
-        k.id_batch,
-        MAX(ps.total_belanja) AS total_belanja,
-        SUM(k.kuantitas) AS kuantitas,
-        GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggunakan GROUP_CONCAT
-        ps.status_pesanan,
-        pb.alamat AS alamat_pembeli
-    FROM keranjang k
-    INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-    INNER JOIN Produk p ON k.id_produk = p.id_produk
-    INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-    WHERE p.id_umkm = ? 
-      AND ps.status_pesanan = 'Pesanan Ditolak' 
-      AND k.id_produk IS NOT NULL
-    GROUP BY
-        k.id_batch,
-        ps.status_pesanan,
-        pb.alamat
-    ORDER BY k.id_batch ASC;
+    k.id_batch,
+    MAX(ps.total_belanja) AS total_belanja,
+    SUM(k.kuantitas) AS kuantitas,
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
+    ps.status_pesanan,
+    pb.alamat AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = ? 
+  AND ps.status_pesanan = 'Pesanan Ditolak' 
+  AND k.id_produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+    ps.status_pesanan,
+    pb.alamat
+ORDER BY k.id_batch ASC;
         `,
             {
                 replacements: [id],
@@ -1943,7 +1945,7 @@ async function getpesananselesai(id, callback) {
     k.id_batch,
     MAX(ps.total_belanja) AS total_belanja,
     SUM(k.kuantitas) AS kuantitas,
-    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang, -- Menggunakan GROUP_CONCAT untuk menggantikan STRING_AGG
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
     ps.status_pesanan,
     pb.alamat AS alamat_pembeli
 FROM keranjang k
