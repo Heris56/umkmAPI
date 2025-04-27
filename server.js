@@ -543,15 +543,19 @@ app.post("/login", (req, res) => {
 });
 
 app.post('/reset-password', async (req, res) => {
-    const email = req.body.email;
+    const inputEmail = req.body.inputEmail;
+
+    if (!inputEmail) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
     try {
-        // Here you can add database check if necessary
-        const emailExists = await cekEmailUMKM(email);
+        const emailExists = await dboperations.cekEmailUMKM(inputEmail);
         if (!emailExists) {
             return res.status(404).json({ message: 'Email not found' });
         }
 
-        await sendResetLink(email);
+        await dboperations.sendResetLink(inputEmail);
         res.status(200).json({ message: 'Password reset link sent successfully' });
 
     } catch (error) {

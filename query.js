@@ -614,34 +614,39 @@ async function loginUMKM(data, callback) {
     }
 }
 
-async function cekEmailUMKM(data, callback) {
+async function cekEmailUMKM(email) {
     try {
-        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
-
-        return user.includes(email);
+        const user = await UMKM.findOne({ where: { email: email } });
+        return !!user; // If user found, return true, else false
     } catch (error) {
-        callback(error, null);
+        console.error('Database error:', error);
+        throw error; 
     }
 }
 
-// async function sendResetLink(email) {
-//     const transporter = nodemailer.createTransport({
-//         service: 'gmail', // You can use other services, or SMTP server
-//         auth: {
-//             user: 'your-email@gmail.com', // Sender's email
-//             pass: 'your-email-password',  // Sender's email password
-//         },
-//     });
+async function sendResetLink(email) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', // You can use other services, or SMTP server
+        auth: {
+            user: process.env.EMAIL_USER, // Sender's email
+            pass: process.env.EMAIL_PASS,  // Sender's email password
+        },
+    });
 
-//     const mailOptions = {
-//         from: 'your-email@gmail.com',
-//         to: email,
-//         subject: 'Password Reset Request',
-//         text: 'Click the link to reset your password: http://your-frontend-url.com/reset-password?email=' + encodeURIComponent(email),
-//     };
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset Request',
+        text: 'Click the link to reset your password: http://127.0.0.1:8000/lupa-password' + encodeURIComponent(email),
+    };
 
-//     return transporter.sendMail(mailOptions);
-// }
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Password reset email sent to:', email);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+}
 // end of bagian UMKM
 
 // Start query ulasans
@@ -2599,6 +2604,7 @@ module.exports = {
     registUMKM,
     loginUMKM,
     cekEmailUMKM,
+    sendResetLink,
     getulasans,
     addulasans,
     getulasansByProdukId,
