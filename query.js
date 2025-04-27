@@ -13,6 +13,7 @@ const Campaign = require("./models/campaign");
 const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
+const nodemailer = require('nodemailer');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -612,6 +613,35 @@ async function loginUMKM(data, callback) {
         callback(error, null);
     }
 }
+
+async function cekEmailUMKM(data, callback) {
+    try {
+        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
+
+        return user.includes(email);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+// async function sendResetLink(email) {
+//     const transporter = nodemailer.createTransport({
+//         service: 'gmail', // You can use other services, or SMTP server
+//         auth: {
+//             user: 'your-email@gmail.com', // Sender's email
+//             pass: 'your-email-password',  // Sender's email password
+//         },
+//     });
+
+//     const mailOptions = {
+//         from: 'your-email@gmail.com',
+//         to: email,
+//         subject: 'Password Reset Request',
+//         text: 'Click the link to reset your password: http://your-frontend-url.com/reset-password?email=' + encodeURIComponent(email),
+//     };
+
+//     return transporter.sendMail(mailOptions);
+// }
 // end of bagian UMKM
 
 // Start query ulasans
@@ -2568,6 +2598,7 @@ module.exports = {
     getuserUMKM: getalluserUMKM,
     registUMKM,
     loginUMKM,
+    cekEmailUMKM,
     getulasans,
     addulasans,
     getulasansByProdukId,
