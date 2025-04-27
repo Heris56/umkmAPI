@@ -542,6 +542,28 @@ app.post("/login", (req, res) => {
     });
 });
 
+app.post('/reset-password', async (req, res) => {
+    const inputEmail = req.body.inputEmail;
+
+    if (!inputEmail) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+        const emailExists = await dboperations.cekEmailUMKM(inputEmail);
+        if (!emailExists) {
+            return res.status(404).json({ message: 'Email not found' });
+        }
+
+        await dboperations.sendResetLink(inputEmail);
+        res.status(200).json({ message: 'Password reset link sent successfully' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error. Please try again.' });
+    }
+});
+
 app.get("/ulasans", (req, res) => {
     dboperations.getulasans((error, result) => {
         if (error) {

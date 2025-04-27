@@ -13,6 +13,7 @@ const Campaign = require("./models/campaign");
 const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
+const nodemailer = require('nodemailer');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -610,6 +611,40 @@ async function loginUMKM(data, callback) {
         }
     } catch (error) {
         callback(error, null);
+    }
+}
+
+async function cekEmailUMKM(email) {
+    try {
+        const user = await UMKM.findOne({ where: { email: email } });
+        return !!user; // If user found, return true, else false
+    } catch (error) {
+        console.error('Database error:', error);
+        throw error; 
+    }
+}
+
+async function sendResetLink(email) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', // You can use other services, or SMTP server
+        auth: {
+            user: process.env.EMAIL_USER, // Sender's email
+            pass: process.env.EMAIL_PASS,  // Sender's email password
+        },
+    });
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset Request',
+        text: 'Click the link to reset your password: http://127.0.0.1:8000/lupa-password' + encodeURIComponent(email),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Password reset email sent to:', email);
+    } catch (error) {
+        console.error('Error sending email:', error);
     }
 }
 // end of bagian UMKM
@@ -2568,6 +2603,8 @@ module.exports = {
     getuserUMKM: getalluserUMKM,
     registUMKM,
     loginUMKM,
+    cekEmailUMKM,
+    sendResetLink,
     getulasans,
     addulasans,
     getulasansByProdukId,
