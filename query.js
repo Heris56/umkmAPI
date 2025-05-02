@@ -264,6 +264,23 @@ async function SearchProduct(input) {
     }
 }
 
+async function SearchOwnProduct(input, id_umkm) {
+    try {
+        const barang = await Produk.findAll({
+            where: {
+                id_umkm: id_umkm,
+                nama_barang: {
+                    [Op.like]: `%${input}%`
+                }
+            }
+        });
+
+        return barang;
+    } catch (error) {
+        return { error: error.message }
+    }
+}
+
 // End of search - Haikal
 
 // bagian keranjang
@@ -2559,6 +2576,7 @@ module.exports = {
     CekKeranjang,
     updatestatuskeranjang,
     SearchProduct,
+    SearchOwnProduct,
     ViewAllBookmark,
     ViewBookmarkbyIDPembeli,
     addbookmark,
