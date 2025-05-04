@@ -286,6 +286,22 @@ app.get("/search", async (req, res) => {
     }
 });
 
+app.get("/search/:id_umkm", async (req, res) => {
+    try {
+        const id_umkm = req.params.id_umkm;
+        const searchquery = req.query.search || "";
+        const result = await dboperations.SearchOwnProduct(searchquery, id_umkm);
+
+        if (result.error) {
+            return res.status(500).json({ error: result.error });
+        }
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // End of search
 
 // keranjang
