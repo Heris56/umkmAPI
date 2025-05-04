@@ -637,7 +637,7 @@ async function cekEmailUMKM(email) {
         return !!user; // If user found, return true, else false
     } catch (error) {
         console.error('Database error:', error);
-        throw error; 
+        throw error;
     }
 }
 
@@ -1892,7 +1892,7 @@ INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
 INNER JOIN Produk p ON k.id_produk = p.id_produk
 INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = ?
-  AND ps.status_pesanan = 'Pesanan Diterima'
+  AND ps.status_pesanan = 'Pesanan Masuk'
   AND k.id_produk IS NOT NULL
 GROUP BY
     k.id_batch,
