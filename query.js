@@ -634,7 +634,7 @@ async function loginUMKM(data, callback) {
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
-        return !!user; // If user found, return true, else false
+        return !!user;
     } catch (error) {
         console.error('Database error:', error);
         throw error;
@@ -642,27 +642,34 @@ async function cekEmailUMKM(email) {
 }
 
 async function sendResetLink(email) {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // You can use other services, or SMTP server
-        auth: {
-            user: process.env.EMAIL_USER, // Sender's email
-            pass: process.env.EMAIL_PASS,  // Sender's email password
-        },
-    });
+  // Buat akun Ethereal secara otomatis
+  let testAccount = await nodemailer.createTestAccount();
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Password Reset Request',
-        text: 'Click the link to reset your password: http://127.0.0.1:8000/lupa-password' + encodeURIComponent(email),
-    };
+  // Buat transporter dengan akun Ethereal
+  const transporter = nodemailer.createTransport({
+    host: testAccount.smtp.host,
+    port: testAccount.smtp.port,
+    secure: testAccount.smtp.secure,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Password reset email sent to:', email);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+  const mailOptions = {
+    from: '"UMKM App 👨‍💼" <no-reply@umkm.test>',
+    to: email,
+    subject: "Reset Kata Sandi",
+    text: `Klik link berikut untuk reset password Anda:\nhttp://127.0.0.1:8000/new-password`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Link reset terkirim ke:", email);
+    console.log("Preview email:", nodemailer.getTestMessageUrl(info)); // cek isi email
+  } catch (error) {
+    console.error("Error kirim email:", error);
+  }
 }
 // end of bagian UMKM
 
