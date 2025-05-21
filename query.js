@@ -1932,6 +1932,7 @@ async function getpesananditerima(id, callback) {
             SUM(k.kuantitas) AS kuantitas,
             GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
             ps.status_pesanan,
+            ps.id_pesanan,
             pb.nama_lengkap,
             pb.nomor_telepon,
             pb.alamat AS alamat_pembeli,
@@ -1946,6 +1947,7 @@ WHERE p.id_umkm = ?
 GROUP BY
     k.id_batch,
             ps.status_pesanan,
+            ps.id_pesanan,
             pb.nama_lengkap,
             pb.nomor_telepon,
             pb.alamat,
