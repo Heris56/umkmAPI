@@ -1581,8 +1581,8 @@ app.put("/updatestatuspesananselesai/:id_umkm/:id_batch", (req, res) => {
 
     dboperations.updatestatuspesananselesai(id_umkm, id_batch, (error, result) => {
         if (error) {
-            console.error("error update status pesanan diterima:", error);
-            return res.status(500).send("error status pesanan diterima");
+            console.error("error update status pesanan selesai:", error);
+            return res.status(500).send("error status pesanan selesai");
         }
         res.status(200).json(result);
     });
