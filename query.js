@@ -2268,7 +2268,7 @@ WHERE k.id_batch = ?
         `;
 
         const [result] = await sequelize.query(query, {
-            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            replacements: [id_batch, id_umkm],
             type: sequelize.QueryTypes.UPDATE,
         });
 
