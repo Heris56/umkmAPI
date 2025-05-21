@@ -1919,24 +1919,28 @@ async function getpesananditerima(id, callback) {
         const result = await sequelize.query(
             `
             SELECT
-                k.id_batch,
-                MAX(ps.total_belanja) AS total_belanja,
-                SUM(k.kuantitas) AS kuantitas,
-                GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
-                ps.status_pesanan,
-                pb.alamat AS alamat_pembeli
-            FROM keranjang k
-            INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
-            INNER JOIN Produk p ON k.id_produk = p.id_produk
-            INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
-            WHERE p.id_umkm = ?
-              AND ps.status_pesanan = 'Pesanan Diterima'
-              AND k.id_Produk IS NOT NULL
-            GROUP BY
-                k.id_batch,
-                ps.status_pesanan,
-                pb.alamat
-            ORDER BY k.id_batch ASC;
+    k.id_batch,
+            MAX(ps.total_belanja) AS total_belanja,
+            SUM(k.kuantitas) AS kuantitas,
+            GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
+            ps.status_pesanan,
+            pb.nama_lengkap,
+            pb.nomor_telepon,
+            pb.alamat AS alamat_pembeli
+FROM keranjang k
+INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
+INNER JOIN Produk p ON k.id_produk = p.id_produk
+INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
+WHERE p.id_umkm = ?
+  AND ps.status_pesanan = 'Pesanan Diterima'
+  AND k.id_Produk IS NOT NULL
+GROUP BY
+    k.id_batch,
+            ps.status_pesanan,
+            pb.nama_lengkap,
+            pb.nomor_telepon,
+            pb.alamat
+ORDER BY k.id_batch ASC;
             `,
             {
                 replacements: [id],
