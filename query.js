@@ -1928,15 +1928,15 @@ async function getpesananditerima(id, callback) {
             `
             SELECT
     k.id_batch,
-            MAX(ps.total_belanja) AS total_belanja,
-            SUM(k.kuantitas) AS kuantitas,
-            GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
-            ps.status_pesanan,
-            ps.id_pesanan,
-            pb.nama_lengkap,
-            pb.nomor_telepon,
-            pb.alamat AS alamat_pembeli,
-            pb.id_pembeli
+    MAX(ps.total_belanja) AS total_belanja,
+    SUM(k.kuantitas) AS kuantitas,
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
+    MAX(ps.status_pesanan) AS status_pesanan,
+    GROUP_CONCAT(ps.id_pesanan) AS id_pesanan, -- karena bisa lebih dari satu
+    MAX(pb.nama_lengkap) AS nama_lengkap,
+    MAX(pb.nomor_telepon) AS nomor_telepon,
+    MAX(pb.alamat) AS alamat_pembeli,
+    MAX(pb.id_pembeli) AS id_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
 INNER JOIN Produk p ON k.id_produk = p.id_produk
@@ -1944,14 +1944,7 @@ INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = ?
   AND ps.status_pesanan = 'Pesanan Diterima'
   AND k.id_Produk IS NOT NULL
-GROUP BY
-    k.id_batch,
-            ps.status_pesanan,
-            ps.id_pesanan,
-            pb.nama_lengkap,
-            pb.nomor_telepon,
-            pb.alamat,
-            pb.id_pembeli
+GROUP BY k.id_batch
 ORDER BY k.id_batch ASC;
             `,
             {
