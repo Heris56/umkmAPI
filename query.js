@@ -1485,7 +1485,15 @@ async function getKurirByID(id, callback) {
             throw new Error("ID cannot be empty");
         }
 
-        const kurir = await Kurir.findByPk(id);
+        const kurir = await Kurir.findAll(
+            {
+                where: { id_kurir: id },
+                include: {
+                    model: UMKM,
+                    attributes: ["nama_usaha"]
+                }
+            }
+        );
 
         if (!kurir) {
             throw new Error(`Kurir with ID ${id} not found`);
