@@ -637,7 +637,7 @@ async function cekEmailUMKM(email) {
         return !!user; // If user found, return true, else false
     } catch (error) {
         console.error('Database error:', error);
-        throw error; 
+        throw error;
     }
 }
 
