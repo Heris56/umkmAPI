@@ -1934,7 +1934,8 @@ async function getpesananditerima(id, callback) {
             ps.status_pesanan,
             pb.nama_lengkap,
             pb.nomor_telepon,
-            pb.alamat AS alamat_pembeli
+            pb.alamat AS alamat_pembeli,
+            pb.id_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
 INNER JOIN Produk p ON k.id_produk = p.id_produk
@@ -1947,7 +1948,8 @@ GROUP BY
             ps.status_pesanan,
             pb.nama_lengkap,
             pb.nomor_telepon,
-            pb.alamat
+            pb.alamat,
+            pb.id_pembeli
 ORDER BY k.id_batch ASC;
             `,
             {
