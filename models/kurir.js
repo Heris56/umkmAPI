@@ -36,6 +36,10 @@ const Kurir = sequelize.define(
       type: DataTypes.STRING(20),
       allowNull: false,
     },
+    nomor_telepon: {
+      type: DataTypes.STRING(13),
+      allowNull: true,
+    },
   },
   {
     tableName: "kurir",
