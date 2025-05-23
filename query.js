@@ -2229,6 +2229,33 @@ WHERE k.id_batch = ?
     }
 }
 
+async function updatestatuspesanandiantar(id_umkm, id_batch, callback) {
+    try {
+        const query = `
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN Produk p ON k.id_produk = p.id_produk
+SET ps.status_pesanan = 'Pesanan Diantar'
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_batch, id_umkm],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 async function updatestatuspesananditolak(id_umkm, id_batch, callback) {
     try {
         const query = `
@@ -2677,6 +2704,7 @@ module.exports = {
     getpesananditolak,
     getpesananselesai,
     updatestatuspesananditerima,
+    updatestatuspesanandiantar,
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
