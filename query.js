@@ -2568,33 +2568,59 @@ WHERE kr.id_kurir = ? ;
 // End Query Dapa
 
 //start query inbox pesanan
-async function getinboxpesanan(callback) {
+async function getinboxpesanan(id_umkm, callback) {
     try {
         const result = await sequelize.query(
             `
-         SELECT
-    pesanan.id_pesanan,
-    pembeli.nama_lengkap,
-    Produk.Nama_Barang,
-    keranjang.kuantitas AS quantity,
-    pesanan.status_pesanan
-    FROM pesanan
-    JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
-    JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
-    JOIN Produk ON keranjang.id_produk = Produk.id_produk;
-
-
-        `,
+            SELECT
+                pesanan.id_pesanan,
+                pembeli.nama_lengkap,
+                Produk.Nama_Barang,
+                pesanan.status_pesanan,
+                pesanan.histori_pesanan -- Ensure this field exists in the database
+            FROM pesanan
+            JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
+            JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
+            JOIN Produk ON keranjang.id_produk = Produk.id_produk
+            WHERE pesanan.status_pesanan = 'Pesanan Diterima'
+              AND Produk.id_umkm = :id_umkm;
+            `,
             {
-                type: QueryTypes.SELECT,
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { id_umkm: id_umkm },
             }
         );
-
         callback(null, result);
     } catch (error) {
         callback(error, null);
-        console.error("Error executing raw query:", error);
-        throw new Error("Query execution failed");
+    }
+}
+
+async function getinboxpesananmasuk(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                pesanan.id_pesanan,
+                pembeli.nama_lengkap,
+                Produk.Nama_Barang,
+                pesanan.status_pesanan,
+                pesanan.histori_pesanan -- Ensure this field exists in the database
+            FROM pesanan
+            JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
+            JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
+            JOIN Produk ON keranjang.id_produk = Produk.id_produk
+            WHERE pesanan.status_pesanan = 'Pesanan Masuk'
+              AND Produk.id_umkm = :id_umkm;
+            `,
+            {
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { id_umkm: id_umkm },
+            }
+        );
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
     }
 }
 
@@ -2745,6 +2771,7 @@ module.exports = {
     updatedataumkm,
     getprofileumkm,
     getinboxpesanan,
+    getinboxpesananmasuk,
     getCampaign,
     createCampaign,
     updateCampaign,
