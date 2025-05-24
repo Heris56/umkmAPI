@@ -1562,6 +1562,19 @@ app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
+app.put("/updatestatuspesanandiantar/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesanandiantar(id_umkm, id_batch, (error, result) => {
+        if (error) {
+            console.error("error update status pesanan diterima:", error);
+            return res.status(500).send("error status pesanan diterima");
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.put("/updatestatuspesananditolak/:id_umkm/:id_batch", (req, res) => {
     const id_umkm = req.params.id_umkm;
     const id_batch = req.params.id_batch;
@@ -1581,8 +1594,8 @@ app.put("/updatestatuspesananselesai/:id_umkm/:id_batch", (req, res) => {
 
     dboperations.updatestatuspesananselesai(id_umkm, id_batch, (error, result) => {
         if (error) {
-            console.error("error update status pesanan diterima:", error);
-            return res.status(500).send("error status pesanan diterima");
+            console.error("error update status pesanan selesai:", error);
+            return res.status(500).send("error status pesanan selesai");
         }
         res.status(200).json(result);
     });
