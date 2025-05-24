@@ -22,11 +22,13 @@ const UMKM = sequelize.define('UMKM', {
     },
     username: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     password: {
         type: DataTypes.STRING,
@@ -38,9 +40,18 @@ const UMKM = sequelize.define('UMKM', {
     },
     NIK_KTP: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
-
+    is_verified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    auth_code: {
+        type: DataTypes.STRING(6),
+        allowNull: true
+    }
 }, {
     tableName: 'umkm',
     timestamps: false

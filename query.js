@@ -14,6 +14,7 @@ const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -601,14 +602,39 @@ async function getalluserUMKM(callback) {
     }
 }
 
-async function registUMKM(data, callback) {
+async function registUMKM(data) {
     try {
         console.log("Incoming data:", data);
-        const result = await UMKM.create(data);
-        callback(null, result);
+        
+        // pastikan field beberapa field yang non-nullable
+        const requiredFields = ['nama_lengkap', 'nomor_telepon', 'username', 'email', 'password', 'NIK_KTP'];
+        for (const field of requiredFields) {
+            if (!data[field]) {
+                throw new Error(`Missing required field: ${field}`);
+            }
+        }
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+
+        const umkmData = {
+            nama_lengkap: data.nama_lengkap,
+            nomor_telepon: data.nomor_telepon,
+            alamat: data.alamat || null, // nullable 
+            username: data.username,
+            email: data.email,
+            password: hashedPassword,
+            nama_usaha: data.nama_usaha || null, // nullable
+            NIK_KTP: parseInt(data.NIK_KTP), // memastikan integer
+            is_verified: false, // false by default
+            auth_code: null // null by default
+        };
+
+        const result = await UMKM.create(umkmData);
+        return result;
     } catch (error) {
         console.error("Error during registration:", error);
-        callback(error, null);
+        throw error;
     }
 }
 
@@ -634,7 +660,7 @@ async function loginUMKM(data, callback) {
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
-        return !!user; // If user found, return true, else false
+        return !!user;
     } catch (error) {
         console.error('Database error:', error);
         throw error;
@@ -642,27 +668,34 @@ async function cekEmailUMKM(email) {
 }
 
 async function sendResetLink(email) {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // You can use other services, or SMTP server
-        auth: {
-            user: process.env.EMAIL_USER, // Sender's email
-            pass: process.env.EMAIL_PASS,  // Sender's email password
-        },
-    });
+  // Buat akun Ethereal secara otomatis
+  let testAccount = await nodemailer.createTestAccount();
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Password Reset Request',
-        text: 'Click the link to reset your password: http://127.0.0.1:8000/lupa-password' + encodeURIComponent(email),
-    };
+  // Buat transporter dengan akun Ethereal
+  const transporter = nodemailer.createTransport({
+    host: testAccount.smtp.host,
+    port: testAccount.smtp.port,
+    secure: testAccount.smtp.secure,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Password reset email sent to:', email);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+  const mailOptions = {
+    from: '"UMKM App 👨‍💼" <no-reply@umkm.test>',
+    to: email,
+    subject: "Reset Kata Sandi",
+    text: `Klik link berikut untuk reset password Anda:\nhttp://127.0.0.1:8000/new-password`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Link reset terkirim ke:", email);
+    console.log("Preview email:", nodemailer.getTestMessageUrl(info)); // cek isi email
+  } catch (error) {
+    console.error("Error kirim email:", error);
+  }
 }
 // end of bagian UMKM
 

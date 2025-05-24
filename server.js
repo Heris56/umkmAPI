@@ -536,15 +536,25 @@ app.get("/umkm", (req, res) => {
     });
 });
 
-app.post("/umkm", (req, res) => {
+app.post("/api/registrasi-umkm", async (req, res) => {
     const data = req.body;
-    dboperations.registUMKM(data, (error, result) => {
-        if (error) {
-            console.error("error regist umkm:", error);
-            return res.status(500).send("error nambah data umkm");
+    
+    try {
+        const result = await dboperations.registUMKM(data);
+        res.status(201).json({ message: 'UMKM registered successfully', data: result });
+    } catch (error) {
+        console.error('Error in /api/umkm:', error);
+        if (error.message.includes('Missing required field')) {
+            return res.status(400).json({ error: error.message });
         }
-        res.status(200).json(result);
-    });
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ error: 'Username, email, or NIK_KTP already exists' });
+        }
+        if (error.message.includes('NIK_KTP must be a valid integer')) {
+            return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Failed to register UMKM: ' + error.message });
+    }
 });
 
 app.post("/login", (req, res) => {
@@ -562,21 +572,21 @@ app.post('/reset-password', async (req, res) => {
     const inputEmail = req.body.inputEmail;
 
     if (!inputEmail) {
-        return res.status(400).json({ message: 'Email is required' });
+        return res.status(400).json({ message: 'Isi kolom email!' });
     }
 
     try {
         const emailExists = await dboperations.cekEmailUMKM(inputEmail);
         if (!emailExists) {
-            return res.status(404).json({ message: 'Email not found' });
+            return res.status(404).json({ message: 'Email tidak ditemukan!' });
         }
 
         await dboperations.sendResetLink(inputEmail);
-        res.status(200).json({ message: 'Password reset link sent successfully' });
+        res.status(200).json({ message: 'Link reset kata sandi berhasil terkirim!' });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error. Please try again.' });
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
