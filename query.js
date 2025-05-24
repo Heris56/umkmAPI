@@ -604,7 +604,32 @@ async function getalluserUMKM(callback) {
 async function registUMKM(data, callback) {
     try {
         console.log("Incoming data:", data);
-        const result = await UMKM.create(data);
+        
+        // pastikan field beberapa field yang non-nullable
+        const requiredFields = ['nama_lengkap', 'nomor_telepon', 'username', 'email', 'password', 'NIK_KTP'];
+        for (const field of requiredFields) {
+            if (!data[field]) {
+                throw new Error(`Missing required field: ${field}`);
+            }
+        }
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+
+        const umkmData = {
+            nama_lengkap: data.nama_lengkap,
+            nomor_telepon: data.nomor_telepon,
+            alamat: data.alamat || null, // nullable 
+            username: data.username,
+            email: data.email,
+            password: hashedPassword,
+            nama_usaha: data.nama_usaha || null, // nullable
+            NIK_KTP: parseInt(data.NIK_KTP), // memastikan integer
+            is_verified: false, // false by default
+            auth_code: null // null by default
+        };
+
+        const result = await UMKM.create(umkmData);
         callback(null, result);
     } catch (error) {
         console.error("Error during registration:", error);

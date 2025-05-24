@@ -538,13 +538,23 @@ app.get("/umkm", (req, res) => {
 
 app.post("/umkm", (req, res) => {
     const data = req.body;
-    dboperations.registUMKM(data, (error, result) => {
-        if (error) {
-            console.error("error regist umkm:", error);
-            return res.status(500).send("error nambah data umkm");
+    
+    try {
+        const result = await dboperations.registUMKM(data);
+        res.status(201).json({ message: 'UMKM registered successfully', data: result });
+    } catch (error) {
+        console.error('Error in /api/umkm:', error);
+        if (error.message.includes('Missing required field')) {
+            return res.status(400).json({ error: error.message });
         }
-        res.status(200).json(result);
-    });
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ error: 'Username, email, or NIK_KTP already exists' });
+        }
+        if (error.message.includes('NIK_KTP must be a valid integer')) {
+            return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Failed to register UMKM: ' + error.message });
+    }
 });
 
 app.post("/login", (req, res) => {
