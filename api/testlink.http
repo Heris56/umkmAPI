@@ -2,5 +2,5 @@ post http://localhost:80/reset-password
 Content-Type: application/json
 
 {
-  "inputEmail": "example@gmail.com"
+  "inputEmail": "johndoe@gmail.com"
 }
