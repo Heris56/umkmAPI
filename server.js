@@ -536,7 +536,7 @@ app.get("/umkm", (req, res) => {
     });
 });
 
-app.post("/umkm", (req, res) => {
+app.post("/api/registrasi-umkm", async (req, res) => {
     const data = req.body;
     
     try {

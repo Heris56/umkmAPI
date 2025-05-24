@@ -14,6 +14,7 @@ const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -601,7 +602,7 @@ async function getalluserUMKM(callback) {
     }
 }
 
-async function registUMKM(data, callback) {
+async function registUMKM(data) {
     try {
         console.log("Incoming data:", data);
         
@@ -630,10 +631,10 @@ async function registUMKM(data, callback) {
         };
 
         const result = await UMKM.create(umkmData);
-        callback(null, result);
+        return result;
     } catch (error) {
         console.error("Error during registration:", error);
-        callback(error, null);
+        throw error;
     }
 }
 
