@@ -610,7 +610,7 @@ async function registUMKM(data) {
         const requiredFields = ['nama_lengkap', 'nomor_telepon', 'username', 'email', 'password', 'NIK_KTP'];
         for (const field of requiredFields) {
             if (!data[field]) {
-                throw new Error(`Missing required field: ${field}`);
+                throw new Error(`Data tidak ditemukan: ${field}`);
             }
         }
 
@@ -633,27 +633,40 @@ async function registUMKM(data) {
         const result = await UMKM.create(umkmData);
         return result;
     } catch (error) {
-        console.error("Error during registration:", error);
+        console.error("Error pada saat registrasi:", error);
         throw error;
     }
 }
 
-async function loginUMKM(data, callback) {
+async function loginUMKM(data) {
     try {
-        // cari by email
-        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
-
-        // cek kalo usernya ada, dan passwordnya sesuai
-        if (user && user.password === data.inputPassword) {
-            const result = {
-                id_umkm: user.id_umkm,
-            };
-            callback(null, result);
-        } else {
-            callback(new Error("Email atau Password salah!"), null);
+        console.log('Login attempt for email:', data.email);
+        // cek user
+        const user = await UMKM.findOne({ where: { email: data.email } });
+        if (!user) {
+            throw new Error('Pengguna tidak tersedia!');
         }
+
+        console.log('User found:', { id_umkm: user.id_umkm, email: user.email });
+        // handle password
+        const isPasswordValid = await bcrypt.compare(data.password, user.password);
+        console.log('Password valid:', isPasswordValid);
+        if (!isPasswordValid) {
+            throw new Error('Password salah!');
+        }
+
+        // generate code otp
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp, is_verified: false });
+
+        return {
+            id_umkm: user.id_umkm,
+            email: user.email,
+            auth_code: otp
+        };
     } catch (error) {
-        callback(error, null);
+        console.error('Error pada saat login:', error);
+        throw error;
     }
 }
 
