@@ -19,7 +19,7 @@
 #     "NIK_KTP": 1234567891
 # }
 
-POST http://localhost:80/api/verifikasi-otp
+POST http://localhost:80/api/masuk-umkm
 Content-Type: application/json
 
 {
