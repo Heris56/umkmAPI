@@ -570,7 +570,7 @@ app.post("/api/masuk-umkm", async (req, res) => {
             return res.status(400).json({ error: 'Email dan kata sandi wajib diisi' });
         }
 
-        const result = await loginUMKM({ email, password });
+        const result = await dboperations.loginUMKM({ email, password });
 
         // Kirim OTP lewat email
         const msg = {
