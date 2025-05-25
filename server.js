@@ -14,6 +14,10 @@ const Message = require("./models/message");
 const Ulasan = require("./models/ulasan");
 const { error } = require("console");
 
+// otp things
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -557,15 +561,75 @@ app.post("/api/registrasi-umkm", async (req, res) => {
     }
 });
 
-app.post("/login", (req, res) => {
-    const { inputEmail, inputPassword } = req.body;
+app.post("/api/masuk-umkm", async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
-        if (error) {
-            return res.status(401).send(error.message);
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
         }
-        res.status(200).json(result);
-    });
+
+        const result = await dboperations.loginUMKM({ email, password });
+
+        // kirim otp lewat email
+        const msg = {
+            to: result.email,
+            from: process.env.EMAIL_FROM,
+            subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+            text: `Kode OTP anda adalah ${result.auth_code}.`,
+            html: `<p>Your OTP is <strong>${result.auth_code}</strong>`
+        };
+
+        console.log('Sending OTP email to:', result.email);
+        await sgMail.send(msg);
+        console.log('OTP email sent');
+
+        // // Generate temporary JWT (valid until OTP verification)
+        // const token = jwt.sign(
+        //     { userId: result.id_umkm, email: result.email },
+        //     JWT_SECRET,
+        //     { expiresIn: '10m' }
+        // );
+
+        res.status(200).json({
+            message: 'OTP terkirim ke email anda',
+            // token,
+            userId: result.id_umkm
+        });
+    } catch (error) {
+        console.error('Error di /api/masuk-umkm:', error);
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
+});
+
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await UMKM.findOne({ where: { email } });
+
+        if (!user || user.auth_code !== otp) {
+            return res.status(401).json({ error: 'OTP Salah' });
+        }
+
+        // hapus otp dan ubah tanda terverifikasi
+        await user.update({ auth_code: null, is_verified: true });
+
+        // // Generate long-lived JWT
+        // const token = jwt.sign(
+        //     { userId: user.id_umkm, email: user.email, is_verified: true },
+        //     JWT_SECRET,
+        //     { expiresIn: '1h' }
+        // );
+
+        res.status(200).json({
+            message: 'OTP berhasil diverifikasi!',
+            token,
+            userId: user.id_umkm
+        });
+    } catch (error) {
+        console.error('Error in /api/verify-otp:', error);
+        res.status(500).json({ error: 'Gagal verifikasi OTP' });
+    }
 });
 
 app.post('/reset-password', async (req, res) => {
