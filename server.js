@@ -16,7 +16,13 @@ const { error } = require("console");
 
 // otp things
 const sgMail = require('@sendgrid/mail');
+if (!process.env.EMAIL_FROM) {
+    console.error('EMAIL_FROM belum diatur di .env!');
+    return res.status(500).json({ error: 'Server error: Email pengirim belum dikonfigurasi' });
+}
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +33,11 @@ const io = new Server(server, {
         allowedHeaders: ["Content-Type"],
         credentials: true,
     },
+});
+
+app.use((req, res, next) => {
+    console.log('Incoming headers:', req.headers);
+    next();
 });
 
 
@@ -580,6 +591,8 @@ app.post("/api/masuk-umkm", async (req, res) => {
             text: `Kode OTP anda adalah ${result.auth_code}.`,
             html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
         };
+        console.log('Email from:', process.env.EMAIL_FROM);
+        console.log('SendGrid payload:', msg);
 
         console.log('Sending OTP email to:', result.email);
         await sgMail.send(msg);
