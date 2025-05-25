@@ -1645,6 +1645,17 @@ app.put("/updatestatuskeranjang/:id", (req, res) => {
     }
 });
 
+app.put("/updateStatusDanIdUmkmKurir/:nama_usaha/:id_kurir", (req, res) => {
+    const nama_usaha = req.params.nama_usaha;
+    const id_kurir = req.params.id_kurir;
+    try {
+        const statuskeranjang = dboperations.updateStatusDanIdUmkmKurir(nama_usaha, id_kurir);
+        res.status(200).json({ message: "berhasil mengupdate id_umkm dan status pada kurir" });
+    } catch (error) {
+        res.status(500).json({ message: "error update id_umkm dan status pada kurir" })
+    }
+});
+
 
 // End Server Dapa
 

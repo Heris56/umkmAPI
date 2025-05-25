@@ -2464,7 +2464,7 @@ WHERE hk.id_umkm = ?;
     }
 }
 
-async function updateStatusKurirTerdaftar(id_kurir, callback) {
+async function updateStatusKurirTerdaftar(id_kurir) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2481,8 +2481,6 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
-        callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
         return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
@@ -2561,6 +2559,44 @@ WHERE kr.id_kurir = ? ;
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
+    }
+}
+
+async function updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir, callback) {
+    if (!nama_usaha || !id_kurir) {
+        throw new Error("nama_usaha dan id_kurir tidak boleh kosong");
+    }
+
+    const umkm = await UMKM.findOne({ where: { nama_usaha } });
+    if (!umkm) throw new Error("UMKM tidak ditemukan");
+
+    const kurir = await Kurir.findByPk(id_kurir);
+    if (!kurir) throw new Error("Kurir tidak ditemukan");
+
+    kurir.id_umkm = umkm.id_umkm;
+    await kurir.save();
+
+    return {
+        success: true,
+        id_kurir,
+        id_umkm: umkm.id_umkm,
+    };
+}
+
+async function updateStatusDanIdUmkmKurir(nama_usaha, id_kurir, callback) {
+    try {
+        if (!nama_usaha || !id_kurir) {
+            throw new Error("nama_usaha dan id_kurir tidak boleh kosong");
+        }
+
+        // Pastikan update UMKM selesai dulu
+        await updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir);
+
+        // Baru update status
+        await updateStatusKurirBelumTerdaftar(id_kurir, callback);
+    } catch (error) {
+        console.error("Gagal update status dan ID UMKM:", error);
+        callback(error, { success: false, message: error.message });
     }
 }
 
@@ -2798,4 +2834,6 @@ module.exports = {
     updateStatusKurirDipecat,
     getumkmkurir,
     gethistorykurirumkm,
+    updateUmkmKurirByNamaUMKM,
+    updateStatusDanIdUmkmKurir,
 };
