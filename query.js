@@ -2464,7 +2464,7 @@ WHERE hk.id_umkm = ?;
     }
 }
 
-async function updateStatusKurirTerdaftar(id_kurir) {
+async function updateStatusKurirTerdaftar(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2481,13 +2481,14 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
+        callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
         return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
     }
 }
 
-async function updateStatusKurirBelumTerdaftar(id_kurir) {
+async function updateStatusKurirBelumTerdaftar(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2500,7 +2501,7 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
@@ -2510,7 +2511,7 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
-async function updateStatusKurirDitolak(id_kurir) {
+async function updateStatusKurirDitolak(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2523,7 +2524,7 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
@@ -2534,7 +2535,7 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
-async function updateStatusKurirDipecat(id_kurir) {
+async function updateStatusKurirDipecat(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2551,7 +2552,7 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
+        callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
