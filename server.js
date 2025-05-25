@@ -594,7 +594,7 @@ app.post("/api/masuk-umkm", async (req, res) => {
         res.status(200).json({
             message: 'OTP terkirim ke email anda',
             // token,
-            userId: result.id_umkm
+            id_umkm: result.id_umkm
         });
     } catch (error) {
         console.error('Error di /api/masuk-umkm:', error);
@@ -602,7 +602,7 @@ app.post("/api/masuk-umkm", async (req, res) => {
     }
 });
 
-app.post('/api/verify-otp', async (req, res) => {
+app.post('/api/verifikasi-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
         const user = await UMKM.findOne({ where: { email } });
@@ -623,7 +623,7 @@ app.post('/api/verify-otp', async (req, res) => {
 
         res.status(200).json({
             message: 'OTP berhasil diverifikasi!',
-            token,
+            // token,
             userId: user.id_umkm
         });
     } catch (error) {
