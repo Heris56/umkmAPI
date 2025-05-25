@@ -614,33 +614,54 @@ app.post("/api/masuk-umkm", async (req, res) => {
     }
 });
 
-app.post('/api/verifikasi-otp', async (req, res) => {
+app.post("/api/verifikasi-otp", async (req, res) => {
     try {
         const { email, otp } = req.body;
-        const user = await dboperations.cekEmailUMKM(email);
-
-        if (!user || user.auth_code !== otp) {
-            return res.status(401).json({ error: 'OTP Salah' });
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email dan OTP wajib diisi' });
         }
 
-        // hapus otp dan ubah tanda terverifikasi
-        await user.update({ auth_code: null, is_verified: true });
+        const isValid = await dboperations.verifikasiOTP({ email, otp });
+        if (!isValid) {
+            return res.status(401).json({ error: 'OTP tidak valid' });
+        }
 
-        // // Generate long-lived JWT
-        // const token = jwt.sign(
-        //     { userId: user.id_umkm, email: user.email, is_verified: true },
-        //     JWT_SECRET,
-        //     { expiresIn: '1h' }
-        // );
+        res.status(200).json({ message: 'Verifikasi OTP berhasil' });
+    } catch (error) {
+        console.error('Error di /api/verifikasi-otp:', error.message);
+        return res.status(500).json({ error: 'Gagal memverifikasi OTP: ' + error.message });
+    }
+});
+
+app.post("/api/kirim-ulang-otp", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email wajib diisi' });
+        }
+
+        const result = await dboperations.kirimUlangOTP(email);
+
+        // kirim email OTP baru
+        const msg = {
+            to: result.email,
+            from: process.env.EMAIL_FROM,
+            subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+            text: `Kode OTP anda adalah ${result.auth_code}.`,
+            html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
+        };
+
+        console.log('Kirim ulang code OTP email ke:', result.email);
+        await sgMail.send(msg);
+        console.log('OTP email berhasil dikirim');
 
         res.status(200).json({
-            message: 'OTP berhasil diverifikasi!',
-            // token,
-            userId: user.id_umkm
+            message: 'OTP terkirim ke email anda',
+            id_umkm: result.id_umkm
         });
     } catch (error) {
-        console.error('Error in /api/verify-otp:', error);
-        res.status(500).json({ error: 'Gagal verifikasi OTP' });
+        console.error('Error di /api/resend-otp:', error.message);
+        return res.status(500).json({ error: 'Gagal mengirim ulang OTP: ' + error.message });
     }
 });
 
