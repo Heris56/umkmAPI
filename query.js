@@ -641,21 +641,22 @@ async function registUMKM(data) {
 async function loginUMKM(data) {
     try {
         console.log('Login attempt for email:', data.email);
-        // cek user
-        const user = await UMKM.findOne({ where: { email: data.email } });
+        // Normalize email to lowercase
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
         if (!user) {
-            throw new Error('Pengguna tidak tersedia!');
+            console.log('No user found for email:', data.email);
+            throw new Error('Pengguna tidak tersedia');
         }
 
         console.log('User found:', { id_umkm: user.id_umkm, email: user.email });
-        // handle password
+        // Handle password
         const isPasswordValid = await bcrypt.compare(data.password, user.password);
         console.log('Password valid:', isPasswordValid);
         if (!isPasswordValid) {
-            throw new Error('Password salah!');
+            throw new Error('Password salah');
         }
 
-        // generate code otp
+        // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await user.update({ auth_code: otp, is_verified: false });
 
@@ -665,7 +666,7 @@ async function loginUMKM(data) {
             auth_code: otp
         };
     } catch (error) {
-        console.error('Error pada saat login:', error);
+        console.error('Error pada saat login:', error.message);
         throw error;
     }
 }
@@ -673,7 +674,7 @@ async function loginUMKM(data) {
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
-        return !!user;
+        return user;
     } catch (error) {
         console.error('Database error:', error);
         throw error;
