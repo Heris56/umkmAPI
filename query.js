@@ -1651,6 +1651,7 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
                 GROUP_CONCAT(
                     DISTINCT JSON_OBJECT(
+                        'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
                         'Harga', p.Harga,
@@ -1693,7 +1694,6 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
         throw error;
     }
 }
-
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
@@ -1704,6 +1704,7 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
                 GROUP_CONCAT(
                     DISTINCT JSON_OBJECT(
+                        'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
                         'Harga', p.Harga,
