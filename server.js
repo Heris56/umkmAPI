@@ -1295,6 +1295,17 @@ app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
     });
 });
 
+app.get("/getallumkm", (req, res) => {
+
+    dboperations.getalluserUMKM((error, result) => {
+        if (error) {
+            console.error("error get data umkm:", error);
+            return res.status(500).send("error fetch data umkm");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getdaftarkurir/:id_umkm", (req, res) => {
     const id = req.params.id_umkm;
 

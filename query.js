@@ -2749,7 +2749,7 @@ module.exports = {
     BookmarkedbyPembeli,
     DeleteBookmark,
     getuserUMKMbyID,
-    getuserUMKM: getalluserUMKM,
+    getalluserUMKM,
     registUMKM,
     loginUMKM,
     cekEmailUMKM,
