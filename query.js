@@ -671,6 +671,48 @@ async function loginUMKM(data) {
     }
 }
 
+async function verifikasiOTP(data) {
+    try {
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        if (user.auth_code !== data.otp) {
+            throw new Error('OTP tidak valid');
+        }
+
+        // hapus auth code karna sudah tidak digunakan
+        // set status verifikasi
+        await user.update({ is_verified: true, auth_code: null });
+        return true;
+    } catch (error) {
+        console.error('Error pada saat verifikasi OTP:', error.message);
+        throw error;
+    }
+}
+
+async function kirimUlangOTP(email) {
+    try {
+        console.log('Resend OTP for email:', email);
+        const user = await UMKM.findOne({ where: { email } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp, is_verified: false });
+
+        return {
+            email: user.email,
+            auth_code: otp
+        };
+    } catch (error) {
+        console.error('Error pada saat resend OTP:', error.message);
+        throw error;
+    }
+}
+
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
@@ -2764,6 +2806,8 @@ module.exports = {
     getalluserUMKM,
     registUMKM,
     loginUMKM,
+    verifikasiOTP,
+    kirimUlangOTP,
     cekEmailUMKM,
     sendResetLink,
     getulasans,
