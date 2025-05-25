@@ -564,48 +564,47 @@ app.post("/api/registrasi-umkm", async (req, res) => {
 app.post("/api/masuk-umkm", async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Received login request:', { email });
 
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+            return res.status(400).json({ error: 'Email dan kata sandi wajib diisi' });
         }
 
-        const result = await dboperations.loginUMKM({ email, password });
+        const result = await loginUMKM({ email, password });
 
-        // kirim otp lewat email
+        // Kirim OTP lewat email
         const msg = {
             to: result.email,
             from: process.env.EMAIL_FROM,
             subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
             text: `Kode OTP anda adalah ${result.auth_code}.`,
-            html: `<p>Your OTP is <strong>${result.auth_code}</strong>`
+            html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
         };
 
         console.log('Sending OTP email to:', result.email);
         await sgMail.send(msg);
-        console.log('OTP email sent');
-
-        // // Generate temporary JWT (valid until OTP verification)
-        // const token = jwt.sign(
-        //     { userId: result.id_umkm, email: result.email },
-        //     JWT_SECRET,
-        //     { expiresIn: '10m' }
-        // );
+        console.log('OTP email sent successfully');
 
         res.status(200).json({
             message: 'OTP terkirim ke email anda',
-            // token,
             id_umkm: result.id_umkm
         });
     } catch (error) {
-        console.error('Error di /api/masuk-umkm:', error);
-        res.status(401).json({ error: 'Invalid credentials' });
+        console.error('Error di /api/masuk-umkm:', error.message);
+        if (error.message === 'Pengguna tidak tersedia') {
+            return res.status(401).json({ error: 'Email tidak terdaftar' });
+        }
+        if (error.message === 'Password salah') {
+            return res.status(401).json({ error: 'Kata sandi salah' });
+        }
+        return res.status(500).json({ error: 'Gagal masuk: ' + error.message });
     }
 });
 
 app.post('/api/verifikasi-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
-        const user = await UMKM.findOne({ where: { email } });
+        const user = await dboperations.cekEmailUMKM(email);
 
         if (!user || user.auth_code !== otp) {
             return res.status(401).json({ error: 'OTP Salah' });
