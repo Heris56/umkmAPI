@@ -2487,7 +2487,7 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
-async function updateStatusKurirBelumTerdaftar(id_kurir, callback) {
+async function updateStatusKurirBelumTerdaftar(id_kurir) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2504,15 +2504,13 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
-        callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
         return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
     }
 }
 
-async function updateStatusKurirDitolak(id_kurir, callback) {
+async function updateStatusKurirDitolak(id_kurir) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2530,14 +2528,13 @@ WHERE kr.id_kurir = ? ;
             throw new Error('Update Gagal');
         }
 
-        callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
     }
 }
 
-async function updateStatusKurirDipecat(id_kurir, callback) {
+async function updateStatusKurirDipecat(id_kurir) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2555,14 +2552,13 @@ WHERE kr.id_kurir = ? ;
             throw new Error('Update Gagal');
         }
 
-        callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
     }
 }
 
-async function updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir, callback) {
+async function updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir) {
     if (!nama_usaha || !id_kurir) {
         throw new Error("nama_usaha dan id_kurir tidak boleh kosong");
     }
