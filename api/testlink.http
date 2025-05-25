@@ -1,6 +1,21 @@
-post http://localhost:80/reset-password
+# post http://localhost:80/reset-password
+# Content-Type: application/json
+
+# {
+#   "inputEmail": "johndoe@gmail.com"
+# }
+
+
+POST http://localhost:80/api/registrasi-umkm
 Content-Type: application/json
 
 {
-  "inputEmail": "example@gmail.com"
+    "nama_lengkap": "John Doe",
+    "nomor_telepon": "0812346567890",
+    "alamat": "Jl. Sudirman No. 123, Jakarta",
+    "username": "malika123",
+    "email": "malika@example.com",
+    "password": "securePassword123",
+    "nama_usaha": "Toko John",
+    "NIK_KTP": 983745
 }
