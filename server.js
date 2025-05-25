@@ -1359,6 +1359,17 @@ app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
     });
 });
 
+app.get("/getallumkm", (req, res) => {
+
+    dboperations.getalluserUMKM((error, result) => {
+        if (error) {
+            console.error("error get data umkm:", error);
+            return res.status(500).send("error fetch data umkm");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getdaftarkurir/:id_umkm", (req, res) => {
     const id = req.params.id_umkm;
 
@@ -1709,18 +1720,65 @@ app.put("/updatestatuskeranjang/:id", (req, res) => {
     }
 });
 
+app.put("/updateStatusDanIdUmkmKurir/:nama_usaha/:id_kurir", (req, res) => {
+    const nama_usaha = req.params.nama_usaha;
+    const id_kurir = req.params.id_kurir;
+    try {
+        const statuskeranjang = dboperations.updateStatusDanIdUmkmKurir(nama_usaha, id_kurir);
+        res.status(200).json({ message: "berhasil mengupdate id_umkm dan status pada kurir" });
+    } catch (error) {
+        res.status(500).json({ message: "error update id_umkm dan status pada kurir" })
+    }
+});
+
 
 // End Server Dapa
 
 //start server inbox
 app.get("/getinboxpesanan", (req, res) => {
-    dboperations.getinboxpesanan((error, result) => {
+    const id_umkm = req.query.id_umkm;
+
+    if (!id_umkm) {
+        return res.status(400).send("Missing required parameter: id_umkm");
+    }
+
+    dboperations.getinboxpesanan(id_umkm, (error, result) => {
         if (error) {
-            console.error("error get inbox:", error);
-            return res.status(500).send("error fetch inbox pesanan");
+            console.error("Error get inbox:", error);
+            return res.status(500).send("Error fetching inbox pesanan diterima");
         }
         res.json(result);
     });
+});
+
+app.get("/getinboxpesananmasuk", async (req, res) => {
+    try {
+        const id_umkm = req.query.id_umkm;
+
+        // Validasi input
+        if (!id_umkm) {
+            return res.status(400).json({ error: "Missing required parameter: id_umkm" });
+        }
+
+        // Panggil fungsi untuk mendapatkan data
+        dboperations.getinboxpesananmasuk(id_umkm, (error, result) => {
+            if (error) {
+                console.error("Error fetching inbox pesanan masuk:", error);
+                return res.status(500).json({ error: "Failed to fetch inbox pesanan masuk" });
+            }
+
+            // Jika tidak ada hasil, kirimkan pesan kosong
+            if (!result || result.length === 0) {
+                return res.status(404).json({ message: "No Pesanan Masuk found for the given UMKM ID" });
+            }
+
+            // Kirimkan hasil
+            res.status(200).json(result);
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        res.status(500).json({ error: "An unexpected error occurred" });
+    }
 });
 
 app.post("/campaign", (req, res) => {
