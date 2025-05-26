@@ -19,9 +19,10 @@
 #     "NIK_KTP": 1234567891
 # }
 
-POST http://localhost:80/api/kirim-ulang-otp
+POST http://localhost:80/api/masuk-umkm
 Content-Type: application/json
 
 {
-  "email": "darrylrambi@gmail.com"
+  "email": "darrylf.rambi@gmail.com",
+  "password": "secureP@ssword123"
 }

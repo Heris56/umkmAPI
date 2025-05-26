@@ -593,6 +593,16 @@ async function getuserUMKMbyID(id, callback) {
     }
 }
 
+async function getUMKMById(id) {
+    if (!id) throw new Error('tidak ada ID di parameter');
+    
+    const umkm = await UMKM.findByPk(id);
+    if (!umkm) throw new Error('tidak menemukan umkm');
+    
+    return umkm;
+}
+
+
 async function getalluserUMKM(callback) {
     try {
         const result = await UMKM.findAll(); // ambil data tari tabel umkm
@@ -658,7 +668,7 @@ async function loginUMKM(data) {
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        await user.update({ auth_code: otp, is_verified: false });
+        await user.update({ auth_code: otp });
 
         return {
             id_umkm: user.id_umkm,
@@ -2815,6 +2825,7 @@ module.exports = {
     getulasansByProdukId,
     getulasansByIdUMKM,
     getOverallRating,
+    getUMKMById,
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,

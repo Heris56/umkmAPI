@@ -582,25 +582,42 @@ app.post("/api/masuk-umkm", async (req, res) => {
         }
 
         const result = await dboperations.loginUMKM({ email, password });
+        console.log('loginUMKM result:', result);
 
-        // Kirim OTP lewat email
-        const msg = {
-            to: result.email,
-            from: process.env.EMAIL_FROM,
-            subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
-            text: `Kode OTP anda adalah ${result.auth_code}.`,
-            html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
-        };
-        console.log('Email from:', process.env.EMAIL_FROM);
-        console.log('SendGrid payload:', msg);
+        // cek status is_verified 
+        const user = await dboperations.getUMKMById(result.id_umkm);
+        console.log('User data:', user.toJSON ? user.toJSON() : user);
+        const is_verified = user.is_verified ? 1 : 0;
 
-        console.log('Sending OTP email to:', result.email);
-        await sgMail.send(msg);
-        console.log('OTP email sent successfully');
 
+        if (!is_verified) {
+            // kirim OTP lewat email jika is_verified == 0 (false)
+            const msg = {
+                to: result.email,
+                from: process.env.EMAIL_FROM,
+                subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+                text: `Kode OTP anda adalah ${result.auth_code}.`,
+                html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
+            };
+            console.log('Email from:', process.env.EMAIL_FROM);
+            console.log('SendGrid payload:', msg);
+
+            console.log('Sending OTP email to:', result.email);
+            await sgMail.send(msg);
+            console.log('OTP email sent successfully');
+
+            return res.status(200).json({
+                message: 'OTP terkirim ke email anda',
+                id_umkm: result.id_umkm,
+                is_verified: 0
+            });
+        }
+
+        // skip kirim otp jika is_verified == 1 (true)
         res.status(200).json({
-            message: 'OTP terkirim ke email anda',
-            id_umkm: result.id_umkm
+            message: 'Login berhasil',
+            id_umkm: result.id_umkm,
+            is_verified: 1
         });
     } catch (error) {
         console.error('Error di /api/masuk-umkm:', error.message);
@@ -625,6 +642,9 @@ app.post("/api/verifikasi-otp", async (req, res) => {
         if (!isValid) {
             return res.status(401).json({ error: 'OTP tidak valid' });
         }
+
+        // hapus otp setelah verifikas
+        await user.update({ is_verified: true, auth_code: null });
 
         res.status(200).json({ message: 'Verifikasi OTP berhasil' });
     } catch (error) {
