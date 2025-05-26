@@ -51,6 +51,14 @@ const UMKM = sequelize.define('UMKM', {
     auth_code: {
         type: DataTypes.STRING(6),
         allowNull: true
+    },
+    reset_token: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    reset_token_expiry: {
+        type: DataTypes.BIGINT,
+        allowNull: true
     }
 }, {
     tableName: 'umkm',

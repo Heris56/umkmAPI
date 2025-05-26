@@ -15,6 +15,7 @@ const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -721,6 +722,59 @@ async function kirimUlangOTP(email) {
         console.error('Error pada saat resend OTP:', error.message);
         throw error;
     }
+}
+
+async function forgotPassword(email) {
+    if (!email) {
+        throw new Error('Email wajib diisi');
+    }
+
+    const user = await UMKM.findOne({ where: { email } });
+    if (!user) {
+        throw new Error('Email tidak terdaftar');
+    }
+
+    // create token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = Date.now() + 3600000; // exp 1 jam
+
+    // simpan token
+    await user.update({
+        reset_token: token,
+        reset_token_expiry: tokenExpiry
+    });
+
+    return { email, token };
+}
+
+async function resetPassword({ email, token, password }) {
+    if (!email || !token || !password) {
+        throw new Error('Email, token, dan kata sandi wajib diisi');
+    }
+
+    const user = await UMKM.findOne({
+        where: {
+            email,
+            reset_token: token,
+            reset_token_expiry: { [Op.gt]: Date.now() }
+        }
+    });
+
+    if (!user) {
+        throw new Error('Token tidak valid atau telah kedaluwarsa');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // adjust password, clear token, set is_verified
+    await user.update({
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expiry: null,
+        is_verified: true // skip otp
+    });
+
+    return { email };
 }
 
 async function cekEmailUMKM(email) {
@@ -2820,6 +2874,8 @@ module.exports = {
     kirimUlangOTP,
     cekEmailUMKM,
     sendResetLink,
+    resetPassword,
+    forgotPassword,
     getulasans,
     addulasans,
     getulasansByProdukId,
