@@ -740,56 +740,117 @@ app.post("/api/kirim-ulang-otp", async (req, res) => {
     }
 });
 
-app.get("/ulasans", (req, res) => {
-    dboperations.getulasans((error, result) => {
-        if (error) {
-            console.error(error);
-            return res.status(500).send(error.message);
-        }
+// start ulasan section
+// fetch semua ulasan
+app.get('/ulasans', async (req, res) => {
+    try {
+        const result = await dboperations.getUlasans();
         res.status(200).json(result);
-    });
+    } catch (error) {
+        console.error('Error fetching ulasans:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
 });
 
-app.post("/ulasans", async (req, res) => {
+// fetch ulasan dari id produk tertentu
+app.get('/ulasans/:id_produk', async (req, res) => {
+    const id_produk = req.params.id_produk;
+    try {
+        const result = await dboperations.getUlasansByProdukId(id_produk);
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Belum ada ulasan untuk produk ini!' });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching ulasans by product ID:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
+});
+
+// fetch seluruh ulasan dari umkm tertentu
+app.get('/ulasans/umkm/:id_umkm', async (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    try {
+        const result = await dboperations.getUlasansByIdUMKM(id_umkm);
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Belum ada ulasan untuk UMKM ini!' });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching ulasans by UMKM ID:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
+});
+
+// post ulasan baru
+app.post('/ulasans', async (req, res) => {
     try {
         const { id_pembeli, id_produk, username, ulasan, rating } = req.body;
 
-        const newUlasan = await Ulasan.create({
+        // validasi
+        if (!id_pembeli || !id_produk || !username || !ulasan || !rating) {
+            return res.status(400).json({ message: 'Lengkapi formulir!' });
+        }
+        if (rating < 0 || rating > 5) {
+            return res.status(400).json({ message: 'Rating harus antara 0 sampai 5!' });
+        }
+
+        const newUlasan = await dboperations.createUlasan({
             id_pembeli,
             id_produk,
             username,
             ulasan,
-            rating
+            rating,
         });
 
-        res.status(200).json(newUlasan);
+        res.status(201).json(newUlasan);
     } catch (error) {
-        console.error("Error adding ulasan:", error);
-        res.status(500).send("Error adding ulasan");
+        console.error('Error menambahkan ulasan:', error);
+        res.status(500).json({ message: 'Error menambahkan ulasan', error: error.message });
     }
 });
 
-app.get("/ulasans/:id_produk", (req, res) => {
-    const id_produk = req.params.id_produk;
+// edit ulasan
+app.put('/ulasans/:id_ulasan', async (req, res) => {
+    const id_ulasan = req.params.id_ulasan;
+    const { ulasan, rating } = req.body;
 
-    dboperations.getulasansByProdukId(id_produk, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
+    try {
+        // validasi
+        if (!ulasan && !rating) {
+            return res.status(400).json({ message: 'Isi ulasan atau rating!' });
         }
-        res.status(200).json(result);
-    });
+        if (rating && (rating < 0 || rating > 5)) {
+            return res.status(400).json({ message: 'Rating harus antara 0 sampai 5!' });
+        }
+
+        const updatedUlasan = await dboperations.updateUlasan(id_ulasan, { ulasan, rating });
+        if (!updatedUlasan) {
+            return res.status(404).json({ message: 'Ulasan tidak tersedia' });
+        }
+
+        res.status(200).json(updatedUlasan);
+    } catch (error) {
+        console.error('Error updating ulasan:', error);
+        res.status(500).json({ message: 'Error updating ulasan', error: error.message });
+    }
 });
 
-app.get("/ulasans/umkm/:id_umkm", (req, res) => {
-    const id_umkm = req.params.id_umkm;
-
-    dboperations.getulasansByIdUMKM(id_umkm, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
+// hapus ulasan
+app.delete('/ulasans/:id_ulasan', async (req, res) => {
+    const id_ulasan = req.params.id_ulasan;
+    try {
+        const deleted = await dboperations.deleteUlasan(id_ulasan);
+        if (!deleted) {
+            return res.status(404).json({ message: 'Ulasan tidak tersedia' });
         }
-        res.status(200).json(result);
-    });
+        res.status(200).json({ message: 'Ulasan berhasil dihapus' });
+    } catch (error) {
+        console.error('Error menghapus ulasan:', error);
+        res.status(500).json({ message: 'Error menghapus ulasan', error: error.message });
+    }
 });
+// end ulasan section
 
 app.get("/overallrating/:id_umkm", (req, res) => {
     const id_umkm = req.params.id_umkm;

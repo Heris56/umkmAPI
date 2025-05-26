@@ -819,68 +819,58 @@ async function sendResetLink(email) {
 }
 // end of bagian UMKM
 
-// Start query ulasans
-async function getulasans(callback) {
-    try {
-        const result = await Ulasan.findAll();
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+// start query ulasans
+async function getUlasans() {
+    return await Ulasan.findAll({
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_produk'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        ],
+    });
 }
 
-async function addulasans(data, callback) {
-    try {
-        const newUlasan = await Ulasan.create({
-            id_pembeli: data.id_pembeli,
-            id_produk: data.id_produk,
-            username: data.username,
-            ulasan: data.ulasan,
-            rating: data.rating
-        });
-
-        callback(null, newUlasan);
-    } catch (error) {
-        callback(error, null);
-    }
+async function getUlasansByProdukId(id_produk) {
+    return await Ulasan.findAll({
+        where: { id_produk },
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_produk'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        ],
+    });
 }
 
-async function getulasansByProdukId(id_produk, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_produk: id_produk },
-            },
+async function getUlasansByIdUMKM(id_umkm) {
+    return await Ulasan.findAll({
+        include: [
             {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
+                model: Produk,
+                where: { id_umkm },
+                attributes: ['id_produk', 'nama_produk'],
             },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        ],
+    });
 }
 
-async function getulasansByIdUMKM(id_umkm, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_umkm: id_umkm },
-            },
-            {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
-            },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
+async function createUlasan(data) {
+    return await Ulasan.create(data);
+}
+
+async function updateUlasan(id_ulasan, data) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return null;
     }
+    return await ulasan.update(data);
+}
+
+async function deleteUlasan(id_ulasan) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return false;
+    }
+    await ulasan.destroy();
+    return true;
 }
 
 async function getOverallRating(id_umkm, callback) {
@@ -2876,10 +2866,12 @@ module.exports = {
     sendResetLink,
     resetPassword,
     forgotPassword,
-    getulasans,
-    addulasans,
-    getulasansByProdukId,
-    getulasansByIdUMKM,
+    getUlasans,
+    getUlasansByProdukId,
+    getUlasansByIdUMKM,
+    createUlasan,
+    updateUlasan,
+    deleteUlasan,
     getOverallRating,
     getUMKMById,
     getMessages,
