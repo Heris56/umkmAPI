@@ -699,7 +699,7 @@ app.post("/api/verifikasi-otp", async (req, res) => {
         }
 
         // hapus otp setelah verifikas
-        await user.update({ is_verified: true, auth_code: null });
+        // await user.update({ is_verified: true, auth_code: null });
 
         res.status(200).json({ message: 'Verifikasi OTP berhasil' });
     } catch (error) {

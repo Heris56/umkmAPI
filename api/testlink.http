@@ -19,7 +19,7 @@
 #     "NIK_KTP": 1234567891
 # }
 
-POST http://localhost:80/api/forgot-password
+POST http://localhost:80/api/verifikasi-otp
 Content-Type: application/json
 
 {
