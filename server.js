@@ -631,38 +631,22 @@ app.post("/api/masuk-umkm", async (req, res) => {
     }
 });
 
-app.post("/api/forgot-password", async (req, res) => {
+app.post('/api/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
         console.log('Received forgot password request:', { email });
 
-        if (!email) {
-            return res.status(400).json({ error: 'Email wajib diisi' });
-        }
+        const { token } = await dboperations.forgotPassword(email);
 
-        const user = await UMKM.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).json({ error: 'Email tidak terdaftar' });
-        }
-
-        // Generate reset token
-        const token = crypto.randomBytes(32).toString('hex');
-        const tokenExpiry = Date.now() + 3600000; // 1 hour expiry
-
-        // Store token and expiry in database
-        await user.update({
-            reset_token: token,
-            reset_token_expiry: tokenExpiry
-        });
-
-        // Send reset email
-        const resetUrl = `https://yourapp.com/umkm/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        const resetUrl = `http://127.0.0.1:8000/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        
+        // isi email
         const msg = {
-            to: email,
-            from: process.env.EMAIL_FROM,
-            subject: 'Reset Kata Sandi Akun UMKMKU',
-            text: `Klik link berikut untuk mereset kata sandi Anda: ${resetUrl}\nLink ini berlaku selama 1 jam.`,
-            html: `<p>Klik link berikut untuk mereset kata sandi Anda:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Link ini berlaku selama 1 jam.</p>`
+        to: email,
+        from: process.env.EMAIL_FROM,
+        subject: 'Reset Kata Sandi Akun UMKMKU',
+        text: `Klik link berikut untuk mereset kata sandi Anda: ${resetUrl}\nLink ini berlaku selama 1 jam.`,
+        html: `<p>Klik link berikut untuk mereset kata sandi Anda:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Link ini berlaku selama 1 jam.</p>`
         };
 
         console.log('Sending reset email to:', email);
@@ -672,6 +656,12 @@ app.post("/api/forgot-password", async (req, res) => {
         res.status(200).json({ message: 'Link reset kata sandi telah dikirim ke email Anda' });
     } catch (error) {
         console.error('Error di /api/forgot-password:', error.message);
+        if (error.message === 'Email wajib diisi') {
+        return res.status(400).json({ error: error.message });
+        }
+        if (error.message === 'Email tidak terdaftar') {
+        return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Gagal mengirim link reset: ' + error.message });
     }
 });
@@ -681,36 +671,17 @@ app.post("/api/reset-password", async (req, res) => {
         const { email, token, password } = req.body;
         console.log('Received reset password request:', { email });
 
-        if (!email || !token || !password) {
-            return res.status(400).json({ error: 'Email, token, dan kata sandi wajib diisi' });
-        }
-
-        const user = await UMKM.findOne({
-            where: {
-                email,
-                reset_token: token,
-                reset_token_expiry: { [Op.gt]: Date.now() }
-            }
-        });
-
-        if (!user) {
-            return res.status(401).json({ error: 'Token tidak valid atau telah kedaluwarsa' });
-        }
-
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Update password, clear token, set is_verified
-        await user.update({
-            password: hashedPassword,
-            reset_token: null,
-            reset_token_expiry: null,
-            is_verified: true // Prevent OTP on next login
-        });
+        await dboperations.resetPassword({ email, token, password });
 
         res.status(200).json({ message: 'Kata sandi berhasil direset' });
     } catch (error) {
         console.error('Error di /api/reset-password:', error.message);
+        if (error.message === 'Email, token, dan kata sandi wajib diisi') {
+            return res.status(400).json({ error: error.message });
+        }
+        if (error.message === 'Token tidak valid atau telah kedaluwarsa') {
+            return res.status(401).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Gagal mereset kata sandi: ' + error.message });
     }
 });
@@ -766,28 +737,6 @@ app.post("/api/kirim-ulang-otp", async (req, res) => {
     } catch (error) {
         console.error('Error di /api/resend-otp:', error.message);
         return res.status(500).json({ error: 'Gagal mengirim ulang OTP: ' + error.message });
-    }
-});
-
-app.post('/reset-password', async (req, res) => {
-    const inputEmail = req.body.inputEmail;
-
-    if (!inputEmail) {
-        return res.status(400).json({ message: 'Isi kolom email!' });
-    }
-
-    try {
-        const emailExists = await dboperations.cekEmailUMKM(inputEmail);
-        if (!emailExists) {
-            return res.status(404).json({ message: 'Email tidak ditemukan!' });
-        }
-
-        await dboperations.sendResetLink(inputEmail);
-        res.status(200).json({ message: 'Link reset kata sandi berhasil terkirim!' });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
     }
 });
 
