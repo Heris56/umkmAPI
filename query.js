@@ -823,8 +823,8 @@ async function sendResetLink(email) {
 async function getUlasans() {
     return await Ulasan.findAll({
         include: [
-            { model: Produk, attributes: ['id_produk', 'nama_barang'] },
-            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
         ],
     });
 }
@@ -833,8 +833,8 @@ async function getUlasansByProdukId(id_produk) {
     return await Ulasan.findAll({
         where: { id_produk },
         include: [
-            { model: Produk, attributes: ['id_produk', 'nama_barang'] },
-            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
         ],
     });
 }
@@ -845,9 +845,9 @@ async function getUlasansByIdUMKM(id_umkm) {
             {
                 model: Produk,
                 where: { id_umkm },
-                attributes: ['id_produk', 'nama_barang'],
+                attributes: ['id_produk', 'nama_barang', 'image_url'],
             },
-            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
         ],
     });
 }
