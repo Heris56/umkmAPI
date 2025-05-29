@@ -823,7 +823,7 @@ async function sendResetLink(email) {
 async function getUlasans() {
     return await Ulasan.findAll({
         include: [
-            { model: Produk, attributes: ['id_produk', 'nama_produk'] },
+            { model: Produk, attributes: ['id_produk', 'nama_barang'] },
             { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
         ],
     });
@@ -833,7 +833,7 @@ async function getUlasansByProdukId(id_produk) {
     return await Ulasan.findAll({
         where: { id_produk },
         include: [
-            { model: Produk, attributes: ['id_produk', 'nama_produk'] },
+            { model: Produk, attributes: ['id_produk', 'nama_barang'] },
             { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
         ],
     });
@@ -845,7 +845,7 @@ async function getUlasansByIdUMKM(id_umkm) {
             {
                 model: Produk,
                 where: { id_umkm },
-                attributes: ['id_produk', 'nama_produk'],
+                attributes: ['id_produk', 'nama_barang'],
             },
             { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
         ],
