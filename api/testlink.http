@@ -19,9 +19,9 @@
 #     "NIK_KTP": 1234567891
 # }
 
-POST http://localhost:80/api/verifikasi-otp
-Content-Type: application/json
+GET  http://localhost:80/ulasans
+# Content-Type: application/json
 
-{
-  "email": "darrylrambi@gmail.com"
-}
+# {
+#   "email": "darrylrambi@gmail.com"
+# }
