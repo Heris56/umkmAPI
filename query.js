@@ -824,7 +824,7 @@ async function getUlasans() {
     return await Ulasan.findAll({
         include: [
             { model: Produk, attributes: ['id_produk', 'nama_barang'] },
-            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
         ],
     });
 }
@@ -834,7 +834,7 @@ async function getUlasansByProdukId(id_produk) {
         where: { id_produk },
         include: [
             { model: Produk, attributes: ['id_produk', 'nama_barang'] },
-            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
         ],
     });
 }
@@ -847,7 +847,7 @@ async function getUlasansByIdUMKM(id_umkm) {
                 where: { id_umkm },
                 attributes: ['id_produk', 'nama_barang'],
             },
-            { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username'] },
         ],
     });
 }
