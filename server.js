@@ -1295,6 +1295,17 @@ app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
     });
 });
 
+app.get("/getallumkm", (req, res) => {
+
+    dboperations.getalluserUMKM((error, result) => {
+        if (error) {
+            console.error("error get data umkm:", error);
+            return res.status(500).send("error fetch data umkm");
+        }
+        res.json(result);
+    });
+});
+
 app.get("/getdaftarkurir/:id_umkm", (req, res) => {
     const id = req.params.id_umkm;
 
@@ -1642,6 +1653,17 @@ app.put("/updatestatuskeranjang/:id", (req, res) => {
         res.status(200).json({ message: "berhasil mengupdate keranjang" });
     } catch (error) {
         res.status(500).json({ message: "error update status" })
+    }
+});
+
+app.put("/updateStatusDanIdUmkmKurir/:nama_usaha/:id_kurir", (req, res) => {
+    const nama_usaha = req.params.nama_usaha;
+    const id_kurir = req.params.id_kurir;
+    try {
+        const statuskeranjang = dboperations.updateStatusDanIdUmkmKurir(nama_usaha, id_kurir);
+        res.status(200).json({ message: "berhasil mengupdate id_umkm dan status pada kurir" });
+    } catch (error) {
+        res.status(500).json({ message: "error update id_umkm dan status pada kurir" })
     }
 });
 
