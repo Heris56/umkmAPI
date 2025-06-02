@@ -5,17 +5,23 @@
 #   "inputEmail": "johndoe@gmail.com"
 # }
 
+# test data untuk registration
+# POST http://localhost:80/api/registrasi-umkm
+# Content-Type: application/json
+# {
+#     "nama_lengkap": "Darryl Rambi",
+#     "nomor_telepon": "0812346567890",
+#     "alamat": "Jl. Sudirman No. 123, Jakarta",
+#     "username": "darryl.rambi",
+#     "email": "darrylrambi@gmail.com",
+#     "password": "secureP@ssword123",
+#     "nama_usaha": "Darryl's Deal",
+#     "NIK_KTP": 1234567891
+# }
 
-POST http://localhost:80/api/registrasi-umkm
-Content-Type: application/json
+GET  http://localhost:80/ulasans
+# Content-Type: application/json
 
-{
-    "nama_lengkap": "John Doe",
-    "nomor_telepon": "0812346567890",
-    "alamat": "Jl. Sudirman No. 123, Jakarta",
-    "username": "malika123",
-    "email": "malika@example.com",
-    "password": "securePassword123",
-    "nama_usaha": "Toko John",
-    "NIK_KTP": 983745
-}
+# {
+#   "email": "darrylrambi@gmail.com"
+# }

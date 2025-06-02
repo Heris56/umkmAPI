@@ -15,6 +15,7 @@ const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
 const { error } = require("console");
@@ -593,6 +594,16 @@ async function getuserUMKMbyID(id, callback) {
     }
 }
 
+async function getUMKMById(id) {
+    if (!id) throw new Error('tidak ada ID di parameter');
+    
+    const umkm = await UMKM.findByPk(id);
+    if (!umkm) throw new Error('tidak menemukan umkm');
+    
+    return umkm;
+}
+
+
 async function getalluserUMKM(callback) {
     try {
         const result = await UMKM.findAll(); // ambil data tari tabel umkm
@@ -610,7 +621,7 @@ async function registUMKM(data) {
         const requiredFields = ['nama_lengkap', 'nomor_telepon', 'username', 'email', 'password', 'NIK_KTP'];
         for (const field of requiredFields) {
             if (!data[field]) {
-                throw new Error(`Missing required field: ${field}`);
+                throw new Error(`Data tidak ditemukan: ${field}`);
             }
         }
 
@@ -633,34 +644,143 @@ async function registUMKM(data) {
         const result = await UMKM.create(umkmData);
         return result;
     } catch (error) {
-        console.error("Error during registration:", error);
+        console.error("Error pada saat registrasi:", error);
         throw error;
     }
 }
 
-async function loginUMKM(data, callback) {
+async function loginUMKM(data) {
     try {
-        // cari by email
-        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
-
-        // cek kalo usernya ada, dan passwordnya sesuai
-        if (user && user.password === data.inputPassword) {
-            const result = {
-                id_umkm: user.id_umkm,
-            };
-            callback(null, result);
-        } else {
-            callback(new Error("Email atau Password salah!"), null);
+        console.log('Login attempt for email:', data.email);
+        // Normalize email to lowercase
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
+        if (!user) {
+            console.log('No user found for email:', data.email);
+            throw new Error('Pengguna tidak tersedia');
         }
+
+        console.log('User found:', { id_umkm: user.id_umkm, email: user.email });
+        // Handle password
+        const isPasswordValid = await bcrypt.compare(data.password, user.password);
+        console.log('Password valid:', isPasswordValid);
+        if (!isPasswordValid) {
+            throw new Error('Password salah');
+        }
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp });
+
+        return {
+            id_umkm: user.id_umkm,
+            email: user.email,
+            auth_code: otp
+        };
     } catch (error) {
-        callback(error, null);
+        console.error('Error pada saat login:', error.message);
+        throw error;
     }
+}
+
+async function verifikasiOTP(data) {
+    try {
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        if (user.auth_code !== data.otp) {
+            throw new Error('OTP tidak valid');
+        }
+
+        // hapus auth code karna sudah tidak digunakan
+        // set status verifikasi
+        await user.update({ is_verified: true, auth_code: null });
+        return true;
+    } catch (error) {
+        console.error('Error pada saat verifikasi OTP:', error.message);
+        throw error;
+    }
+}
+
+async function kirimUlangOTP(email) {
+    try {
+        console.log('Resend OTP for email:', email);
+        const user = await UMKM.findOne({ where: { email } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp, is_verified: false });
+
+        return {
+            email: user.email,
+            auth_code: otp
+        };
+    } catch (error) {
+        console.error('Error pada saat resend OTP:', error.message);
+        throw error;
+    }
+}
+
+async function forgotPassword(email) {
+    if (!email) {
+        throw new Error('Email wajib diisi');
+    }
+
+    const user = await UMKM.findOne({ where: { email } });
+    if (!user) {
+        throw new Error('Email tidak terdaftar');
+    }
+
+    // create token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = Date.now() + 3600000; // exp 1 jam
+
+    // simpan token
+    await user.update({
+        reset_token: token,
+        reset_token_expiry: tokenExpiry
+    });
+
+    return { email, token };
+}
+
+async function resetPassword({ email, token, password }) {
+    if (!email || !token || !password) {
+        throw new Error('Email, token, dan kata sandi wajib diisi');
+    }
+
+    const user = await UMKM.findOne({
+        where: {
+            email,
+            reset_token: token,
+            reset_token_expiry: { [Op.gt]: Date.now() }
+        }
+    });
+
+    if (!user) {
+        throw new Error('Token tidak valid atau telah kedaluwarsa');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // adjust password, clear token, set is_verified
+    await user.update({
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expiry: null,
+        is_verified: true // skip otp
+    });
+
+    return { email };
 }
 
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
-        return !!user;
+        return user;
     } catch (error) {
         console.error('Database error:', error);
         throw error;
@@ -699,68 +819,58 @@ async function sendResetLink(email) {
 }
 // end of bagian UMKM
 
-// Start query ulasans
-async function getulasans(callback) {
-    try {
-        const result = await Ulasan.findAll();
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+// start query ulasans
+async function getUlasans() {
+    return await Ulasan.findAll({
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function addulasans(data, callback) {
-    try {
-        const newUlasan = await Ulasan.create({
-            id_pembeli: data.id_pembeli,
-            id_produk: data.id_produk,
-            username: data.username,
-            ulasan: data.ulasan,
-            rating: data.rating
-        });
-
-        callback(null, newUlasan);
-    } catch (error) {
-        callback(error, null);
-    }
+async function getUlasansByProdukId(id_produk) {
+    return await Ulasan.findAll({
+        where: { id_produk },
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function getulasansByProdukId(id_produk, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_produk: id_produk },
-            },
+async function getUlasansByIdUMKM(id_umkm) {
+    return await Ulasan.findAll({
+        include: [
             {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
+                model: Produk,
+                where: { id_umkm },
+                attributes: ['id_produk', 'nama_barang', 'image_url'],
             },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function getulasansByIdUMKM(id_umkm, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_umkm: id_umkm },
-            },
-            {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
-            },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
+async function createUlasan(data) {
+    return await Ulasan.create(data);
+}
+
+async function updateUlasan(id_ulasan, data) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return null;
     }
+    return await ulasan.update(data);
+}
+
+async function deleteUlasan(id_ulasan) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return false;
+    }
+    await ulasan.destroy();
+    return true;
 }
 
 async function getOverallRating(id_umkm, callback) {
@@ -2465,7 +2575,7 @@ WHERE hk.id_umkm = ?;
     }
 }
 
-async function updateStatusKurirTerdaftar(id_kurir) {
+async function updateStatusKurirTerdaftar(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2482,13 +2592,14 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
+        callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
         return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
     }
 }
 
-async function updateStatusKurirBelumTerdaftar(id_kurir) {
+async function updateStatusKurirBelumTerdaftar(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2501,7 +2612,7 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
@@ -2511,7 +2622,7 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
-async function updateStatusKurirDitolak(id_kurir) {
+async function updateStatusKurirDitolak(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2524,7 +2635,7 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
@@ -2535,7 +2646,7 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
-async function updateStatusKurirDipecat(id_kurir) {
+async function updateStatusKurirDipecat(id_kurir, callback) {
     try {
         const query = `
             UPDATE kurir kr
@@ -2552,7 +2663,7 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
+        callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
@@ -2749,13 +2860,20 @@ module.exports = {
     getalluserUMKM,
     registUMKM,
     loginUMKM,
+    verifikasiOTP,
+    kirimUlangOTP,
     cekEmailUMKM,
     sendResetLink,
-    getulasans,
-    addulasans,
-    getulasansByProdukId,
-    getulasansByIdUMKM,
+    resetPassword,
+    forgotPassword,
+    getUlasans,
+    getUlasansByProdukId,
+    getUlasansByIdUMKM,
+    createUlasan,
+    updateUlasan,
+    deleteUlasan,
     getOverallRating,
+    getUMKMById,
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,
