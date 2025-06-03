@@ -754,7 +754,7 @@ app.get('/ulasans', async (req, res) => {
 });
 
 // fetch ulasan dari id produk tertentu
-app.get('/ulasans/:id_produk', async (req, res) => {
+app.get('/ulasans/produk/:id_produk', async (req, res) => {
     const id_produk = req.params.id_produk;
     try {
         const result = await dboperations.getUlasansByProdukId(id_produk);
