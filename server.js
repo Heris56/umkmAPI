@@ -652,6 +652,7 @@ app.post('/api/forgot-password', async (req, res) => {
         console.log('Sending reset email to:', email);
         await sgMail.send(msg);
         console.log('Reset email sent successfully');
+        console.log('URL Reset Password:', resetUrl);
 
         res.status(200).json({ message: 'Link reset kata sandi telah dikirim ke email Anda' });
     } catch (error) {
