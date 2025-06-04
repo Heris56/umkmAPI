@@ -638,7 +638,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const { token } = await dboperations.forgotPassword(email);
 
-        const resetUrl = `http://127.0.0.1:8000/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        const resetUrl = `https://tubeswebpro-production.up.railway.app/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
         
         // isi email
         const msg = {
