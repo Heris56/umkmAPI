@@ -35,12 +35,6 @@ const io = new Server(server, {
     },
 });
 
-app.use((req, res, next) => {
-    console.log('Incoming headers:', req.headers);
-    next();
-});
-
-
 io.on("connection", (socket) => {
     console.log("New user connected:", socket.id);
 
@@ -638,7 +632,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const { token } = await dboperations.forgotPassword(email);
 
-        const resetUrl = `https://tubeswebpro-production.up.railway.app/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        const resetUrl = `https://tubeswebpro-production.up.railway.app//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
         
         // isi email
         const msg = {
