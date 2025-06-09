@@ -1460,26 +1460,32 @@ async function getPembeliByID(id, callback) {
 async function loginPembeli(data, callback) {
     try {
         const pembeli = await Pembeli.findOne({ where: { email: data.email } });
-        if (pembeli && pembeli.password === data.password) {
-            const result = {
-                id_pembeli: pembeli.id_pembeli,
-                nama_lengkap: pembeli.nama_lengkap,
-                username: pembeli.username,
-                nomor_telepon: pembeli.nomor_telepon,
-                alamat: pembeli.alamat,
-                email: pembeli.email,
-                profileImage: pembeli.profileImg,
 
+        if (pembeli) {
+            // Compare hashed password with the input password
+            const isPasswordValid = await bcrypt.compare(data.password, pembeli.password);
+
+            if (isPasswordValid) {
+                const result = {
+                    id_pembeli: pembeli.id_pembeli,
+                    nama_lengkap: pembeli.nama_lengkap,
+                    username: pembeli.username,
+                    nomor_telepon: pembeli.nomor_telepon,
+                    alamat: pembeli.alamat,
+                    email: pembeli.email,
+                    profileImage: pembeli.profileImg,
+                };
+                callback(null, result);
+            } else {
+                callback(new Error('Email atau Password salah!'), null);
             }
-            callback(null, result);
         } else {
             callback(new Error('Email atau Password salah!'), null);
-        };
-        return (null, pembeli);
+        }
     } catch (error) {
         callback(error, null);
     }
-};
+}
 
 // async function logi(email, password, callback) {
 //     try {
@@ -1506,6 +1512,12 @@ async function addPembeli(data, callback) {
         ) {
             throw new Error("Incomplete data");
         }
+        // hash password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+
+        // Replace plaintext password with hashed password
+        data.password = hashedPassword;
 
         const result = await Pembeli.create(data);
         callback(null, result);
