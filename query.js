@@ -1513,29 +1513,45 @@ async function loginPembeli(data, callback) {
 
 // Add a new pembeli
 async function addPembeli(data, callback) {
-    try {
-        if (
-            !data.nama_lengkap ||
-            !data.nomor_telepon ||
-            !data.username ||
-            !data.email ||
-            !data.password ||
-            !data.alamat
-        ) {
-            throw new Error("Incomplete data");
-        }
-        // hash password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-
-        // Replace plaintext password with hashed password
-        data.password = hashedPassword;
-
-        const result = await Pembeli.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
+  try {
+    // 1. Validasi kelengkapan data
+    if (
+      !data.nama_lengkap ||
+      !data.nomor_telepon ||
+      !data.username ||
+      !data.email ||
+      !data.password ||
+      !data.alamat
+    ) {
+      // Menggunakan return agar fungsi berhenti di sini
+      return callback(new Error("Incomplete data"), null);
     }
+
+    // 2. Cek apakah email atau username sudah ada
+    const existingPembeli = await Pembeli.findOne({
+      where: {
+        [Op.or]: [{ email: data.email }, { username: data.username }],
+      },
+    });
+
+    // 3. Jika sudah ada, kirim error spesifik melalui callback
+    if (existingPembeli) {
+      return callback(new Error("Email atau Username sudah ada"), null);
+    }
+
+    // 4. Jika aman, enkripsi password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+    data.password = hashedPassword;
+
+    // 5. Buat pengguna baru
+    const result = await Pembeli.create(data);
+    callback(null, result);
+
+  } catch (error) {
+    // Tangani error tak terduga lainnya
+    callback(error, null);
+  }
 }
 
 // Update pembeli information
