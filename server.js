@@ -35,12 +35,6 @@ const io = new Server(server, {
     },
 });
 
-app.use((req, res, next) => {
-    console.log('Incoming headers:', req.headers);
-    next();
-});
-
-
 io.on("connection", (socket) => {
     console.log("New user connected:", socket.id);
 
@@ -638,7 +632,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const { token } = await dboperations.forgotPassword(email);
 
-        const resetUrl = `http://127.0.0.1:8000/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        const resetUrl = `https://tubeswebpro-production.up.railway.app//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
         
         // isi email
         const msg = {
@@ -652,6 +646,7 @@ app.post('/api/forgot-password', async (req, res) => {
         console.log('Sending reset email to:', email);
         await sgMail.send(msg);
         console.log('Reset email sent successfully');
+        console.log('URL Reset Password:', resetUrl);
 
         res.status(200).json({ message: 'Link reset kata sandi telah dikirim ke email Anda' });
     } catch (error) {
