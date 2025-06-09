@@ -18,6 +18,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
+const otpGenerator = require('otp-generator');
 const { error } = require("console");
 require("dotenv").config();
 
@@ -1460,26 +1461,43 @@ async function getPembeliByID(id, callback) {
 async function loginPembeli(data, callback) {
     try {
         const pembeli = await Pembeli.findOne({ where: { email: data.email } });
-        if (pembeli && pembeli.password === data.password) {
-            const result = {
-                id_pembeli: pembeli.id_pembeli,
-                nama_lengkap: pembeli.nama_lengkap,
-                username: pembeli.username,
-                nomor_telepon: pembeli.nomor_telepon,
-                alamat: pembeli.alamat,
-                email: pembeli.email,
-                profileImage: pembeli.profileImg,
 
+        if (pembeli) {
+            const isPasswordValid = await bcrypt.compare(data.password, pembeli.password);
+
+            if (isPasswordValid) {
+                // Generate OTP dan Hash
+                const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, specialChars: false, lowerCaseAlphaments: false });
+                const ttl = 5 * 60 * 1000;
+                const expires = Date.now() + ttl;
+                const otpData = `${data.email}.${otp}.${expires}`;
+                const key = "koderahasia";
+                const hash = crypto.createHmac('sha256', key).update(otpData).digest('hex');
+                const fullHash = `${hash}.${expires}`;
+
+                await pembeli.update({ auth_code: otp });
+
+                // ->>> BAGIAN PENTING ADA DI SINI <<<-
+                // Pastikan objek result MENGANDUNG 'hash: fullHash'
+                const result = {
+                    id_pembeli: pembeli.id_pembeli,
+                    email: pembeli.email,
+                    auth_code: otp,
+                    hash: fullHash // <-- Pastikan baris ini ada
+                };
+                callback(null, result);
+                // ------------------------------------
+                
+            } else {
+                callback(new Error('Email atau Password salah!'), null);
             }
-            callback(null, result);
         } else {
             callback(new Error('Email atau Password salah!'), null);
-        };
-        return (null, pembeli);
+        }
     } catch (error) {
         callback(error, null);
     }
-};
+}
 
 // async function logi(email, password, callback) {
 //     try {
@@ -1506,6 +1524,12 @@ async function addPembeli(data, callback) {
         ) {
             throw new Error("Incomplete data");
         }
+        // hash password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+
+        // Replace plaintext password with hashed password
+        data.password = hashedPassword;
 
         const result = await Pembeli.create(data);
         callback(null, result);
@@ -1588,7 +1612,14 @@ async function changePasswordPembeli(email, newPassword, callback) {
             return callback(new Error("User not found"), null);
         }
 
-        user.password = newPassword;
+        // ======================================================
+        // PERBAIKAN: Enkripsi password baru sebelum disimpan
+        // ======================================================
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        user.password = hashedPassword;
+        // ======================================================
+
         await user.save();
 
         callback(null, { message: "Password changed successfully" });

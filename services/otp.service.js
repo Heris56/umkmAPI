@@ -1,39 +1,57 @@
+// services/otp.service.js
+
 const otpGenerator = require('otp-generator');
 const crypto = require('crypto');
-const key = "koderahasia";
-const emailService = require('../services/emailer.service');
+const sgMail = require('@sendgrid/mail');
+require('dotenv').config(); // Untuk memuat variabel dari .env
 
-async function sendOTP(params, callback){
+// Konfigurasi SendGrid API Key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const key = "koderahasia"; // Pastikan key ini konsisten
+
+async function sendOTP(params, callback) {
+    // 1. Generate OTP 4 digit
     const otp = otpGenerator.generate(4, {
-        digits: true, 
+        digits: true,
         upperCaseAlphabets: false,
         specialChars: false,
         lowerCaseAlphabets: false
-        }
-    );
+    });
 
-    const ttl = 1000 * 60 * 5; 
+    const ttl = 1000 * 60 * 5; // Waktu hidup OTP 5 menit
     const expires = Date.now() + ttl;
     const data = `${params.email}.${otp}.${expires}`;
+
+    // 2. Buat hash untuk verifikasi
     const hash = crypto.createHmac('sha256', key).update(data).digest('hex');
     const fullHash = `${hash}.${expires}`;
 
-    var otpMessage = 'Kode OTP Anda adalah ' + otp + ' \n Kode ini akan kadaluarsa dalam 5 menit.';
-    var model = {
-        email: params.email,
+    // === PERMINTAAN ANDA: Cetak OTP di Terminal ===
+    console.log(`[DEBUG MOBILE] OTP Lupa Password untuk ${params.email} adalah: ${otp}`);
+    // ===============================================
+
+    // 3. Siapkan email yang akan dikirim melalui SendGrid
+    const msg = {
+        to: params.email,
+        from: process.env.EMAIL_FROM, // Email pengirim yang sudah diverifikasi di SendGrid
         subject: 'Kode OTP Ganti Password UMKMku',
-        body: otpMessage
+        text: `Kode OTP Anda adalah ${otp}. Kode ini akan kedaluwarsa dalam 5 menit.`,
+        html: `<p>Kode OTP Anda adalah <strong>${otp}</strong>. Kode ini akan kedaluwarsa dalam 5 menit.</p>`
     };
 
-    emailService.sendEmail(model, function(err, data){
-        if(err){
-            return callback(err);
-        }else{
-            return callback( {message: data, hash: fullHash});
-        }
-    });
+    try {
+        // 4. Kirim email menggunakan SendGrid
+        await sgMail.send(msg);
+        
+        // 5. Kirim kembali hash ke controller jika berhasil
+        return callback(null, { hash: fullHash });
 
-
+    } catch (error) {
+        console.error("Error saat mengirim email dengan SendGrid:", error);
+        // Kirim error ke controller jika gagal
+        return callback(error);
+    }
 }
 
 async function verifyOTP(params) {
@@ -56,4 +74,4 @@ async function verifyOTP(params) {
 module.exports = {
     sendOTP,
     verifyOTP
-}
+};

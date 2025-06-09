@@ -26,9 +26,9 @@ const Pesanan = sequelize.define('Pesanan', {
         }
     },
     histori_pesanan: {
-    type: DataTypes.DATE,
-    allowNull: true
-  }
+        type: DataTypes.DATE,
+        allowNull: true
+    }
 }, {
     tableName: 'pesanan',
     timestamps: false
