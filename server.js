@@ -1312,7 +1312,7 @@ app.post("/loginpembeli", (req, res) => {
         }
 
         try {
-            console.log(`Mengirim OTP: ${result.auth_code} ke email: ${result.email}`);
+            console.log(`[DEBUG MOBILE]Mengirim OTP: ${result.auth_code} ke email: ${result.email}`);
             
             const msg = {
                 to: result.email,
@@ -1326,11 +1326,11 @@ app.post("/loginpembeli", (req, res) => {
             // Pastikan res.json() MENGANDUNG 'hash: result.hash'
             res.status(200).json({
                 message: "OTP sent successfully",
-                hash: result.hash, // <-- Pastikan baris ini ada
+                hash: result.hash, 
                 id_pembeli: result.id_pembeli,
                 email: result.email
             });
-            // ------------------------------------
+         
 
         } catch (emailError) {
             console.error("Gagal mengirim email OTP:", emailError);

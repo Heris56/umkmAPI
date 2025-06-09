@@ -1612,7 +1612,14 @@ async function changePasswordPembeli(email, newPassword, callback) {
             return callback(new Error("User not found"), null);
         }
 
-        user.password = newPassword;
+        // ======================================================
+        // PERBAIKAN: Enkripsi password baru sebelum disimpan
+        // ======================================================
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        user.password = hashedPassword;
+        // ======================================================
+
         await user.save();
 
         callback(null, { message: "Password changed successfully" });
