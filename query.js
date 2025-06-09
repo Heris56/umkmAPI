@@ -18,6 +18,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
+const otpGenerator = require('otp-generator');
 const { error } = require("console");
 require("dotenv").config();
 
@@ -1462,20 +1463,31 @@ async function loginPembeli(data, callback) {
         const pembeli = await Pembeli.findOne({ where: { email: data.email } });
 
         if (pembeli) {
-            // Compare hashed password with the input password
             const isPasswordValid = await bcrypt.compare(data.password, pembeli.password);
 
             if (isPasswordValid) {
+                // Generate OTP dan Hash
+                const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, specialChars: false, lowerCaseAlphaments: false });
+                const ttl = 5 * 60 * 1000;
+                const expires = Date.now() + ttl;
+                const otpData = `${data.email}.${otp}.${expires}`;
+                const key = "koderahasia";
+                const hash = crypto.createHmac('sha256', key).update(otpData).digest('hex');
+                const fullHash = `${hash}.${expires}`;
+
+                await pembeli.update({ auth_code: otp });
+
+                // ->>> BAGIAN PENTING ADA DI SINI <<<-
+                // Pastikan objek result MENGANDUNG 'hash: fullHash'
                 const result = {
                     id_pembeli: pembeli.id_pembeli,
-                    nama_lengkap: pembeli.nama_lengkap,
-                    username: pembeli.username,
-                    nomor_telepon: pembeli.nomor_telepon,
-                    alamat: pembeli.alamat,
                     email: pembeli.email,
-                    profileImage: pembeli.profileImg,
+                    auth_code: otp,
+                    hash: fullHash // <-- Pastikan baris ini ada
                 };
                 callback(null, result);
+                // ------------------------------------
+                
             } else {
                 callback(new Error('Email atau Password salah!'), null);
             }

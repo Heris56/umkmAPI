@@ -1301,16 +1301,65 @@ app.post("/checkPembeliByEmail", (req, res) => {
     });
 });
 
+// server.js
+
+// Ganti endpoint /loginpembeli yang ada dengan ini
 app.post("/loginpembeli", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginPembeli({ email, password }, (error, result) => {
+    dboperations.loginPembeli({ email, password }, async (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
-        res.status(200).json(result);
+
+        try {
+            console.log(`Mengirim OTP: ${result.auth_code} ke email: ${result.email}`);
+            
+            const msg = {
+                to: result.email,
+                from: process.env.EMAIL_FROM,
+                subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+                text: `Kode OTP Anda adalah ${result.auth_code}.`
+            };
+            await sgMail.send(msg);
+
+            // ->>> BAGIAN PENTING ADA DI SINI <<<-
+            // Pastikan res.json() MENGANDUNG 'hash: result.hash'
+            res.status(200).json({
+                message: "OTP sent successfully",
+                hash: result.hash, // <-- Pastikan baris ini ada
+                id_pembeli: result.id_pembeli,
+                email: result.email
+            });
+            // ------------------------------------
+
+        } catch (emailError) {
+            console.error("Gagal mengirim email OTP:", emailError);
+            res.status(500).json({ error: 'Gagal mengirim email OTP.' });
+        }
     });
 });
 
+// Tambahkan endpoint baru ini untuk verifikasi
+app.post("/api/pembeli/verify-otp", async (req, res) => {
+    const { email, otp, hash } = req.body;
+
+    // Gunakan service yang sudah ada
+    const otpService = require('./services/otp.service');
+
+    try {
+        const isValid = await otpService.verifyOTP({ email, otp, hash });
+        if (isValid) {
+            res.status(200).json({ message: 'Login berhasil!' });
+        } else {
+            res.status(400).json({ message: 'OTP tidak valid.' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
+// ... (sisa kode Anda)
 app.put("/changepassword", (req, res) => {
     const { email, newPassword } = req.body;
 
