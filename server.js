@@ -1267,24 +1267,46 @@ app.post("/pembeli", (req, res) => {
 
 // Update pembeli by ID
 app.put("/pembeli/:id", (req, res) => {
-    const id = req.params.id;
-    const data = req.body;
+    const id = req.params.id; // Get ID from URL parameters
+    const data = req.body;   // Get request body (containing profile updates and/or password changes)
+
+    // Call your updatePembeli function
     dboperations.updatePembeli(id, data, (error, result) => {
         if (error) {
-            return res.status(500).send(error.message);
+            console.error("Error updating pembeli:", error.message); // Log the error on the server side
+
+            // --- Enhanced Error Handling for Client Responses ---
+            // Removed specific old password error, as that check is gone.
+            if (error.message.includes("not found")) {
+                // Specific error for pembeli not found
+                return res.status(404).json({ message: error.message }); // 404 Not Found
+            }
+            if (error.message.includes("ID cannot be empty")) {
+                // Specific error for bad request (e.g., missing ID)
+                return res.status(400).json({ message: error.message }); // 400 Bad Request
+            }
+            // Catch-all for any other unexpected server errors
+            return res.status(500).json({ message: "Gagal memperbarui profil. Terjadi kesalahan internal.", error: error.message });
         }
-        res.status(200).json(result); // Send updated pembeli data
+        // If successful, send the updated pembeli data
+        res.status(200).json(result);
     });
 });
 
 // Delete pembeli by ID
 app.delete("/pembeli/:id", (req, res) => {
     const id = req.params.id;
-    dboperations.deletePembeli(id, (error, result) => {
+    const { email, password } = req.body; // Get email and password sent from Flutter
+
+    dboperations.deletePembeli(id, email, password, (error, result) => {
         if (error) {
-            return res.status(500).send(error.message);
+            // Send a specific error code for invalid credentials
+            if (error.message === 'Invalid email or password') {
+                return res.status(401).send(error.message); // 401 means Unauthorized
+            }
+            return res.status(500).send(error.message); // Other server errors
         }
-        res.status(200).json(result); // Send success message
+        res.status(200).json(result); // Success
     });
 });
 
