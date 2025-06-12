@@ -1700,11 +1700,16 @@ async function getKurirByID(id, callback) {
 // Add a new kurir
 async function addKurir(data, callback) {
     try {
+        // Hash the password before storing it
+        const hashedPassword = await bcrypt.hash(data.password, 10); // 10 is the salt rounds
+
         const newKurir = await Kurir.create({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
             email: data.email,
-            password: data.password,
+            password: hashedPassword, // Store the hashed password
+            status: data.status,
+            nomor_telepon: data.nomor_telepon,
         });
         callback(null, newKurir);
     } catch (error) {
@@ -1758,23 +1763,30 @@ async function deleteKurir(id, callback) {
 async function loginKurir(data, callback) {
     try {
         if (!data.email) {
-            return callback(new Error("Email is required"), null);
+            return callback(new Error("Email dibutuhkan"), null);
         }
 
         const kurir = await Kurir.findOne({
             where: { email: data.email },
         });
 
-        if (kurir && kurir.password === data.password) {
-            const result = {
-                id_kurir: kurir.id_kurir,
-                nama_kurir: kurir.nama_kurir,
-                id_umkm: kurir.id_umkm,
-                email: kurir.email,
-            };
-            callback(null, result);
+        if (kurir) {
+            // Compare the provided password with the stored hash
+            const isPasswordValid = await bcrypt.compare(data.password, kurir.password);
+
+            if (isPasswordValid) {
+                const result = {
+                    id_kurir: kurir.id_kurir,
+                    nama_kurir: kurir.nama_kurir,
+                    id_umkm: kurir.id_umkm,
+                    email: kurir.email,
+                };
+                callback(null, result);
+            } else {
+                callback(new Error("Invalid email atau password"), null);
+            }
         } else {
-            callback(new Error("Invalid email or password"), null);
+            callback(new Error("Invalid email atau password"), null);
         }
     } catch (error) {
         return callback(error, null);
@@ -1790,6 +1802,28 @@ async function checkKurir(email, callback) {
         } else {
             callback(null, { exists: false });
         }
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
+
+async function changePasswordKurir(email, newPassword, callback) {
+    try {
+        const kurir = await Kurir.findOne({ where: { email: email } });
+
+        if (!kurir) {
+            // Jika kurir dengan email tersebut tidak ditemukan
+            return callback(new Error("Kurir tidak ditemukan"), null);
+        }
+
+        // Hash password baru sebelum disimpan
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update kolom password di database
+        await kurir.update({ password: hashedPassword });
+
+        callback(null, { message: "Password kurir berhasil diubah" });
     } catch (error) {
         callback(error, null);
     }
@@ -2996,4 +3030,5 @@ module.exports = {
     gethistorykurirumkm,
     updateUmkmKurirByNamaUMKM,
     updateStatusDanIdUmkmKurir,
+    changePasswordKurir,
 };
