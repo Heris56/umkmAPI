@@ -1401,13 +1401,13 @@ app.get("/kurir/:id", (req, res) => {
 // Add a new kurir
 app.post("/kurir", async (req, res) => {
     try {
-        const { nama_kurir, id_umkm, email, password } = req.body;
+        const { nama_kurir, id_umkm, email, password, status } = req.body;
         const newKurir = await Kurir.create({
             nama_kurir,
             id_umkm,
-            // id_pesanan,
             email,
             password,
+            status
         });
 
         res.status(201).json(newKurir);
