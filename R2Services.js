@@ -1,13 +1,13 @@
 const { S3Client, PutObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
 require("dotenv").config();
 const { NodeHttpHandler } = require("@smithy/node-http-handler");
-const https = require('https');
+// const https = require('https');
 
-const agent = new https.Agent({
-  minVersion: 'TLSv1.2',
-  maxVersion: 'TLSv1.3',
-  honorCipherOrder: true
-});
+// const agent = new https.Agent({
+//   minVersion: 'TLSv1.2',
+//   maxVersion: 'TLSv1.3',
+//   honorCipherOrder: true
+// });
 
 const r2 = new S3Client({
     region: "auto",
@@ -17,7 +17,8 @@ const r2 = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
     forcePathStyle: true,
-    requestHandler: new NodeHttpHandler({ httpsAgent: agent })
+    // requestHandler: new NodeHttpHandler({ httpsAgent: agent })
+    requestHandler: new NodeHttpHandler({}) // Gunakan ini untuk membiarkan Node.js negosiasi TLS secara default
 });
 
 const uploadfile = async (bucketName, fileName, fileContent, mimetype) => {
