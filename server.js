@@ -1399,23 +1399,40 @@ app.get("/kurir/:id", (req, res) => {
 });
 
 // Add a new kurir
-app.post("/kurir", async (req, res) => {
-    try {
-        const { nama_kurir, id_umkm, email, password, status } = req.body;
-        const newKurir = await Kurir.create({
-            nama_kurir,
-            id_umkm,
-            email,
-            password,
-            status
-        });
-
-        res.status(201).json(newKurir);
-    } catch (error) {
-        console.error("Error adding kurir:", error);
-        res.status(500).send("Error adding kurir");
-    }
+app.post("/kurir", (req, res) => {
+    const data = req.body;
+    dboperations.addKurir(data, (error, result) => {
+        if (error) {
+            console.error("Error adding kurir:", error);
+            return res.status(500).send("Error adding kurir");
+        }
+        res.status(201).json(result);
+    });
 });
+
+app.put("/kurir/change-password", (req, res) => {
+    const { email, newPassword } = req.body;
+
+    // Validasi input
+    if (!email || !newPassword) {
+        return res.status(400).json({ message: "Email dan password baru wajib diisi" });
+    }
+
+    dboperations.changePasswordKurir(email, newPassword, (error, result) => {
+        if (error) {
+            // Jika kurir tidak ditemukan, kirim status 404
+            if (error.message === "Kurir tidak ditemukan") {
+                return res.status(404).json({ message: error.message });
+            }
+            // Untuk error lainnya
+            return res.status(500).json({ message: "Gagal mengubah password", error: error.message });
+        }
+        // Jika berhasil
+        res.status(200).json(result);
+    });
+});
+
+
 
 // Update kurir by ID
 app.put("/kurir/:id", (req, res) => {
@@ -1428,6 +1445,7 @@ app.put("/kurir/:id", (req, res) => {
         res.status(200).json(result); // Send updated kurir data
     });
 });
+
 
 // Delete kurir by ID
 app.delete("/kurir/:id", (req, res) => {
