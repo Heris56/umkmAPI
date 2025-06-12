@@ -607,10 +607,10 @@ async function getUMKMById(id) {
 
 async function getalluserUMKM(callback) {
     try {
-        const result = await UMKM.findAll(); // ambil data tari tabel umkm
-        callback(null, result); //return data umkm
+        const result = await UMKM.findAll(); 
+        callback(null, result); 
     } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
+        callback(error, null);
     }
 }
 
@@ -1455,7 +1455,6 @@ async function getPembeliByID(id, callback) {
     }
 }
 
-//get
 
 //login pembeli
 async function loginPembeli(data, callback) {
@@ -1466,7 +1465,6 @@ async function loginPembeli(data, callback) {
             const isPasswordValid = await bcrypt.compare(data.password, pembeli.password);
 
             if (isPasswordValid) {
-                // Generate OTP dan Hash
                 const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, specialChars: false, lowerCaseAlphaments: false });
                 const ttl = 5 * 60 * 1000;
                 const expires = Date.now() + ttl;
@@ -1476,18 +1474,13 @@ async function loginPembeli(data, callback) {
                 const fullHash = `${hash}.${expires}`;
 
                 await pembeli.update({ auth_code: otp });
-
-                // ->>> BAGIAN PENTING ADA DI SINI <<<-
-                // Pastikan objek result MENGANDUNG 'hash: fullHash'
                 const result = {
                     id_pembeli: pembeli.id_pembeli,
                     email: pembeli.email,
                     auth_code: otp,
-                    hash: fullHash // <-- Pastikan baris ini ada
+                    hash: fullHash 
                 };
                 callback(null, result);
-                // ------------------------------------
-                
             } else {
                 callback(new Error('Email atau Password salah!'), null);
             }
@@ -1499,46 +1492,41 @@ async function loginPembeli(data, callback) {
     }
 }
 
-// async function logi(email, password, callback) {
-//     try {
-//         const result = await Pembeli.findAll({
-//             where: {email: email, password: password}
-//         }); // Get all pembeli data
-//         callback(null, result);
-//     } catch (error) {
-//         callback(error, null); // Send error if something goes wrong
-//     }
-// }
 
 
-// Add a new pembeli
+
+
 async function addPembeli(data, callback) {
-    try {
-        if (
-            !data.nama_lengkap ||
-            !data.nomor_telepon ||
-            !data.username ||
-            !data.email ||
-            !data.password ||
-            !data.alamat
-        ) {
-            throw new Error("Incomplete data");
-        }
-        // hash password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-
-        // Replace plaintext password with hashed password
-        data.password = hashedPassword;
-
-        const result = await Pembeli.create(data);
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
+  try {
+    if (
+      !data.nama_lengkap ||
+      !data.nomor_telepon ||
+      !data.username ||
+      !data.email ||
+      !data.password ||
+      !data.alamat
+    ) {
+      return callback(new Error("Incomplete data"), null);
     }
+    const existingPembeli = await Pembeli.findOne({
+      where: {
+        [Op.or]: [{ email: data.email }, { username: data.username }],
+      },
+    });
+    if (existingPembeli) {
+      return callback(new Error("Email atau Username sudah ada"), null);
+    }
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+    data.password = hashedPassword;
+    const result = await Pembeli.create(data);
+    callback(null, result);
+  } catch (error) {
+    callback(error, null);
+  }
 }
 
-// Update pembeli information
+
 async function updatePembeli(id, data, callback) {
     try {
         if (!id) {
@@ -1551,14 +1539,14 @@ async function updatePembeli(id, data, callback) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
-        const updatedPembeli = await pembeli.update(data); // Update pembeli
+        const updatedPembeli = await pembeli.update(data); 
         callback(null, updatedPembeli);
     } catch (error) {
         callback(error, null);
     }
 }
 
-// Delete pembeli
+
 async function deletePembeli(id, callback) {
     try {
         if (!id) {
@@ -1571,13 +1559,13 @@ async function deletePembeli(id, callback) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
-        await pembeli.destroy(); // Delete pembeli from the table
+        await pembeli.destroy();
         callback(null, { message: `Pembeli with ID ${id} has been deleted` });
     } catch (error) {
         callback(error, null);
     }
 }
-//Check Pembeli kalo pake email atau username
+
 async function checkPembeli(emailInput, usernameInput, callback) {
     try {
         const email = await Pembeli.findOne({ where: { email: emailInput } });
@@ -1611,14 +1599,10 @@ async function changePasswordPembeli(email, newPassword, callback) {
         if (!user) {
             return callback(new Error("User not found"), null);
         }
-
-        // ======================================================
-        // PERBAIKAN: Enkripsi password baru sebelum disimpan
-        // ======================================================
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
         user.password = hashedPassword;
-        // ======================================================
+ 
 
         await user.save();
 
@@ -1628,7 +1612,7 @@ async function changePasswordPembeli(email, newPassword, callback) {
     }
 }
 
-//Check user tapi Pembeli juga cuman pake select from pembeli
+
 async function checkUser(email, username, callback) {
     const query = 'SELECT COUNT(*) AS count FROM pembeli WHERE email = ? OR username = ?';
     db.query(query, [email, username], (error, results) => {
@@ -1641,7 +1625,6 @@ async function checkUser(email, username, callback) {
 }
 
 
-//Query Kurir
 // Get all kurir data
 async function getKurir(callback) {
     try {
@@ -1685,7 +1668,6 @@ async function addKurir(data, callback) {
         const newKurir = await Kurir.create({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            // id_pesanan: data.id_pesanan,
             email: data.email,
             password: data.password,
         });
@@ -1710,7 +1692,6 @@ async function updateKurir(id, data, callback) {
         await kurir.update({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            // id_pesanan: data.id_pesanan,
         });
         callback(null, kurir);
     } catch (error) {
@@ -1754,8 +1735,6 @@ async function loginKurir(data, callback) {
                 id_kurir: kurir.id_kurir,
                 nama_kurir: kurir.nama_kurir,
                 id_umkm: kurir.id_umkm,
-                // username: kurir.username,
-                // nomor_telepon: kurir.nomor_telepon,
                 email: kurir.email,
             };
             callback(null, result);
