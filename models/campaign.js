@@ -1,10 +1,10 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // Adjust the path as needed
-const UMKM = require('./umkm'); // Import UMKM model if you need to define the association
+const sequelize = require('../db');  
+const UMKM = require('./umkm'); 
 
 const Campaign = sequelize.define('Campaign', {
     id_campaign: {
-        field: 'id_campaign', // This should match the column name in the database
+        field: 'id_campaign', 
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -22,12 +22,11 @@ const Campaign = sequelize.define('Campaign', {
         allowNull: true
     },
     start_date: {
-        type: DataTypes.DATEONLY, // Use DATEONLY to match SQL DATE type
+        type: DataTypes.DATEONLY,
         allowNull: false
     },
     end_date: {
-        type: DataTypes.DATEONLY, // Use DATEONLY to match SQL DATE type
-        allowNull: false
+        type: DataTypes.DATEONLY, 
     },
     status: {
         type: DataTypes.STRING(50),
@@ -36,7 +35,7 @@ const Campaign = sequelize.define('Campaign', {
     },
     id_umkm: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Set to true since not all campaigns may have UMKM
+        allowNull: true,
         references: {
             model: UMKM,
             key: 'id_umkm'
@@ -44,7 +43,7 @@ const Campaign = sequelize.define('Campaign', {
     }
 }, {
     tableName: 'campaign',
-    timestamps: false, // No timestamps since it's not present in the SQL table
+    timestamps: false, 
 });
 
 module.exports = Campaign;

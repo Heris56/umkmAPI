@@ -14,8 +14,11 @@ const Bookmark = require("./models/bookmark");
 const { QueryTypes, where, Op } = require("sequelize");
 const sequelize = require("./db");
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
+const otpGenerator = require('otp-generator');
 const { error } = require("console");
 require("dotenv").config();
 
@@ -592,49 +595,193 @@ async function getuserUMKMbyID(id, callback) {
     }
 }
 
+async function getUMKMById(id) {
+    if (!id) throw new Error('tidak ada ID di parameter');
+    
+    const umkm = await UMKM.findByPk(id);
+    if (!umkm) throw new Error('tidak menemukan umkm');
+    
+    return umkm;
+}
+
+
 async function getalluserUMKM(callback) {
     try {
-        const result = await UMKM.findAll(); // ambil data tari tabel umkm
-        callback(null, result); //return data umkm
+        const result = await UMKM.findAll(); 
+        callback(null, result); 
     } catch (error) {
-        callback(error, null); // Kirim error jika terjadi masalah
+        callback(error, null);
     }
 }
 
-async function registUMKM(data, callback) {
+async function registUMKM(data) {
     try {
         console.log("Incoming data:", data);
-        const result = await UMKM.create(data);
-        callback(null, result);
+        
+        // pastikan field beberapa field yang non-nullable
+        const requiredFields = ['nama_lengkap', 'nomor_telepon', 'username', 'email', 'password', 'NIK_KTP'];
+        for (const field of requiredFields) {
+            if (!data[field]) {
+                throw new Error(`Data tidak ditemukan: ${field}`);
+            }
+        }
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+
+        const umkmData = {
+            nama_lengkap: data.nama_lengkap,
+            nomor_telepon: data.nomor_telepon,
+            alamat: data.alamat || null, // nullable 
+            username: data.username,
+            email: data.email,
+            password: hashedPassword,
+            nama_usaha: data.nama_usaha || null, // nullable
+            NIK_KTP: parseInt(data.NIK_KTP), // memastikan integer
+            is_verified: false, // false by default
+            auth_code: null // null by default
+        };
+
+        const result = await UMKM.create(umkmData);
+        return result;
     } catch (error) {
-        console.error("Error during registration:", error);
-        callback(error, null);
+        console.error("Error pada saat registrasi:", error);
+        throw error;
     }
 }
 
-async function loginUMKM(data, callback) {
+async function loginUMKM(data) {
     try {
-        // cari by email
-        const user = await UMKM.findOne({ where: { email: data.inputEmail } });
-
-        // cek kalo usernya ada, dan passwordnya sesuai
-        if (user && user.password === data.inputPassword) {
-            const result = {
-                id_umkm: user.id_umkm,
-            };
-            callback(null, result);
-        } else {
-            callback(new Error("Email atau Password salah!"), null);
+        console.log('Login attempt for email:', data.email);
+        // Normalize email to lowercase
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
+        if (!user) {
+            console.log('No user found for email:', data.email);
+            throw new Error('Pengguna tidak tersedia');
         }
+
+        console.log('User found:', { id_umkm: user.id_umkm, email: user.email });
+        // Handle password
+        const isPasswordValid = await bcrypt.compare(data.password, user.password);
+        console.log('Password valid:', isPasswordValid);
+        if (!isPasswordValid) {
+            throw new Error('Password salah');
+        }
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp });
+
+        return {
+            id_umkm: user.id_umkm,
+            email: user.email,
+            auth_code: otp
+        };
     } catch (error) {
-        callback(error, null);
+        console.error('Error pada saat login:', error.message);
+        throw error;
     }
+}
+
+async function verifikasiOTP(data) {
+    try {
+        const user = await UMKM.findOne({ where: { email: data.email.toLowerCase() } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        if (user.auth_code !== data.otp) {
+            throw new Error('OTP tidak valid');
+        }
+
+        // hapus auth code karna sudah tidak digunakan
+        // set status verifikasi
+        await user.update({ is_verified: true, auth_code: null });
+        return true;
+    } catch (error) {
+        console.error('Error pada saat verifikasi OTP:', error.message);
+        throw error;
+    }
+}
+
+async function kirimUlangOTP(email) {
+    try {
+        console.log('Resend OTP for email:', email);
+        const user = await UMKM.findOne({ where: { email } });
+        if (!user) {
+            throw new Error('Pengguna tidak ditemukan');
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await user.update({ auth_code: otp, is_verified: false });
+
+        return {
+            email: user.email,
+            auth_code: otp
+        };
+    } catch (error) {
+        console.error('Error pada saat resend OTP:', error.message);
+        throw error;
+    }
+}
+
+async function forgotPassword(email) {
+    if (!email) {
+        throw new Error('Email wajib diisi');
+    }
+
+    const user = await UMKM.findOne({ where: { email } });
+    if (!user) {
+        throw new Error('Email tidak terdaftar');
+    }
+
+    // create token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = Date.now() + 3600000; // exp 1 jam
+
+    // simpan token
+    await user.update({
+        reset_token: token,
+        reset_token_expiry: tokenExpiry
+    });
+
+    return { email, token };
+}
+
+async function resetPassword({ email, token, password }) {
+    if (!email || !token || !password) {
+        throw new Error('Email, token, dan kata sandi wajib diisi');
+    }
+
+    const user = await UMKM.findOne({
+        where: {
+            email,
+            reset_token: token,
+            reset_token_expiry: { [Op.gt]: Date.now() }
+        }
+    });
+
+    if (!user) {
+        throw new Error('Token tidak valid atau telah kedaluwarsa');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // adjust password, clear token, set is_verified
+    await user.update({
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expiry: null,
+        is_verified: true // skip otp
+    });
+
+    return { email };
 }
 
 async function cekEmailUMKM(email) {
     try {
         const user = await UMKM.findOne({ where: { email: email } });
-        return !!user; // If user found, return true, else false
+        return user;
     } catch (error) {
         console.error('Database error:', error);
         throw error;
@@ -642,92 +789,89 @@ async function cekEmailUMKM(email) {
 }
 
 async function sendResetLink(email) {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // You can use other services, or SMTP server
-        auth: {
-            user: process.env.EMAIL_USER, // Sender's email
-            pass: process.env.EMAIL_PASS,  // Sender's email password
-        },
-    });
+  // Buat akun Ethereal secara otomatis
+  let testAccount = await nodemailer.createTestAccount();
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Password Reset Request',
-        text: 'Click the link to reset your password: http://127.0.0.1:8000/lupa-password' + encodeURIComponent(email),
-    };
+  // Buat transporter dengan akun Ethereal
+  const transporter = nodemailer.createTransport({
+    host: testAccount.smtp.host,
+    port: testAccount.smtp.port,
+    secure: testAccount.smtp.secure,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Password reset email sent to:', email);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+  const mailOptions = {
+    from: '"UMKM App 👨‍💼" <no-reply@umkm.test>',
+    to: email,
+    subject: "Reset Kata Sandi",
+    text: `Klik link berikut untuk reset password Anda:\nhttp://127.0.0.1:8000/new-password`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Link reset terkirim ke:", email);
+    console.log("Preview email:", nodemailer.getTestMessageUrl(info)); // cek isi email
+  } catch (error) {
+    console.error("Error kirim email:", error);
+  }
 }
 // end of bagian UMKM
 
-// Start query ulasans
-async function getulasans(callback) {
-    try {
-        const result = await Ulasan.findAll();
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+// start query ulasans
+async function getUlasans() {
+    return await Ulasan.findAll({
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function addulasans(data, callback) {
-    try {
-        const newUlasan = await Ulasan.create({
-            id_pembeli: data.id_pembeli,
-            id_produk: data.id_produk,
-            username: data.username,
-            ulasan: data.ulasan,
-            rating: data.rating
-        });
-
-        callback(null, newUlasan);
-    } catch (error) {
-        callback(error, null);
-    }
+async function getUlasansByProdukId(id_produk) {
+    return await Ulasan.findAll({
+        where: { id_produk },
+        include: [
+            { model: Produk, attributes: ['id_produk', 'nama_barang', 'image_url'] },
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function getulasansByProdukId(id_produk, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_produk: id_produk },
-            },
+async function getUlasansByIdUMKM(id_umkm) {
+    return await Ulasan.findAll({
+        include: [
             {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
+                model: Produk,
+                where: { id_umkm },
+                attributes: ['id_produk', 'nama_barang', 'image_url'],
             },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
-    }
+            { model: Pembeli, attributes: ['id_pembeli', 'username', 'profileImg'] },
+        ],
+    });
 }
 
-async function getulasansByIdUMKM(id_umkm, callback) {
-    try {
-        const result = await Ulasan.findAll({
-            include: [{
-                model: Produk,
-                where: { id_umkm: id_umkm },
-            },
-            {
-                model: Pembeli,
-                attributes: ['id_pembeli', 'username', 'profileImg'],
-            },
-            ]
-        });
-        callback(null, result);
-    } catch (error) {
-        callback(error, null);
+async function createUlasan(data) {
+    return await Ulasan.create(data);
+}
+
+async function updateUlasan(id_ulasan, data) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return null;
     }
+    return await ulasan.update(data);
+}
+
+async function deleteUlasan(id_ulasan) {
+    const ulasan = await Ulasan.findByPk(id_ulasan);
+    if (!ulasan) {
+        return false;
+    }
+    await ulasan.destroy();
+    return true;
 }
 
 async function getOverallRating(id_umkm, callback) {
@@ -1311,67 +1455,78 @@ async function getPembeliByID(id, callback) {
     }
 }
 
-//get
 
 //login pembeli
 async function loginPembeli(data, callback) {
     try {
         const pembeli = await Pembeli.findOne({ where: { email: data.email } });
-        if (pembeli && pembeli.password === data.password) {
-            const result = {
-                id_pembeli: pembeli.id_pembeli,
-                nama_lengkap: pembeli.nama_lengkap,
-                username: pembeli.username,
-                nomor_telepon: pembeli.nomor_telepon,
-                alamat: pembeli.alamat,
-                email: pembeli.email,
-                profileImage: pembeli.profileImg,
 
+        if (pembeli) {
+            const isPasswordValid = await bcrypt.compare(data.password, pembeli.password);
+
+            if (isPasswordValid) {
+                const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, specialChars: false, lowerCaseAlphaments: false });
+                const ttl = 5 * 60 * 1000;
+                const expires = Date.now() + ttl;
+                const otpData = `${data.email}.${otp}.${expires}`;
+                const key = "koderahasia";
+                const hash = crypto.createHmac('sha256', key).update(otpData).digest('hex');
+                const fullHash = `${hash}.${expires}`;
+
+                await pembeli.update({ auth_code: otp });
+                const result = {
+                    id_pembeli: pembeli.id_pembeli,
+                    email: pembeli.email,
+                    auth_code: otp,
+                    hash: fullHash 
+                };
+                callback(null, result);
+            } else {
+                callback(new Error('Email atau Password salah!'), null);
             }
-            callback(null, result);
         } else {
             callback(new Error('Email atau Password salah!'), null);
-        };
-        return (null, pembeli);
-    } catch (error) {
-        callback(error, null);
-    }
-};
-
-// async function logi(email, password, callback) {
-//     try {
-//         const result = await Pembeli.findAll({
-//             where: {email: email, password: password}
-//         }); // Get all pembeli data
-//         callback(null, result);
-//     } catch (error) {
-//         callback(error, null); // Send error if something goes wrong
-//     }
-// }
-
-
-// Add a new pembeli
-async function addPembeli(data, callback) {
-    try {
-        if (
-            !data.nama_lengkap ||
-            !data.nomor_telepon ||
-            !data.username ||
-            !data.email ||
-            !data.password ||
-            !data.alamat
-        ) {
-            throw new Error("Incomplete data");
         }
-
-        const result = await Pembeli.create(data);
-        callback(null, result);
     } catch (error) {
         callback(error, null);
     }
 }
 
-// Update pembeli information
+
+
+
+
+async function addPembeli(data, callback) {
+  try {
+    if (
+      !data.nama_lengkap ||
+      !data.nomor_telepon ||
+      !data.username ||
+      !data.email ||
+      !data.password ||
+      !data.alamat
+    ) {
+      return callback(new Error("Incomplete data"), null);
+    }
+    const existingPembeli = await Pembeli.findOne({
+      where: {
+        [Op.or]: [{ email: data.email }, { username: data.username }],
+      },
+    });
+    if (existingPembeli) {
+      return callback(new Error("Email atau Username sudah ada"), null);
+    }
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+    data.password = hashedPassword;
+    const result = await Pembeli.create(data);
+    callback(null, result);
+  } catch (error) {
+    callback(error, null);
+  }
+}
+
+
 async function updatePembeli(id, data, callback) {
     try {
         if (!id) {
@@ -1384,14 +1539,14 @@ async function updatePembeli(id, data, callback) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
-        const updatedPembeli = await pembeli.update(data); // Update pembeli
+        const updatedPembeli = await pembeli.update(data); 
         callback(null, updatedPembeli);
     } catch (error) {
         callback(error, null);
     }
 }
 
-// Delete pembeli
+
 async function deletePembeli(id, callback) {
     try {
         if (!id) {
@@ -1404,13 +1559,13 @@ async function deletePembeli(id, callback) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
-        await pembeli.destroy(); // Delete pembeli from the table
+        await pembeli.destroy();
         callback(null, { message: `Pembeli with ID ${id} has been deleted` });
     } catch (error) {
         callback(error, null);
     }
 }
-//Check Pembeli kalo pake email atau username
+
 async function checkPembeli(emailInput, usernameInput, callback) {
     try {
         const email = await Pembeli.findOne({ where: { email: emailInput } });
@@ -1444,8 +1599,11 @@ async function changePasswordPembeli(email, newPassword, callback) {
         if (!user) {
             return callback(new Error("User not found"), null);
         }
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        user.password = hashedPassword;
+ 
 
-        user.password = newPassword;
         await user.save();
 
         callback(null, { message: "Password changed successfully" });
@@ -1454,7 +1612,7 @@ async function changePasswordPembeli(email, newPassword, callback) {
     }
 }
 
-//Check user tapi Pembeli juga cuman pake select from pembeli
+
 async function checkUser(email, username, callback) {
     const query = 'SELECT COUNT(*) AS count FROM pembeli WHERE email = ? OR username = ?';
     db.query(query, [email, username], (error, results) => {
@@ -1467,7 +1625,6 @@ async function checkUser(email, username, callback) {
 }
 
 
-//Query Kurir
 // Get all kurir data
 async function getKurir(callback) {
     try {
@@ -1511,7 +1668,6 @@ async function addKurir(data, callback) {
         const newKurir = await Kurir.create({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            // id_pesanan: data.id_pesanan,
             email: data.email,
             password: data.password,
         });
@@ -1536,7 +1692,6 @@ async function updateKurir(id, data, callback) {
         await kurir.update({
             nama_kurir: data.nama_kurir,
             id_umkm: data.id_umkm,
-            // id_pesanan: data.id_pesanan,
         });
         callback(null, kurir);
     } catch (error) {
@@ -1580,8 +1735,6 @@ async function loginKurir(data, callback) {
                 id_kurir: kurir.id_kurir,
                 nama_kurir: kurir.nama_kurir,
                 id_umkm: kurir.id_umkm,
-                // username: kurir.username,
-                // nomor_telepon: kurir.nomor_telepon,
                 email: kurir.email,
             };
             callback(null, result);
@@ -1618,6 +1771,7 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
                 GROUP_CONCAT(
                     DISTINCT JSON_OBJECT(
+                        'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
                         'Harga', p.Harga,
@@ -1660,7 +1814,6 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
         throw error;
     }
 }
-
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
@@ -1671,6 +1824,7 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
                 GROUP_CONCAT(
                     DISTINCT JSON_OBJECT(
+                        'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
                         'Harga', p.Harga,
@@ -1928,13 +2082,15 @@ async function getpesananditerima(id, callback) {
             `
             SELECT
     k.id_batch,
-            MAX(ps.total_belanja) AS total_belanja,
-            SUM(k.kuantitas) AS kuantitas,
-            GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
-            ps.status_pesanan,
-            pb.nama_lengkap,
-            pb.nomor_telepon,
-            pb.alamat AS alamat_pembeli
+    MAX(ps.total_belanja) AS total_belanja,
+    SUM(k.kuantitas) AS kuantitas,
+    GROUP_CONCAT(p.nama_barang SEPARATOR ', ') AS nama_barang,
+    MAX(ps.status_pesanan) AS status_pesanan,
+    GROUP_CONCAT(ps.id_pesanan) AS id_pesanan, -- karena bisa lebih dari satu
+    MAX(pb.nama_lengkap) AS nama_lengkap,
+    MAX(pb.nomor_telepon) AS nomor_telepon,
+    MAX(pb.alamat) AS alamat_pembeli,
+    MAX(pb.id_pembeli) AS id_pembeli
 FROM keranjang k
 INNER JOIN pesanan ps ON ps.id_keranjang = k.id_keranjang
 INNER JOIN Produk p ON k.id_produk = p.id_produk
@@ -1942,12 +2098,7 @@ INNER JOIN pembeli pb ON k.id_pembeli = pb.id_pembeli
 WHERE p.id_umkm = ?
   AND ps.status_pesanan = 'Pesanan Diterima'
   AND k.id_Produk IS NOT NULL
-GROUP BY
-    k.id_batch,
-            ps.status_pesanan,
-            pb.nama_lengkap,
-            pb.nomor_telepon,
-            pb.alamat
+GROUP BY k.id_batch
 ORDER BY k.id_batch ASC;
             `,
             {
@@ -2232,6 +2383,33 @@ WHERE k.id_batch = ?
     }
 }
 
+async function updatestatuspesanandiantar(id_umkm, id_batch, callback) {
+    try {
+        const query = `
+            UPDATE pesanan ps
+JOIN keranjang k ON ps.id_keranjang = k.id_keranjang
+JOIN Produk p ON k.id_produk = p.id_produk
+SET ps.status_pesanan = 'Pesanan Diantar'
+WHERE k.id_batch = ? 
+  AND p.id_umkm = ?;
+        `;
+
+        const [result] = await sequelize.query(query, {
+            replacements: [id_batch, id_umkm],
+            type: sequelize.QueryTypes.UPDATE,
+        });
+
+
+        if (result === 0) {
+            throw new Error('Update Gagal');
+        }
+
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
+    }
+}
+
 async function updatestatuspesananditolak(id_umkm, id_batch, callback) {
     try {
         const query = `
@@ -2271,7 +2449,7 @@ WHERE k.id_batch = ?
         `;
 
         const [result] = await sequelize.query(query, {
-            replacements: { id_batch: id_batch, id_umkm: id_umkm },
+            replacements: [id_batch, id_umkm],
             type: sequelize.QueryTypes.UPDATE,
         });
 
@@ -2424,7 +2602,6 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
         callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
@@ -2445,12 +2622,10 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
-        callback(null, result);
     } catch (error) {
         console.error("Error Mengambil Data Kurir", error);
         return { success: false, message: "Ada kesalahan saat mengambil Data Kurir" };
@@ -2470,12 +2645,11 @@ WHERE kr.id_kurir = ? ;
             type: sequelize.QueryTypes.UPDATE,
         });
 
-
+        callback(null, result);
         if (result === 0) {
             throw new Error('Update Gagal');
         }
 
-        callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
         return { success: false, message: "Ada kesalahan saat mengupdate status kurir" };
@@ -2499,7 +2673,6 @@ WHERE kr.id_kurir = ? ;
         if (result === 0) {
             throw new Error('Update Gagal');
         }
-
         callback(null, result);
     } catch (error) {
         console.error("Error mengupdate status kurir", error);
@@ -2507,37 +2680,101 @@ WHERE kr.id_kurir = ? ;
     }
 }
 
+async function updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir) {
+    if (!nama_usaha || !id_kurir) {
+        throw new Error("nama_usaha dan id_kurir tidak boleh kosong");
+    }
+
+    const umkm = await UMKM.findOne({ where: { nama_usaha } });
+    if (!umkm) throw new Error("UMKM tidak ditemukan");
+
+    const kurir = await Kurir.findByPk(id_kurir);
+    if (!kurir) throw new Error("Kurir tidak ditemukan");
+
+    kurir.id_umkm = umkm.id_umkm;
+    await kurir.save();
+
+    return {
+        success: true,
+        id_kurir,
+        id_umkm: umkm.id_umkm,
+    };
+}
+
+async function updateStatusDanIdUmkmKurir(nama_usaha, id_kurir, callback) {
+    try {
+        if (!nama_usaha || !id_kurir) {
+            throw new Error("nama_usaha dan id_kurir tidak boleh kosong");
+        }
+
+        // Pastikan update UMKM selesai dulu
+        await updateUmkmKurirByNamaUMKM(nama_usaha, id_kurir);
+
+        // Baru update status
+        await updateStatusKurirBelumTerdaftar(id_kurir, callback);
+    } catch (error) {
+        console.error("Gagal update status dan ID UMKM:", error);
+        callback(error, { success: false, message: error.message });
+    }
+}
+
 
 // End Query Dapa
 
 //start query inbox pesanan
-async function getinboxpesanan(callback) {
+async function getinboxpesanan(id_umkm, callback) {
     try {
         const result = await sequelize.query(
             `
-         SELECT
-    pesanan.id_pesanan,
-    pembeli.nama_lengkap,
-    Produk.Nama_Barang,
-    keranjang.kuantitas AS quantity,
-    pesanan.status_pesanan
-    FROM pesanan
-    JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
-    JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
-    JOIN Produk ON keranjang.id_produk = Produk.id_produk;
-
-
-        `,
+            SELECT
+                pesanan.id_pesanan,
+                pembeli.nama_lengkap,
+                Produk.Nama_Barang,
+                pesanan.status_pesanan,
+                pesanan.histori_pesanan -- Ensure this field exists in the database
+            FROM pesanan
+            JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
+            JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
+            JOIN Produk ON keranjang.id_produk = Produk.id_produk
+            WHERE pesanan.status_pesanan = 'Pesanan Diterima'
+              AND Produk.id_umkm = :id_umkm;
+            `,
             {
-                type: QueryTypes.SELECT,
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { id_umkm: id_umkm },
             }
         );
-
         callback(null, result);
     } catch (error) {
         callback(error, null);
-        console.error("Error executing raw query:", error);
-        throw new Error("Query execution failed");
+    }
+}
+
+async function getinboxpesananmasuk(id_umkm, callback) {
+    try {
+        const result = await sequelize.query(
+            `
+            SELECT
+                pesanan.id_pesanan,
+                pembeli.nama_lengkap,
+                Produk.Nama_Barang,
+                pesanan.status_pesanan,
+                pesanan.histori_pesanan -- Ensure this field exists in the database
+            FROM pesanan
+            JOIN keranjang ON pesanan.id_keranjang = keranjang.id_keranjang
+            JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli
+            JOIN Produk ON keranjang.id_produk = Produk.id_produk
+            WHERE pesanan.status_pesanan = 'Pesanan Masuk'
+              AND Produk.id_umkm = :id_umkm;
+            `,
+            {
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { id_umkm: id_umkm },
+            }
+        );
+        callback(null, result);
+    } catch (error) {
+        callback(error, null);
     }
 }
 
@@ -2630,16 +2867,23 @@ module.exports = {
     BookmarkedbyPembeli,
     DeleteBookmark,
     getuserUMKMbyID,
-    getuserUMKM: getalluserUMKM,
+    getalluserUMKM,
     registUMKM,
     loginUMKM,
+    verifikasiOTP,
+    kirimUlangOTP,
     cekEmailUMKM,
     sendResetLink,
-    getulasans,
-    addulasans,
-    getulasansByProdukId,
-    getulasansByIdUMKM,
+    resetPassword,
+    forgotPassword,
+    getUlasans,
+    getUlasansByProdukId,
+    getUlasansByIdUMKM,
+    createUlasan,
+    updateUlasan,
+    deleteUlasan,
     getOverallRating,
+    getUMKMById,
     getMessages,
     getMessagesByUMKM,
     getMessagesByPembeli,
@@ -2680,6 +2924,7 @@ module.exports = {
     getpesananditolak,
     getpesananselesai,
     updatestatuspesananditerima,
+    updatestatuspesanandiantar,
     updatestatuspesananditolak,
     updatestatuspesananselesai,
     updatestatuspesananmasuk,
@@ -2687,6 +2932,7 @@ module.exports = {
     updatedataumkm,
     getprofileumkm,
     getinboxpesanan,
+    getinboxpesananmasuk,
     getCampaign,
     createCampaign,
     updateCampaign,
@@ -2713,4 +2959,6 @@ module.exports = {
     updateStatusKurirDipecat,
     getumkmkurir,
     gethistorykurirumkm,
+    updateUmkmKurirByNamaUMKM,
+    updateStatusDanIdUmkmKurir,
 };

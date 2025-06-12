@@ -14,6 +14,16 @@ const Message = require("./models/message");
 const Ulasan = require("./models/ulasan");
 const { error } = require("console");
 
+// otp things
+const sgMail = require('@sendgrid/mail');
+if (!process.env.EMAIL_FROM) {
+    console.error('EMAIL_FROM belum diatur di .env!');
+    return res.status(500).json({ error: 'Server error: Email pengirim belum dikonfigurasi' });
+}
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -24,7 +34,6 @@ const io = new Server(server, {
         credentials: true,
     },
 });
-
 
 io.on("connection", (socket) => {
     console.log("New user connected:", socket.id);
@@ -527,7 +536,7 @@ app.get("/umkm/:id", (req, res) => {
 });
 
 app.get("/umkm", (req, res) => {
-    dboperations.getuserUMKM((error, result) => {
+     dboperations.getalluserUMKM((error, result) => {
         if (error) {
             console.error("error get semua user UMKM:", error);
             return res.status(500).send("error fetch user UMKM (test purposes)");
@@ -536,100 +545,307 @@ app.get("/umkm", (req, res) => {
     });
 });
 
-app.post("/umkm", (req, res) => {
+app.post("/api/registrasi-umkm", async (req, res) => {
     const data = req.body;
-    dboperations.registUMKM(data, (error, result) => {
-        if (error) {
-            console.error("error regist umkm:", error);
-            return res.status(500).send("error nambah data umkm");
-        }
-        res.status(200).json(result);
-    });
-});
-
-app.post("/login", (req, res) => {
-    const { inputEmail, inputPassword } = req.body;
-
-    dboperations.loginUMKM({ inputEmail, inputPassword }, (error, result) => {
-        if (error) {
-            return res.status(401).send(error.message);
-        }
-        res.status(200).json(result);
-    });
-});
-
-app.post('/reset-password', async (req, res) => {
-    const inputEmail = req.body.inputEmail;
-
-    if (!inputEmail) {
-        return res.status(400).json({ message: 'Email is required' });
-    }
-
+    
     try {
-        const emailExists = await dboperations.cekEmailUMKM(inputEmail);
-        if (!emailExists) {
-            return res.status(404).json({ message: 'Email not found' });
-        }
-
-        await dboperations.sendResetLink(inputEmail);
-        res.status(200).json({ message: 'Password reset link sent successfully' });
-
+        const result = await dboperations.registUMKM(data);
+        res.status(201).json({ message: 'UMKM registered successfully', data: result });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error. Please try again.' });
+        console.error('Error in /api/umkm:', error);
+        if (error.message.includes('Missing required field')) {
+            return res.status(400).json({ error: error.message });
+        }
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ error: 'Username, email, or NIK_KTP already exists' });
+        }
+        if (error.message.includes('NIK_KTP must be a valid integer')) {
+            return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Failed to register UMKM: ' + error.message });
     }
 });
 
-app.get("/ulasans", (req, res) => {
-    dboperations.getulasans((error, result) => {
-        if (error) {
-            console.error(error);
-            return res.status(500).send(error.message);
+app.post("/api/masuk-umkm", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log('Received login request:', { email });
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email dan kata sandi wajib diisi' });
         }
-        res.status(200).json(result);
-    });
+
+        const result = await dboperations.loginUMKM({ email, password });
+        console.log('loginUMKM result:', result);
+
+        // cek status is_verified 
+        const user = await dboperations.getUMKMById(result.id_umkm);
+        console.log('User data:', user.toJSON ? user.toJSON() : user);
+        const is_verified = user.is_verified ? 1 : 0;
+
+
+        if (!is_verified) {
+            // kirim OTP lewat email jika is_verified == 0 (false)
+            const msg = {
+                to: result.email,
+                from: process.env.EMAIL_FROM,
+                subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+                text: `Kode OTP anda adalah ${result.auth_code}.`,
+                html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
+            };
+            console.log('Email from:', process.env.EMAIL_FROM);
+            console.log('SendGrid payload:', msg);
+
+            console.log('Sending OTP email to:', result.email);
+            await sgMail.send(msg);
+            console.log('OTP email sent successfully');
+
+            return res.status(200).json({
+                message: 'OTP terkirim ke email anda',
+                id_umkm: result.id_umkm,
+                is_verified: 0
+            });
+        }
+
+        // skip kirim otp jika is_verified == 1 (true)
+        res.status(200).json({
+            message: 'Login berhasil',
+            id_umkm: result.id_umkm,
+            is_verified: 1
+        });
+    } catch (error) {
+        console.error('Error di /api/masuk-umkm:', error.message);
+        if (error.message === 'Pengguna tidak tersedia') {
+            return res.status(401).json({ error: 'Email tidak terdaftar' });
+        }
+        if (error.message === 'Password salah') {
+            return res.status(401).json({ error: 'Kata sandi salah' });
+        }
+        return res.status(500).json({ error: 'Gagal masuk: ' + error.message });
+    }
 });
 
-app.post("/ulasans", async (req, res) => {
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log('Received forgot password request:', { email });
+
+        const { token } = await dboperations.forgotPassword(email);
+
+        const resetUrl = `https://tubeswebpro-production.up.railway.app//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        
+        // isi email
+        const msg = {
+        to: email,
+        from: process.env.EMAIL_FROM,
+        subject: 'Reset Kata Sandi Akun UMKMKU',
+        text: `Klik link berikut untuk mereset kata sandi Anda: ${resetUrl}\nLink ini berlaku selama 1 jam.`,
+        html: `<p>Klik link berikut untuk mereset kata sandi Anda:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Link ini berlaku selama 1 jam.</p>`
+        };
+
+        console.log('Sending reset email to:', email);
+        await sgMail.send(msg);
+        console.log('Reset email sent successfully');
+        console.log('URL Reset Password:', resetUrl);
+
+        res.status(200).json({ message: 'Link reset kata sandi telah dikirim ke email Anda' });
+    } catch (error) {
+        console.error('Error di /api/forgot-password:', error.message);
+        if (error.message === 'Email wajib diisi') {
+        return res.status(400).json({ error: error.message });
+        }
+        if (error.message === 'Email tidak terdaftar') {
+        return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Gagal mengirim link reset: ' + error.message });
+    }
+});
+
+app.post("/api/reset-password", async (req, res) => {
+    try {
+        const { email, token, password } = req.body;
+        console.log('Received reset password request:', { email });
+
+        await dboperations.resetPassword({ email, token, password });
+
+        res.status(200).json({ message: 'Kata sandi berhasil direset' });
+    } catch (error) {
+        console.error('Error di /api/reset-password:', error.message);
+        if (error.message === 'Email, token, dan kata sandi wajib diisi') {
+            return res.status(400).json({ error: error.message });
+        }
+        if (error.message === 'Token tidak valid atau telah kedaluwarsa') {
+            return res.status(401).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Gagal mereset kata sandi: ' + error.message });
+    }
+});
+
+app.post("/api/verifikasi-otp", async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email dan OTP wajib diisi' });
+        }
+
+        const isValid = await dboperations.verifikasiOTP({ email, otp });
+        if (!isValid) {
+            return res.status(401).json({ error: 'OTP tidak valid' });
+        }
+
+        // hapus otp setelah verifikas
+        // await user.update({ is_verified: true, auth_code: null });
+
+        res.status(200).json({ message: 'Verifikasi OTP berhasil' });
+    } catch (error) {
+        console.error('Error di /api/verifikasi-otp:', error.message);
+        return res.status(500).json({ error: 'Gagal memverifikasi OTP: ' + error.message });
+    }
+});
+
+app.post("/api/kirim-ulang-otp", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email wajib diisi' });
+        }
+
+        const result = await dboperations.kirimUlangOTP(email);
+
+        // kirim email OTP baru
+        const msg = {
+            to: result.email,
+            from: process.env.EMAIL_FROM,
+            subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+            text: `Kode OTP anda adalah ${result.auth_code}.`,
+            html: `<p>Kode OTP anda adalah <strong>${result.auth_code}</strong></p>`
+        };
+
+        console.log('Kirim ulang code OTP email ke:', result.email);
+        await sgMail.send(msg);
+        console.log('OTP email berhasil dikirim');
+
+        res.status(200).json({
+            message: 'OTP terkirim ke email anda',
+            id_umkm: result.id_umkm
+        });
+    } catch (error) {
+        console.error('Error di /api/resend-otp:', error.message);
+        return res.status(500).json({ error: 'Gagal mengirim ulang OTP: ' + error.message });
+    }
+});
+
+// start ulasan section
+// fetch semua ulasan
+app.get('/ulasans', async (req, res) => {
+    try {
+        const result = await dboperations.getUlasans();
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching ulasans:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
+});
+
+// fetch ulasan dari id produk tertentu
+app.get('/ulasans/produk/:id_produk', async (req, res) => {
+    const id_produk = req.params.id_produk;
+    try {
+        const result = await dboperations.getUlasansByProdukId(id_produk);
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Belum ada ulasan untuk produk ini!' });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching ulasans by product ID:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
+});
+
+// fetch seluruh ulasan dari umkm tertentu
+app.get('/ulasans/umkm/:id_umkm', async (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    try {
+        const result = await dboperations.getUlasansByIdUMKM(id_umkm);
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Belum ada ulasan untuk UMKM ini!' });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching ulasans by UMKM ID:', error);
+        res.status(500).json({ message: 'Error fetching ulasans', error: error.message });
+    }
+});
+
+// post ulasan baru
+app.post('/ulasans', async (req, res) => {
     try {
         const { id_pembeli, id_produk, username, ulasan, rating } = req.body;
 
-        const newUlasan = await Ulasan.create({
+        // validasi
+        if (!id_pembeli || !id_produk || !username || !ulasan || !rating) {
+            return res.status(400).json({ message: 'Lengkapi formulir!' });
+        }
+        if (rating < 0 || rating > 5) {
+            return res.status(400).json({ message: 'Rating harus antara 0 sampai 5!' });
+        }
+
+        const newUlasan = await dboperations.createUlasan({
             id_pembeli,
             id_produk,
             username,
             ulasan,
-            rating
+            rating,
         });
 
-        res.status(200).json(newUlasan);
+        res.status(201).json(newUlasan);
     } catch (error) {
-        console.error("Error adding ulasan:", error);
-        res.status(500).send("Error adding ulasan");
+        console.error('Error menambahkan ulasan:', error);
+        res.status(500).json({ message: 'Error menambahkan ulasan', error: error.message });
     }
 });
 
-app.get("/ulasans/:id_produk", (req, res) => {
-    const id_produk = req.params.id_produk;
+// edit ulasan
+app.put('/ulasans/:id_ulasan', async (req, res) => {
+    const id_ulasan = req.params.id_ulasan;
+    const { ulasan, rating } = req.body;
 
-    dboperations.getulasansByProdukId(id_produk, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
+    try {
+        // validasi
+        if (!ulasan && !rating) {
+            return res.status(400).json({ message: 'Isi ulasan atau rating!' });
         }
-        res.status(200).json(result);
-    });
+        if (rating && (rating < 0 || rating > 5)) {
+            return res.status(400).json({ message: 'Rating harus antara 0 sampai 5!' });
+        }
+
+        const updatedUlasan = await dboperations.updateUlasan(id_ulasan, { ulasan, rating });
+        if (!updatedUlasan) {
+            return res.status(404).json({ message: 'Ulasan tidak tersedia' });
+        }
+
+        res.status(200).json(updatedUlasan);
+    } catch (error) {
+        console.error('Error updating ulasan:', error);
+        res.status(500).json({ message: 'Error updating ulasan', error: error.message });
+    }
 });
 
-app.get("/ulasans/umkm/:id_umkm", (req, res) => {
-    const id_umkm = req.params.id_umkm;
-
-    dboperations.getulasansByIdUMKM(id_umkm, (error, result) => {
-        if (error) {
-            return res.status(500).send(error.message);
+// hapus ulasan
+app.delete('/ulasans/:id_ulasan', async (req, res) => {
+    const id_ulasan = req.params.id_ulasan;
+    try {
+        const deleted = await dboperations.deleteUlasan(id_ulasan);
+        if (!deleted) {
+            return res.status(404).json({ message: 'Ulasan tidak tersedia' });
         }
-        res.status(200).json(result);
-    });
+        res.status(200).json({ message: 'Ulasan berhasil dihapus' });
+    } catch (error) {
+        console.error('Error menghapus ulasan:', error);
+        res.status(500).json({ message: 'Error menghapus ulasan', error: error.message });
+    }
 });
+// end ulasan section
 
 app.get("/overallrating/:id_umkm", (req, res) => {
     const id_umkm = req.params.id_umkm;
@@ -1033,13 +1249,20 @@ app.get("/pembeli/:id", (req, res) => {
 
 // Add a new pembeli
 app.post("/pembeli", (req, res) => {
-    const data = req.body;
-    dboperations.addPembeli(data, (error, result) => {
-        if (error) {
-            return res.status(500).send("Error adding pembeli");
-        }
-        res.status(200).json(result); // Send the newly created pembeli
-    });
+  const data = req.body;
+  dboperations.addPembeli(data, (error, result) => {
+    if (error) {
+
+      if (error.message === "Email atau Username sudah ada") {
+        // Kirim status 409 Conflict jika user sudah ada
+        return res.status(409).json({ message: error.message });
+      }
+      // Kirim error server umum untuk masalah lainnya
+      return res.status(500).send("Error adding pembeli");
+    }
+    // Jika sukses, kirim status 201 Created
+    res.status(201).json(result);
+  });
 });
 
 // Update pembeli by ID
@@ -1085,16 +1308,62 @@ app.post("/checkPembeliByEmail", (req, res) => {
     });
 });
 
+// server.js
+
+// Ganti endpoint /loginpembeli yang ada dengan ini
 app.post("/loginpembeli", (req, res) => {
     const { email, password } = req.body;
-    dboperations.loginPembeli({ email, password }, (error, result) => {
+    dboperations.loginPembeli({ email, password }, async (error, result) => {
         if (error) {
             return res.status(401).send(error.message);
         }
-        res.status(200).json(result);
+
+        try {
+            console.log(`[DEBUG MOBILE]Mengirim OTP: ${result.auth_code} ke email: ${result.email}`);
+            
+            const msg = {
+                to: result.email,
+                from: process.env.EMAIL_FROM,
+                subject: 'Kode OTP Untuk Masuk ke Akun UMKMKU',
+                text: `Kode OTP Anda adalah ${result.auth_code}.`
+            };
+            await sgMail.send(msg);
+            res.status(200).json({
+                message: "OTP sent successfully",
+                hash: result.hash, 
+                id_pembeli: result.id_pembeli,
+                email: result.email
+            });
+         
+
+        } catch (emailError) {
+            console.error("Gagal mengirim email OTP:", emailError);
+            res.status(500).json({ error: 'Gagal mengirim email OTP.' });
+        }
     });
 });
 
+// Tambahkan endpoint baru ini untuk verifikasi
+app.post("/api/pembeli/verify-otp", async (req, res) => {
+    const { email, otp, hash } = req.body;
+
+    // Gunakan service yang sudah ada
+    const otpService = require('./services/otp.service');
+
+    try {
+        const isValid = await otpService.verifyOTP({ email, otp, hash });
+        if (isValid) {
+            res.status(200).json({ message: 'Login berhasil!' });
+        } else {
+            res.status(400).json({ message: 'OTP tidak valid.' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
+// ... (sisa kode Anda)
 app.put("/changepassword", (req, res) => {
     const { email, newPassword } = req.body;
 
@@ -1132,13 +1401,13 @@ app.get("/kurir/:id", (req, res) => {
 // Add a new kurir
 app.post("/kurir", async (req, res) => {
     try {
-        const { nama_kurir, id_umkm, email, password } = req.body;
+        const { nama_kurir, id_umkm, email, password, status } = req.body;
         const newKurir = await Kurir.create({
             nama_kurir,
             id_umkm,
-            // id_pesanan,
             email,
             password,
+            status
         });
 
         res.status(201).json(newKurir);
@@ -1280,6 +1549,17 @@ app.get("/gethistorykurirumkm/:id_umkm", (req, res) => {
         if (error) {
             console.error("error get data kurir:", error);
             return res.status(500).send("error fetch data kurir");
+        }
+        res.json(result);
+    });
+});
+
+app.get("/getallumkm", (req, res) => {
+
+    dboperations.getalluserUMKM((error, result) => {
+        if (error) {
+            console.error("error get data umkm:", error);
+            return res.status(500).send("error fetch data umkm");
         }
         res.json(result);
     });
@@ -1562,6 +1842,19 @@ app.put("/updatestatuspesananditerima/:id_umkm/:id_batch", (req, res) => {
     });
 });
 
+app.put("/updatestatuspesanandiantar/:id_umkm/:id_batch", (req, res) => {
+    const id_umkm = req.params.id_umkm;
+    const id_batch = req.params.id_batch;
+
+    dboperations.updatestatuspesanandiantar(id_umkm, id_batch, (error, result) => {
+        if (error) {
+            console.error("error update status pesanan diterima:", error);
+            return res.status(500).send("error status pesanan diterima");
+        }
+        res.status(200).json(result);
+    });
+});
+
 app.put("/updatestatuspesananditolak/:id_umkm/:id_batch", (req, res) => {
     const id_umkm = req.params.id_umkm;
     const id_batch = req.params.id_batch;
@@ -1581,8 +1874,8 @@ app.put("/updatestatuspesananselesai/:id_umkm/:id_batch", (req, res) => {
 
     dboperations.updatestatuspesananselesai(id_umkm, id_batch, (error, result) => {
         if (error) {
-            console.error("error update status pesanan diterima:", error);
-            return res.status(500).send("error status pesanan diterima");
+            console.error("error update status pesanan selesai:", error);
+            return res.status(500).send("error status pesanan selesai");
         }
         res.status(200).json(result);
     });
@@ -1622,18 +1915,65 @@ app.put("/updatestatuskeranjang/:id", (req, res) => {
     }
 });
 
+app.put("/updateStatusDanIdUmkmKurir/:nama_usaha/:id_kurir", (req, res) => {
+    const nama_usaha = req.params.nama_usaha;
+    const id_kurir = req.params.id_kurir;
+    try {
+        const statuskeranjang = dboperations.updateStatusDanIdUmkmKurir(nama_usaha, id_kurir);
+        res.status(200).json({ message: "berhasil mengupdate id_umkm dan status pada kurir" });
+    } catch (error) {
+        res.status(500).json({ message: "error update id_umkm dan status pada kurir" })
+    }
+});
+
 
 // End Server Dapa
 
 //start server inbox
 app.get("/getinboxpesanan", (req, res) => {
-    dboperations.getinboxpesanan((error, result) => {
+    const id_umkm = req.query.id_umkm;
+
+    if (!id_umkm) {
+        return res.status(400).send("Missing required parameter: id_umkm");
+    }
+
+    dboperations.getinboxpesanan(id_umkm, (error, result) => {
         if (error) {
-            console.error("error get inbox:", error);
-            return res.status(500).send("error fetch inbox pesanan");
+            console.error("Error get inbox:", error);
+            return res.status(500).send("Error fetching inbox pesanan diterima");
         }
         res.json(result);
     });
+});
+
+app.get("/getinboxpesananmasuk", async (req, res) => {
+    try {
+        const id_umkm = req.query.id_umkm;
+
+        // Validasi input
+        if (!id_umkm) {
+            return res.status(400).json({ error: "Missing required parameter: id_umkm" });
+        }
+
+        // Panggil fungsi untuk mendapatkan data
+        dboperations.getinboxpesananmasuk(id_umkm, (error, result) => {
+            if (error) {
+                console.error("Error fetching inbox pesanan masuk:", error);
+                return res.status(500).json({ error: "Failed to fetch inbox pesanan masuk" });
+            }
+
+            // Jika tidak ada hasil, kirimkan pesan kosong
+            if (!result || result.length === 0) {
+                return res.status(404).json({ message: "No Pesanan Masuk found for the given UMKM ID" });
+            }
+
+            // Kirimkan hasil
+            res.status(200).json(result);
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        res.status(500).json({ error: "An unexpected error occurred" });
+    }
 });
 
 app.post("/campaign", (req, res) => {

@@ -25,7 +25,10 @@ const Pesanan = sequelize.define('Pesanan', {
             key: 'id_keranjang'
         }
     },
-
+    histori_pesanan: {
+        type: DataTypes.DATE,
+        allowNull: true
+    }
 }, {
     tableName: 'pesanan',
     timestamps: false
