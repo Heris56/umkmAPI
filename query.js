@@ -1533,36 +1533,71 @@ async function updatePembeli(id, data, callback) {
             throw new Error("ID cannot be empty");
         }
 
-        const pembeli = await Pembeli.findByPk(id);
+        const pembeli = await Pembeli.findByPk(id); // Fetch the existing pembeli record
 
         if (!pembeli) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
-        const updatedPembeli = await pembeli.update(data); 
+        // --- Password Change Logic (Simplified) ---
+        // Check if the 'new_password' field is present in the data (indicating a password change request)
+        if (data.new_password) { 
+            const newPasswordPlain = data.new_password;
+
+            // Define saltRounds for bcrypt hashing
+            const saltRounds = 10; 
+            const newHashedPassword = await bcrypt.hash(newPasswordPlain, saltRounds);
+            
+            // Overwrite the 'password' field (for your ORM model) with the new hashed password
+            data.password = newHashedPassword;
+
+            // Remove the temporary 'new_password' field as it's not a database column
+            delete data.new_password;
+        }
+        // --- End Password Change Logic ---
+
+        // Proceed with updating the pembeli information
+        // This will update all fields present in `data`, including the new hashed password if it was changed
+        const updatedPembeli = await pembeli.update(data);
         callback(null, updatedPembeli);
+
     } catch (error) {
         callback(error, null);
     }
 }
 
 
-async function deletePembeli(id, callback) {
+async function deletePembeli(id, email, password, callback) {
     try {
-        if (!id) {
-            throw new Error("ID cannot be empty");
+        // Basic checks for missing info
+        if (!id || !email || !password) {
+            throw new Error("ID, email, and password cannot be empty");
         }
 
         const pembeli = await Pembeli.findByPk(id);
 
+        // Check if user exists
         if (!pembeli) {
             throw new Error(`Pembeli with ID ${id} not found`);
         }
 
+        // 1. Verify email matches
+        if (pembeli.email !== email) {
+            throw new Error('Invalid email or password'); // Use a generic error for security
+        }
+
+        // 2. Compare the given password with the stored HASHED password
+        const passwordMatch = await bcrypt.compare(password, pembeli.password);
+
+        if (!passwordMatch) {
+            throw new Error('Invalid email or password'); // Generic error
+        }
+
+        // If everything checks out, delete the account
         await pembeli.destroy();
         callback(null, { message: `Pembeli with ID ${id} has been deleted` });
     } catch (error) {
-        callback(error, null);
+        callback(error, null); // Send any errors back
     }
 }
 
