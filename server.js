@@ -536,7 +536,7 @@ app.get("/umkm/:id", (req, res) => {
 });
 
 app.get("/umkm", (req, res) => {
-    dboperations.getuserUMKM((error, result) => {
+     dboperations.getalluserUMKM((error, result) => {
         if (error) {
             console.error("error get semua user UMKM:", error);
             return res.status(500).send("error fetch user UMKM (test purposes)");
@@ -1252,7 +1252,7 @@ app.post("/pembeli", (req, res) => {
   const data = req.body;
   dboperations.addPembeli(data, (error, result) => {
     if (error) {
-      // Cek apakah ini error spesifik dari kita
+
       if (error.message === "Email atau Username sudah ada") {
         // Kirim status 409 Conflict jika user sudah ada
         return res.status(409).json({ message: error.message });
@@ -1328,9 +1328,6 @@ app.post("/loginpembeli", (req, res) => {
                 text: `Kode OTP Anda adalah ${result.auth_code}.`
             };
             await sgMail.send(msg);
-
-            // ->>> BAGIAN PENTING ADA DI SINI <<<-
-            // Pastikan res.json() MENGANDUNG 'hash: result.hash'
             res.status(200).json({
                 message: "OTP sent successfully",
                 hash: result.hash, 
