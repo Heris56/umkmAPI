@@ -4,10 +4,10 @@ const { NodeHttpHandler } = require("@smithy/node-http-handler");
 const https = require('https');
 
 const agent = new https.Agent({
-    minVersion: "TLSv1.2", // atau coba "TLSv1.3" kalau masih gagal
-    ciphers: "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256",
-    honorCipherOrder: true
-})
+  minVersion: 'TLSv1.2',
+  maxVersion: 'TLSv1.3',
+  honorCipherOrder: true
+});
 
 const r2 = new S3Client({
     region: "auto",
@@ -17,6 +17,7 @@ const r2 = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
     forcePathStyle: true,
+    requestHandler: new NodeHttpHandler({ httpsAgent: agent })
 });
 
 const uploadfile = async (bucketName, fileName, fileContent, mimetype) => {
