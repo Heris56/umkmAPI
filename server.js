@@ -632,7 +632,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const { token } = await dboperations.forgotPassword(email);
 
-        const resetUrl = `https://umkmku.shop//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        const resetUrl = `https://umkmku.shop/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
 
         // isi email
         const msg = {
