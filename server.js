@@ -536,7 +536,7 @@ app.get("/umkm/:id", (req, res) => {
 });
 
 app.get("/umkm", (req, res) => {
-     dboperations.getalluserUMKM((error, result) => {
+    dboperations.getalluserUMKM((error, result) => {
         if (error) {
             console.error("error get semua user UMKM:", error);
             return res.status(500).send("error fetch user UMKM (test purposes)");
@@ -547,7 +547,7 @@ app.get("/umkm", (req, res) => {
 
 app.post("/api/registrasi-umkm", async (req, res) => {
     const data = req.body;
-    
+
     try {
         const result = await dboperations.registUMKM(data);
         res.status(201).json({ message: 'UMKM registered successfully', data: result });
@@ -632,15 +632,15 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const { token } = await dboperations.forgotPassword(email);
 
-        const resetUrl = `https://tubeswebpro-production.up.railway.app//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
-        
+        const resetUrl = `https://umkmku.shop//reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+
         // isi email
         const msg = {
-        to: email,
-        from: process.env.EMAIL_FROM,
-        subject: 'Reset Kata Sandi Akun UMKMKU',
-        text: `Klik link berikut untuk mereset kata sandi Anda: ${resetUrl}\nLink ini berlaku selama 1 jam.`,
-        html: `<p>Klik link berikut untuk mereset kata sandi Anda:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Link ini berlaku selama 1 jam.</p>`
+            to: email,
+            from: process.env.EMAIL_FROM,
+            subject: 'Reset Kata Sandi Akun UMKMKU',
+            text: `Klik link berikut untuk mereset kata sandi Anda: ${resetUrl}\nLink ini berlaku selama 1 jam.`,
+            html: `<p>Klik link berikut untuk mereset kata sandi Anda:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Link ini berlaku selama 1 jam.</p>`
         };
 
         console.log('Sending reset email to:', email);
@@ -652,10 +652,10 @@ app.post('/api/forgot-password', async (req, res) => {
     } catch (error) {
         console.error('Error di /api/forgot-password:', error.message);
         if (error.message === 'Email wajib diisi') {
-        return res.status(400).json({ error: error.message });
+            return res.status(400).json({ error: error.message });
         }
         if (error.message === 'Email tidak terdaftar') {
-        return res.status(404).json({ error: error.message });
+            return res.status(404).json({ error: error.message });
         }
         res.status(500).json({ error: 'Gagal mengirim link reset: ' + error.message });
     }
@@ -1249,20 +1249,20 @@ app.get("/pembeli/:id", (req, res) => {
 
 // Add a new pembeli
 app.post("/pembeli", (req, res) => {
-  const data = req.body;
-  dboperations.addPembeli(data, (error, result) => {
-    if (error) {
+    const data = req.body;
+    dboperations.addPembeli(data, (error, result) => {
+        if (error) {
 
-      if (error.message === "Email atau Username sudah ada") {
-        // Kirim status 409 Conflict jika user sudah ada
-        return res.status(409).json({ message: error.message });
-      }
-      // Kirim error server umum untuk masalah lainnya
-      return res.status(500).send("Error adding pembeli");
-    }
-    // Jika sukses, kirim status 201 Created
-    res.status(201).json(result);
-  });
+            if (error.message === "Email atau Username sudah ada") {
+                // Kirim status 409 Conflict jika user sudah ada
+                return res.status(409).json({ message: error.message });
+            }
+            // Kirim error server umum untuk masalah lainnya
+            return res.status(500).send("Error adding pembeli");
+        }
+        // Jika sukses, kirim status 201 Created
+        res.status(201).json(result);
+    });
 });
 
 // Update pembeli by ID
@@ -1342,7 +1342,7 @@ app.post("/loginpembeli", (req, res) => {
 
         try {
             console.log(`[DEBUG MOBILE]Mengirim OTP: ${result.auth_code} ke email: ${result.email}`);
-            
+
             const msg = {
                 to: result.email,
                 from: process.env.EMAIL_FROM,
@@ -1352,11 +1352,11 @@ app.post("/loginpembeli", (req, res) => {
             await sgMail.send(msg);
             res.status(200).json({
                 message: "OTP sent successfully",
-                hash: result.hash, 
+                hash: result.hash,
                 id_pembeli: result.id_pembeli,
                 email: result.email
             });
-         
+
 
         } catch (emailError) {
             console.error("Gagal mengirim email OTP:", emailError);
