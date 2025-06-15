@@ -1833,13 +1833,13 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
     try {
         const result = await sequelize.query(
             `
-            SELECT 
+            SELECT
                 MONTH(r.tanggal) AS month,
                 YEAR(r.tanggal) AS year,
                 SUM(p.Harga * k.kuantitas) AS total_sales,
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
-                GROUP_CONCAT(
-                    DISTINCT JSON_OBJECT(
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
                         'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
@@ -1848,21 +1848,21 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
                         'total_sales', p.Harga * k.kuantitas
                     )
                 ) AS products
-            FROM 
+            FROM
                 riwayat r
-            JOIN 
+            JOIN
                 pesanan pes ON r.id_pesanan = pes.id_pesanan
-            JOIN 
+            JOIN
                 keranjang k ON pes.id_keranjang = k.id_keranjang
             JOIN
                 Produk p ON k.id_produk = p.id_produk
-            WHERE 
+            WHERE
                 p.ID_UMKM = :umkmId
                 AND YEAR(r.tanggal) = :year
-            GROUP BY 
+            GROUP BY
                 MONTH(r.tanggal),
                 YEAR(r.tanggal)
-            ORDER BY 
+            ORDER BY
                 year, month;
             `,
             {
@@ -1876,13 +1876,15 @@ async function getMonthlyStatsByUMKM(umkmId, year) {
             year: parseInt(item.year),
             total_sales: parseFloat(item.total_sales || 0),
             total_orders: parseInt(item.total_orders || 0),
-            products: item.products ? JSON.parse(`[${item.products}]`) : []
+            // <--- REMOVED JSON.parse() here, as Sequelize already parses it
+            products: item.products || []
         }));
     } catch (error) {
         console.error("Error fetching monthly stats:", error);
         throw error;
     }
 }
+
 async function getDailyStatsByUMKM(umkmId, month, year) {
     try {
         const result = await sequelize.query(
@@ -1891,8 +1893,8 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
                 r.tanggal AS tanggal,
                 SUM(p.Harga * k.kuantitas) AS total_sales,
                 COUNT(DISTINCT pes.id_pesanan) AS total_orders,
-                GROUP_CONCAT(
-                    DISTINCT JSON_OBJECT(
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
                         'tanggal', r.tanggal,
                         'id_produk', p.id_produk,
                         'Nama_Barang', p.Nama_Barang,
@@ -1928,7 +1930,8 @@ async function getDailyStatsByUMKM(umkmId, month, year) {
             tanggal: item.tanggal,
             total_sales: parseFloat(item.total_sales || 0),
             total_orders: parseInt(item.total_orders || 0),
-            products: item.products ? JSON.parse(`[${item.products}]`) : []
+            // <--- REMOVED JSON.parse() here, as Sequelize already parses it
+            products: item.products || []
         }));
     } catch (error) {
         console.error("Error fetching daily stats:", error);
